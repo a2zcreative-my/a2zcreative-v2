@@ -1,65 +1,388 @@
+import Link from "next/link";
 import Image from "next/image";
+import {
+  Sparkles,
+  Heart,
+  Zap,
+  Globe,
+  Users,
+  Palette,
+  Music,
+  MapPin,
+  Gift,
+  Send,
+  Check,
+  ArrowRight,
+  Star
+} from "lucide-react";
 
-export default function Home() {
+const features = [
+  {
+    icon: Palette,
+    title: "Beautiful Templates",
+    description: "Choose from stunning designs for weddings, engagements, and more."
+  },
+  {
+    icon: Music,
+    title: "Background Music",
+    description: "Set the mood with beautiful background music for your invitation."
+  },
+  {
+    icon: MapPin,
+    title: "Google Maps & Waze",
+    description: "Guests can easily navigate to your venue with integrated maps."
+  },
+  {
+    icon: Users,
+    title: "RSVP Management",
+    description: "Track guest attendance and manage your guest list easily."
+  },
+  {
+    icon: Gift,
+    title: "Digital Gift Registry",
+    description: "Accept bank transfers and e-wallet gifts seamlessly."
+  },
+  {
+    icon: Globe,
+    title: "Custom URL",
+    description: "Get your own personalized link like yourname.a2zcreative.com.my"
+  },
+];
+
+const pricingPlans = [
+  {
+    name: "Starter",
+    price: 20,
+    description: "Perfect for birthdays",
+    features: [
+      "1 Event Invitation",
+      "2 Templates",
+      "Up to 50 Guests",
+      "Basic RSVP",
+      "Valid for 14 days",
+    ],
+    popular: false,
+  },
+  {
+    name: "Basic",
+    price: 49,
+    description: "Perfect for simple invitations",
+    features: [
+      "1 Event Invitation",
+      "3 Templates",
+      "Up to 100 Guests",
+      "RSVP Tracking",
+      "Valid for 30 days",
+    ],
+    popular: false,
+  },
+  {
+    name: "Premium",
+    price: 99,
+    description: "Most popular choice",
+    features: [
+      "1 Event Invitation",
+      "All Templates",
+      "Up to 500 Guests",
+      "RSVP Tracking",
+      "Background Music",
+      "Custom URL",
+      "Gift Registry",
+      "Valid for 90 days",
+    ],
+    popular: true,
+  },
+  {
+    name: "Ultimate",
+    price: 149,
+    description: "For the perfect celebration",
+    features: [
+      "1 Event Invitation",
+      "All Templates + Custom Design",
+      "Unlimited Guests",
+      "Everything in Premium",
+      "Priority Support",
+      "Valid for 1 year",
+      "Multiple Events",
+    ],
+    popular: false,
+  },
+];
+
+const testimonials = [
+  {
+    name: "Ahmad & Sarah",
+    event: "Wedding Reception",
+    message: "Our guests loved the digital invitation! So easy to share and the RSVP feature saved us so much time.",
+    rating: 5,
+  },
+  {
+    name: "Farah & Imran",
+    event: "Engagement Ceremony",
+    message: "Beautiful design and the door animation made our invitation so special. Highly recommended!",
+    rating: 5,
+  },
+  {
+    name: "Aisha & Hafiz",
+    event: "Walimatul Urus",
+    message: "Professional looking invitation at an affordable price. The Waze integration was a lifesaver for our guests!",
+    rating: 5,
+  },
+];
+
+export default function LandingPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-[var(--glass-border)]">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <Image src="/logo.png" alt="A2ZCreative" width={32} height={32} className="rounded-lg" />
+            <span className="text-xl font-bold text-white">A2ZCreative</span>
+          </Link>
+          <div className="hidden md:flex items-center gap-8">
+            <a href="#features" className="text-foreground-muted hover:text-white transition-colors">Features</a>
+            <a href="#pricing" className="text-foreground-muted hover:text-white transition-colors">Pricing</a>
+            <a href="#testimonials" className="text-foreground-muted hover:text-white transition-colors">Testimonials</a>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="text-foreground-muted hover:text-white transition-colors">
+              Login
+            </Link>
+            <Link href="/register" className="btn-primary text-sm px-4 py-2">
+              Get Started
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="min-h-screen flex items-center justify-center pt-20 px-6 relative overflow-hidden">
+        {/* Background Decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
+          <Heart className="absolute top-40 right-20 w-16 h-16 text-primary/10" />
+          <Sparkles className="absolute bottom-40 left-20 w-12 h-12 text-secondary/10" />
+        </div>
+
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm mb-6">
+            <Sparkles className="w-4 h-4" />
+            <span>Beautiful Digital Invitations</span>
+          </div>
+
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+            Create Stunning
+            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> Digital Invitations</span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+
+          <p className="text-lg md:text-xl text-foreground-muted mb-8 max-w-2xl mx-auto">
+            Design beautiful wedding, engagement, and event invitations that your guests will love.
+            Share instantly via WhatsApp, track RSVPs, and make your celebration unforgettable.
           </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+            <Link href="/register" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
+              <span>Start Creating</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link href="/ahmad-alia" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
+              <span>View Demo</span>
+              <Heart className="w-5 h-5" />
+            </Link>
+          </div>
+
+          {/* Trust Badges */}
+          <div className="flex items-center justify-center gap-8 text-foreground-muted text-sm">
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success" />
+              <span>No App Required</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success" />
+              <span>Instant Sharing</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Check className="w-4 h-4 text-success" />
+              <span>Malaysian Made</span>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Everything You Need
+            </h2>
+            <p className="text-foreground-muted max-w-xl mx-auto">
+              Create professional digital invitations with all the features your guests will love.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => (
+              <div key={index} className="glass-card p-6 hover:border-primary/30 transition-colors group">
+                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors">
+                  <feature.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-foreground-muted text-sm">{feature.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-24 px-6 bg-background-secondary/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Simple, Affordable Pricing
+            </h2>
+            <p className="text-foreground-muted max-w-xl mx-auto">
+              Choose the perfect plan for your celebration. All prices in Malaysian Ringgit (RM).
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {pricingPlans.map((plan, index) => (
+              <div
+                key={index}
+                className={`glass-card p-6 relative flex flex-col ${plan.popular ? 'border-primary ring-2 ring-primary/30' : ''
+                  }`}
+              >
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-primary text-white text-xs font-semibold">
+                    Most Popular
+                  </div>
+                )}
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold text-white mb-2">{plan.name}</h3>
+                  <p className="text-foreground-muted text-sm mb-4">{plan.description}</p>
+                  <div className="flex items-baseline justify-center gap-1">
+                    <span className="text-foreground-muted">RM</span>
+                    <span className="text-4xl font-bold text-white">{plan.price}</span>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-6 flex-grow">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-center gap-2 text-sm">
+                      <Check className="w-4 h-4 text-success shrink-0" />
+                      <span className="text-foreground-muted">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href={`/login?plan=${plan.name.toLowerCase()}`}
+                  className={`w-full block text-center py-3 rounded-xl font-semibold transition-all mt-auto ${plan.popular
+                    ? 'bg-primary text-white hover:bg-primary/90'
+                    : 'bg-background-tertiary text-white hover:bg-primary/20'
+                    }`}
+                >
+                  Get Started
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section id="testimonials" className="py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Loved by Couples
+            </h2>
+            <p className="text-foreground-muted max-w-xl mx-auto">
+              See what our happy customers have to say about A2ZCreative.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="glass-card p-6">
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 text-yellow-400" fill="currentColor" />
+                  ))}
+                </div>
+                <p className="text-foreground-muted text-sm mb-4">"{testimonial.message}"</p>
+                <div>
+                  <p className="text-white font-semibold">{testimonial.name}</p>
+                  <p className="text-foreground-muted text-sm">{testimonial.event}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 px-6">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="glass-card p-12 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10" />
+            <div className="relative z-10">
+              <Heart className="w-12 h-12 text-primary mx-auto mb-6" />
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Ready to Create Your Invitation?
+              </h2>
+              <p className="text-foreground-muted mb-8 max-w-xl mx-auto">
+                Join thousands of couples who have made their celebration special with A2ZCreative.
+              </p>
+              <Link href="/register" className="btn-primary text-lg px-8 py-4 inline-flex items-center gap-2">
+                <span>Get Started Free</span>
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-6 border-t border-[var(--glass-border)]">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div className="md:col-span-2">
+              <Link href="/" className="flex items-center gap-2 mb-4">
+                <Image src="/logo.png" alt="A2ZCreative" width={32} height={32} className="rounded-lg" />
+                <span className="text-xl font-bold text-white">A2ZCreative</span>
+              </Link>
+              <p className="text-foreground-muted text-sm mb-4 max-w-sm">
+                Create beautiful digital invitations for your special moments. Proudly made in Malaysia.
+              </p>
+              <p className="text-foreground-muted text-sm">
+                Powered by <span className="text-primary font-semibold">A2Z Creative</span>
+              </p>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Product</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#features" className="text-foreground-muted hover:text-white transition-colors">Features</a></li>
+                <li><a href="#pricing" className="text-foreground-muted hover:text-white transition-colors">Pricing</a></li>
+                <li><Link href="/ahmad-alia" className="text-foreground-muted hover:text-white transition-colors">Demo</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-white font-semibold mb-4">Support</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#" className="text-foreground-muted hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#" className="text-foreground-muted hover:text-white transition-colors">Contact Us</a></li>
+                <li><a href="#" className="text-foreground-muted hover:text-white transition-colors">Privacy Policy</a></li>
+              </ul>
+            </div>
+          </div>
+          <div className="pt-8 border-t border-[var(--glass-border)] text-center text-sm text-foreground-muted">
+            © 2026 A2Z Creative. All rights reserved.
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
