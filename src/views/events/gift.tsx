@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -39,8 +40,8 @@ const eWallets = [
     "Setel",
 ];
 
-export default function GiftPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function GiftPage() {
+    const params = useParams(); const id = params?.id as string;
     const [giftType, setGiftType] = useState("bank");
     const [bankDetails, setBankDetails] = useState({
         bankName: "",
@@ -271,4 +272,4 @@ export default function GiftPage({ params }: { params: Promise<{ id: string }> }
     );
 }
 
-export const runtime = 'edge';
+

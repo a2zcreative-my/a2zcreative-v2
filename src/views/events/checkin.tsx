@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -9,8 +10,8 @@ const checkedInGuests = [
     { id: "3", name: "Tan Wei Ming", pax: 3, checkedInAt: "12:18 PM", table: "B-5" },
 ];
 
-export default function CheckInPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function CheckInPage() {
+    const params = useParams(); const id = params?.id as string;
     const [searchQuery, setSearchQuery] = useState("");
     const [showScanner, setShowScanner] = useState(true);
     const [lastScanned, setLastScanned] = useState<{ name: string; pax: number } | null>(null);
@@ -178,4 +179,4 @@ export default function CheckInPage({ params }: { params: Promise<{ id: string }
     );
 }
 
-export const runtime = 'edge';
+

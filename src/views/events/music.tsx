@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -17,8 +18,8 @@ const musicLibrary = [
 
 const categories = ["All", "Wedding", "Birthday", "Corporate", "Cultural"];
 
-export default function MusicPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function MusicPage() {
+    const params = useParams(); const id = params?.id as string;
     const [selectedMusic, setSelectedMusic] = useState<string | null>(null);
     const [musicEnabled, setMusicEnabled] = useState(true);
     const [autoMute, setAutoMute] = useState(true);
@@ -155,4 +156,4 @@ export default function MusicPage({ params }: { params: Promise<{ id: string }> 
     );
 }
 
-export const runtime = 'edge';
+

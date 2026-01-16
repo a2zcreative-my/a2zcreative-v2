@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -7,8 +8,8 @@ const textStyles = ["Heading", "Subheading", "Body", "Caption"];
 const fontFamilies = ["Playfair Display", "Poppins", "Montserrat", "Lora", "Dancing Script"];
 const colors = ["#ffffff", "#f59e0b", "#ec4899", "#22c55e", "#3b82f6", "#8b5cf6"];
 
-export default function BuilderPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function BuilderPage() {
+    const params = useParams(); const id = params?.id as string;
     const [activeTab, setActiveTab] = useState<"text" | "colors" | "photos" | "elements">("text");
     const [selectedElement, setSelectedElement] = useState<string | null>(null);
 
@@ -209,4 +210,4 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
     );
 }
 
-export const runtime = 'edge';
+

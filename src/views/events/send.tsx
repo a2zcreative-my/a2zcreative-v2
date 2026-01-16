@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -12,8 +13,8 @@ const channels = [
     { id: "twitter", name: "Twitter/X", icon: "🐦", description: "Share on Twitter" },
 ];
 
-export default function SendPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function SendPage() {
+    const params = useParams(); const id = params?.id as string;
     const [selectedChannel, setSelectedChannel] = useState<string>("whatsapp");
     const [message, setMessage] = useState(
         "Assalamualaikum! 🌸\n\nAnda dijemput ke Majlis Perkahwinan Ahmad & Alia.\n\nKlik link di bawah untuk maklumat lanjut dan RSVP:"
@@ -187,4 +188,4 @@ export default function SendPage({ params }: { params: Promise<{ id: string }> }
     );
 }
 
-export const runtime = 'edge';
+

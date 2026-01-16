@@ -1,10 +1,11 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
 import { use } from "react";
 
-export default function ReportPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function ReportPage() {
+    const params = useParams(); const id = params?.id as string;
 
     const stats = {
         totalInvited: 200,
@@ -164,4 +165,4 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
     );
 }
 
-export const runtime = 'edge';
+

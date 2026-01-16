@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -11,8 +12,8 @@ const rsvpData = [
     { id: "5", name: "Fatimah binti Osman", email: "fatimah@email.com", status: "pending", pax: 0, timestamp: "Sent", notes: "" },
 ];
 
-export default function RSVPPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function RSVPPage() {
+    const params = useParams(); const id = params?.id as string;
     const [filter, setFilter] = useState<string>("all");
 
     const stats = {
@@ -150,4 +151,4 @@ export default function RSVPPage({ params }: { params: Promise<{ id: string }> }
     );
 }
 
-export const runtime = 'edge';
+

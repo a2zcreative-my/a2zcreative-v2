@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, use, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams , useParams} from "next/navigation";
 import StepIndicator from "@/components/StepIndicator";
 
 const orderDetails = {
@@ -14,8 +14,8 @@ const orderDetails = {
     ],
 };
 
-export default function PaymentPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function PaymentPage() {
+    const params = useParams(); const id = params?.id as string;
     const searchParams = useSearchParams();
     const [isProcessing, setIsProcessing] = useState(false);
     const [promoCode, setPromoCode] = useState("");
@@ -226,4 +226,4 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
     );
 }
 
-export const runtime = 'edge';
+

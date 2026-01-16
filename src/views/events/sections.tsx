@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -15,8 +16,8 @@ const sections = [
     { id: "wishes", name: "Guest Wishes", icon: "💬", description: "Let guests leave messages" },
 ];
 
-export default function SectionsPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function SectionsPage() {
+    const params = useParams(); const id = params?.id as string;
     const [enabledSections, setEnabledSections] = useState<Record<string, boolean>>({
         location: true,
         itinerary: true,
@@ -119,4 +120,4 @@ export default function SectionsPage({ params }: { params: Promise<{ id: string 
     );
 }
 
-export const runtime = 'edge';
+

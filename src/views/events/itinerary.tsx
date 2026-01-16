@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -11,8 +12,8 @@ interface ItineraryItem {
     location: string;
 }
 
-export default function ItineraryPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function ItineraryPage() {
+    const params = useParams(); const id = params?.id as string;
     const [items, setItems] = useState<ItineraryItem[]>([
         { id: "1", time: "11:00", activity: "Guest Arrival", location: "" },
         { id: "2", time: "12:00", activity: "Ceremony Begins", location: "" },
@@ -174,4 +175,4 @@ export default function ItineraryPage({ params }: { params: Promise<{ id: string
     );
 }
 
-export const runtime = 'edge';
+

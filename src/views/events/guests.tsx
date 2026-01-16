@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -14,8 +15,8 @@ const mockGuests = [
 
 const groups = ["All", "VIP", "Family", "Friends", "Colleagues"];
 
-export default function GuestsPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function GuestsPage() {
+    const params = useParams(); const id = params?.id as string;
     const [guests, setGuests] = useState(mockGuests);
     const [selectedGroup, setSelectedGroup] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
@@ -261,4 +262,4 @@ export default function GuestsPage({ params }: { params: Promise<{ id: string }>
     );
 }
 
-export const runtime = 'edge';
+

@@ -1,11 +1,12 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
 import { useState, use } from "react";
 import StepIndicator from "@/components/StepIndicator";
 
-export default function PreviewPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function PreviewPage() {
+    const params = useParams(); const id = params?.id as string;
     const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
 
     return (
@@ -127,4 +128,4 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
     );
 }
 
-export const runtime = 'edge';
+

@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -21,8 +22,8 @@ const templates = [
 
 const categories = ["All", "Wedding", "Birthday", "Corporate", "VIP", "Religious"];
 
-export default function TemplatePage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function TemplatePage() {
+    const params = useParams(); const id = params?.id as string;
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
@@ -120,4 +121,4 @@ export default function TemplatePage({ params }: { params: Promise<{ id: string 
     );
 }
 
-export const runtime = 'edge';
+

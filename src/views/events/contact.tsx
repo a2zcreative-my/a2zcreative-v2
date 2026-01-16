@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -6,8 +7,8 @@ import StepIndicator from "@/components/StepIndicator";
 
 const roles = ["Bride", "Groom", "Father of Bride", "Mother of Bride", "Father of Groom", "Mother of Groom", "Organizer", "Event Coordinator", "Other"];
 
-export default function ContactPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function ContactPage() {
+    const params = useParams(); const id = params?.id as string;
     const [contacts, setContacts] = useState([
         { id: "1", name: "", phone: "", whatsapp: true, role: "" },
     ]);
@@ -148,4 +149,4 @@ export default function ContactPage({ params }: { params: Promise<{ id: string }
     );
 }
 
-export const runtime = 'edge';
+

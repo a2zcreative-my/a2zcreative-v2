@@ -1,3 +1,4 @@
+import { useParams } from 'next/navigation';
 "use client";
 
 import Link from "next/link";
@@ -33,8 +34,8 @@ const backgrounds = [
     { id: "sparkle", name: "Sparkle Effect", type: "animated", premium: true },
 ];
 
-export default function ThemePage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function ThemePage() {
+    const params = useParams(); const id = params?.id as string;
     const [selectedPalette, setSelectedPalette] = useState("gold-elegant");
     const [selectedFont, setSelectedFont] = useState("classic");
     const [selectedBg, setSelectedBg] = useState("gradient");
@@ -156,4 +157,4 @@ export default function ThemePage({ params }: { params: Promise<{ id: string }> 
     );
 }
 
-export const runtime = 'edge';
+
