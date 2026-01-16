@@ -1,8 +1,17 @@
 "use client";
 import { useParams } from 'next/navigation';
 import Link from "next/link";
-import { useState, use } from "react";
+import { useState } from "react";
 import StepIndicator from "@/components/StepIndicator";
+import {
+    Music,
+    VolumeX,
+    Play,
+    Pause,
+    Check,
+    ArrowLeft,
+    ArrowRight,
+} from "lucide-react";
 
 const musicLibrary = [
     { id: "romantic-piano", name: "Romantic Piano", duration: "3:24", category: "Wedding" },
@@ -18,7 +27,8 @@ const musicLibrary = [
 const categories = ["All", "Wedding", "Birthday", "Corporate", "Cultural"];
 
 export default function MusicPage() {
-    const params = useParams(); const id = params?.id as string;
+    const params = useParams();
+    const id = params?.id as string;
     const [selectedMusic, setSelectedMusic] = useState<string | null>(null);
     const [musicEnabled, setMusicEnabled] = useState(true);
     const [autoMute, setAutoMute] = useState(true);
@@ -37,9 +47,13 @@ export default function MusicPage() {
             {/* Header */}
             <div className="max-w-4xl mx-auto mb-8">
                 <Link href={`/events/${id}/theme`} className="text-foreground-muted hover:text-white text-sm flex items-center gap-2 mb-4">
-                    ← Back to Theme
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Theme
                 </Link>
-                <h1 className="text-3xl font-bold text-white mb-2">Add Music 🎵</h1>
+                <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                    Add Music
+                    <Music className="w-8 h-8 text-primary" />
+                </h1>
                 <p className="text-foreground-muted">Add emotional background music to your invitation</p>
             </div>
 
@@ -68,7 +82,9 @@ export default function MusicPage() {
                         <div className="glass-card p-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-xl">🔇</span>
+                                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                                        <VolumeX className="w-5 h-5 text-primary" />
+                                    </div>
                                     <div>
                                         <p className="text-white font-medium">Auto-mute on open</p>
                                         <p className="text-xs text-foreground-muted">Best UX practice - guests tap to unmute</p>
@@ -124,7 +140,11 @@ export default function MusicPage() {
                                                 }}
                                                 className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors"
                                             >
-                                                {isPlaying === track.id ? "⏸" : "▶️"}
+                                                {isPlaying === track.id ? (
+                                                    <Pause className="w-4 h-4" />
+                                                ) : (
+                                                    <Play className="w-4 h-4 ml-0.5" />
+                                                )}
                                             </button>
                                             <div>
                                                 <p className="text-white font-medium">{track.name}</p>
@@ -132,7 +152,10 @@ export default function MusicPage() {
                                             </div>
                                         </div>
                                         {selectedMusic === track.id && (
-                                            <span className="text-primary text-sm font-medium">✓ Selected</span>
+                                            <span className="text-primary text-sm font-medium flex items-center gap-1">
+                                                <Check className="w-4 h-4" />
+                                                Selected
+                                            </span>
                                         )}
                                     </div>
                                 ))}
@@ -143,16 +166,16 @@ export default function MusicPage() {
 
                 {/* Navigation */}
                 <div className="flex gap-4">
-                    <Link href={`/events/${id}/theme`} className="btn-secondary flex-1 text-center">
-                        ← Back
+                    <Link href={`/events/${id}/theme`} className="btn-secondary flex-1 text-center flex items-center justify-center gap-2">
+                        <ArrowLeft className="w-4 h-4" />
+                        Back
                     </Link>
-                    <Link href={`/events/${id}/sections`} className="btn-primary flex-1 text-center">
-                        Continue to Sections →
+                    <Link href={`/events/${id}/sections`} className="btn-primary flex-1 text-center flex items-center justify-center gap-2">
+                        Continue to Sections
+                        <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </div>
         </div>
     );
 }
-
-

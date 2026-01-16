@@ -1,8 +1,17 @@
 "use client";
 import { useParams } from 'next/navigation';
 import Link from "next/link";
-import { useState, use } from "react";
+import { useState } from "react";
 import StepIndicator from "@/components/StepIndicator";
+import {
+    Calendar,
+    GripVertical,
+    Trash2,
+    Plus,
+    Lightbulb,
+    ArrowLeft,
+    ArrowRight,
+} from "lucide-react";
 
 interface ItineraryItem {
     id: string;
@@ -12,7 +21,8 @@ interface ItineraryItem {
 }
 
 export default function ItineraryPage() {
-    const params = useParams(); const id = params?.id as string;
+    const params = useParams();
+    const id = params?.id as string;
     const [items, setItems] = useState<ItineraryItem[]>([
         { id: "1", time: "11:00", activity: "Guest Arrival", location: "" },
         { id: "2", time: "12:00", activity: "Ceremony Begins", location: "" },
@@ -63,9 +73,13 @@ export default function ItineraryPage() {
             {/* Header */}
             <div className="max-w-3xl mx-auto mb-8">
                 <Link href={`/events/${id}/contact`} className="text-foreground-muted hover:text-white text-sm flex items-center gap-2 mb-4">
-                    ← Back to Contact
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Contact
                 </Link>
-                <h1 className="text-3xl font-bold text-white mb-2">Itinerary / Tentative 🗓️</h1>
+                <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                    Itinerary / Tentative
+                    <Calendar className="w-8 h-8 text-primary" />
+                </h1>
                 <p className="text-foreground-muted">Create a timeline for your event</p>
             </div>
 
@@ -83,7 +97,7 @@ export default function ItineraryPage() {
                         <div className="flex items-start gap-4">
                             {/* Drag Handle */}
                             <div className="text-foreground-muted mt-3 cursor-grab">
-                                ⋮⋮
+                                <GripVertical className="w-5 h-5" />
                             </div>
 
                             {/* Timeline Indicator */}
@@ -135,7 +149,7 @@ export default function ItineraryPage() {
                                     onClick={() => removeItem(item.id)}
                                     className="text-foreground-muted hover:text-error mt-3"
                                 >
-                                    🗑️
+                                    <Trash2 className="w-5 h-5" />
                                 </button>
                             )}
                         </div>
@@ -147,13 +161,16 @@ export default function ItineraryPage() {
                     onClick={addItem}
                     className="w-full p-4 rounded-xl border-2 border-dashed border-[var(--glass-border)] text-foreground-muted hover:text-white hover:border-primary transition-colors flex items-center justify-center gap-2"
                 >
-                    ➕ Add Timeline Item
+                    <Plus className="w-5 h-5" />
+                    Add Timeline Item
                 </button>
 
                 {/* Tip */}
                 <div className="glass-card p-4 border-info/30 bg-info/5">
                     <div className="flex items-center gap-3">
-                        <span className="text-xl">💡</span>
+                        <div className="w-10 h-10 rounded-xl bg-info/20 flex items-center justify-center">
+                            <Lightbulb className="w-5 h-5 text-info" />
+                        </div>
                         <p className="text-sm text-foreground-muted">
                             <strong className="text-white">Tip:</strong> Drag items to reorder your timeline
                         </p>
@@ -162,16 +179,16 @@ export default function ItineraryPage() {
 
                 {/* Navigation */}
                 <div className="flex gap-4 pt-4">
-                    <Link href={`/events/${id}/contact`} className="btn-secondary flex-1 text-center">
-                        ← Back
+                    <Link href={`/events/${id}/contact`} className="btn-secondary flex-1 text-center flex items-center justify-center gap-2">
+                        <ArrowLeft className="w-4 h-4" />
+                        Back
                     </Link>
-                    <Link href={`/events/${id}/gift`} className="btn-primary flex-1 text-center">
-                        Continue to Gift Details →
+                    <Link href={`/events/${id}/gift`} className="btn-primary flex-1 text-center flex items-center justify-center gap-2">
+                        Continue to Gift Details
+                        <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </div>
         </div>
     );
 }
-
-

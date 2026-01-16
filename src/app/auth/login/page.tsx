@@ -56,14 +56,14 @@ function LoginForm() {
                 {/* Content - Centered */}
                 <div className="relative z-10 flex flex-col items-center justify-center w-full p-12 text-center">
                     <div className="mb-8">
-                        <div className="flex items-center justify-center gap-4 mb-6">
+                        <Link href="/" className="flex items-center justify-center gap-4 mb-6 hover:opacity-80 transition-opacity">
                             <div className="w-16 h-16 rounded-2xl overflow-hidden shrink-0">
                                 <Image src="/logo.png" alt="A2ZCreative" width={64} height={64} />
                             </div>
                             <h1 className="text-5xl font-bold text-white">
                                 A2ZCreative
                             </h1>
-                        </div>
+                        </Link>
                         <p className="text-xl text-foreground-muted max-w-md mx-auto">
                             Join thousands of happy couples creating beautiful digital invitations for their special moments.
                         </p>
@@ -112,14 +112,14 @@ function LoginForm() {
                     <div className="w-full max-w-md space-y-8 animate-fade-in">
                         {/* Mobile Logo */}
                         <div className="lg:hidden text-center mb-8">
-                            <div className="flex items-center justify-center gap-3 mb-4">
+                            <Link href="/" className="flex items-center justify-center gap-3 mb-4 hover:opacity-80 transition-opacity">
                                 <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0">
                                     <Image src="/logo.png" alt="A2ZCreative" width={48} height={48} />
                                 </div>
                                 <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                                     A2ZCreative
                                 </h1>
-                            </div>
+                            </Link>
                         </div>
 
                         {/* Header */}

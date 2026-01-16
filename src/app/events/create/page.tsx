@@ -3,54 +3,115 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
+import {
+    Cake,
+    PartyPopper,
+    Moon,
+    Home,
+    Users,
+    Gift,
+    Heart,
+    GraduationCap,
+    Handshake,
+    UtensilsCrossed,
+    BookOpen,
+    Baby,
+    Gem,
+    Church,
+    Building2,
+    Rocket,
+    Wine,
+    BookMarked,
+    HeartHandshake,
+    Crown,
+    Sparkles,
+    Mic,
+    Landmark,
+    Lock,
+    Trophy,
+    ArrowLeft,
+    ArrowRight,
+    type LucideIcon,
+} from "lucide-react";
 
-const eventTypes: Record<string, { title: string; icon: string; events: { name: string; icon: string }[] }> = {
+// Map event names to Lucide icons
+const iconMap: Record<string, LucideIcon> = {
+    "Birthday Party (Kids)": Cake,
+    "Birthday Party (Adults)": PartyPopper,
+    "Aqiqah / Doa Selamat": Moon,
+    "Housewarming": Home,
+    "Small Family Gathering": Users,
+    "Simple Surprise Party": Gift,
+    "Engagement / Nikah": Heart,
+    "Graduation Celebration": GraduationCap,
+    "Family Reunion": Handshake,
+    "Kenduri Kecil": UtensilsCrossed,
+    "Religious Talks / Ceramah": BookOpen,
+    "Baby Shower": Baby,
+    "Wedding Reception": Church,
+    "Corporate Event": Building2,
+    "Product Launch": Rocket,
+    "Annual Dinner": Wine,
+    "Seminar / Workshop": BookMarked,
+    "Charity Gala": HeartHandshake,
+    "VIP / Royal-style Wedding": Crown,
+    "Private Gala Dinner": Sparkles,
+    "Conference / Summit": Mic,
+    "Government / NGO Event": Landmark,
+    "Invite-Only Exclusive Event": Lock,
+    "Award Ceremony": Trophy,
+};
+
+const planIcons: Record<string, LucideIcon> = {
+    starter: Cake,
+    basic: Heart,
+    premium: Gem,
+    exclusive: Crown,
+};
+
+const eventTypes: Record<string, { title: string; events: string[] }> = {
     starter: {
         title: "Starter Pack Events",
-        icon: "🎂",
         events: [
-            { name: "Birthday Party (Kids)", icon: "🎈" },
-            { name: "Birthday Party (Adults)", icon: "🎉" },
-            { name: "Aqiqah / Doa Selamat", icon: "🌙" },
-            { name: "Housewarming", icon: "🏠" },
-            { name: "Small Family Gathering", icon: "👨‍👩‍👧‍👦" },
-            { name: "Simple Surprise Party", icon: "🎁" },
+            "Birthday Party (Kids)",
+            "Birthday Party (Adults)",
+            "Aqiqah / Doa Selamat",
+            "Housewarming",
+            "Small Family Gathering",
+            "Simple Surprise Party",
         ],
     },
     basic: {
         title: "Basic Pack Events",
-        icon: "💝",
         events: [
-            { name: "Engagement / Nikah", icon: "💍" },
-            { name: "Graduation Celebration", icon: "🎓" },
-            { name: "Family Reunion", icon: "🤝" },
-            { name: "Kenduri Kecil", icon: "🍽️" },
-            { name: "Religious Talks / Ceramah", icon: "📖" },
-            { name: "Baby Shower", icon: "👶" },
+            "Engagement / Nikah",
+            "Graduation Celebration",
+            "Family Reunion",
+            "Kenduri Kecil",
+            "Religious Talks / Ceramah",
+            "Baby Shower",
         ],
     },
     premium: {
         title: "Premium Pack Events",
-        icon: "💎",
         events: [
-            { name: "Wedding Reception", icon: "💒" },
-            { name: "Corporate Event", icon: "🏢" },
-            { name: "Product Launch", icon: "🚀" },
-            { name: "Annual Dinner", icon: "🍷" },
-            { name: "Seminar / Workshop", icon: "📚" },
-            { name: "Charity Gala", icon: "❤️" },
+            "Wedding Reception",
+            "Corporate Event",
+            "Product Launch",
+            "Annual Dinner",
+            "Seminar / Workshop",
+            "Charity Gala",
         ],
     },
     exclusive: {
         title: "Exclusive Plan Events",
-        icon: "👑",
         events: [
-            { name: "VIP / Royal-style Wedding", icon: "👑" },
-            { name: "Private Gala Dinner", icon: "✨" },
-            { name: "Conference / Summit", icon: "🎤" },
-            { name: "Government / NGO Event", icon: "🏛️" },
-            { name: "Invite-Only Exclusive Event", icon: "🔒" },
-            { name: "Award Ceremony", icon: "🏆" },
+            "VIP / Royal-style Wedding",
+            "Private Gala Dinner",
+            "Conference / Summit",
+            "Government / NGO Event",
+            "Invite-Only Exclusive Event",
+            "Award Ceremony",
         ],
     },
 };
@@ -61,6 +122,7 @@ function CreateEventContent() {
     const [selectedType, setSelectedType] = useState<string | null>(null);
 
     const planData = eventTypes[plan] || eventTypes.starter;
+    const PlanIcon = planIcons[plan] || Cake;
 
     return (
         <div className="min-h-screen bg-background py-12 px-4">
@@ -88,10 +150,13 @@ function CreateEventContent() {
             {/* Header */}
             <div className="text-center mb-10 animate-fade-in">
                 <Link href="/plans" className="inline-flex items-center gap-2 text-foreground-muted hover:text-white mb-4">
-                    ← Change Plan
+                    <ArrowLeft className="w-4 h-4" />
+                    Change Plan
                 </Link>
                 <div className="flex items-center justify-center gap-3 mb-3">
-                    <span className="text-4xl">{planData.icon}</span>
+                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                        <PlanIcon className="w-6 h-6 text-primary" />
+                    </div>
                     <h1 className="text-3xl md:text-4xl font-bold text-white">
                         {planData.title}
                     </h1>
@@ -103,20 +168,25 @@ function CreateEventContent() {
 
             {/* Event Types Grid */}
             <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-4">
-                {planData.events.map((event, index) => (
-                    <div
-                        key={event.name}
-                        onClick={() => setSelectedType(event.name)}
-                        className={`glass-card p-6 cursor-pointer transition-all duration-300 animate-fade-in text-center ${selectedType === event.name
+                {planData.events.map((eventName, index) => {
+                    const EventIcon = iconMap[eventName] || Gift;
+                    return (
+                        <div
+                            key={eventName}
+                            onClick={() => setSelectedType(eventName)}
+                            className={`glass-card p-6 cursor-pointer transition-all duration-300 animate-fade-in text-center ${selectedType === eventName
                                 ? "ring-2 ring-primary shadow-lg shadow-primary/20"
                                 : "hover:border-white/20"
-                            }`}
-                        style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                        <div className="text-5xl mb-4">{event.icon}</div>
-                        <h3 className="font-semibold text-white">{event.name}</h3>
-                    </div>
-                ))}
+                                }`}
+                            style={{ animationDelay: `${index * 50}ms` }}
+                        >
+                            <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                                <EventIcon className="w-8 h-8 text-primary" />
+                            </div>
+                            <h3 className="font-semibold text-white">{eventName}</h3>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Continue Button */}
@@ -129,9 +199,10 @@ function CreateEventContent() {
                         </div>
                         <Link
                             href={`/events/create/details?plan=${plan}&type=${encodeURIComponent(selectedType)}`}
-                            className="btn-primary"
+                            className="btn-primary flex items-center gap-2"
                         >
-                            Continue to Details →
+                            Continue to Details
+                            <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
                 </div>

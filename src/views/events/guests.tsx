@@ -1,8 +1,18 @@
 "use client";
 import { useParams } from 'next/navigation';
 import Link from "next/link";
-import { useState, use } from "react";
+import { useState } from "react";
 import StepIndicator from "@/components/StepIndicator";
+import {
+    Users,
+    Upload,
+    UserPlus,
+    Pencil,
+    Trash2,
+    Mail,
+    ArrowLeft,
+    ArrowRight,
+} from "lucide-react";
 
 const mockGuests = [
     { id: "1", name: "Ahmad bin Ali", email: "ahmad@email.com", phone: "+60123456789", status: "confirmed", pax: 4 },
@@ -15,7 +25,8 @@ const mockGuests = [
 const groups = ["All", "VIP", "Family", "Friends", "Colleagues"];
 
 export default function GuestsPage() {
-    const params = useParams(); const id = params?.id as string;
+    const params = useParams();
+    const id = params?.id as string;
     const [guests, setGuests] = useState(mockGuests);
     const [selectedGroup, setSelectedGroup] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
@@ -51,7 +62,8 @@ export default function GuestsPage() {
             {/* Header */}
             <div className="max-w-6xl mx-auto mb-8">
                 <Link href={`/events/${id}/gift`} className="text-foreground-muted hover:text-white text-sm flex items-center gap-2 mb-4">
-                    ← Back to Gift Details
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Gift Details
                 </Link>
                 <div className="flex items-center justify-between">
                     <div>
@@ -59,11 +71,13 @@ export default function GuestsPage() {
                         <p className="text-foreground-muted">Manage your event attendees</p>
                     </div>
                     <div className="flex gap-2">
-                        <button className="btn-secondary">
-                            📤 Import CSV
+                        <button className="btn-secondary flex items-center gap-2">
+                            <Upload className="w-4 h-4" />
+                            Import CSV
                         </button>
-                        <button onClick={() => setShowAddModal(true)} className="btn-primary">
-                            ➕ Add Guest
+                        <button onClick={() => setShowAddModal(true)} className="btn-primary flex items-center gap-2">
+                            <UserPlus className="w-4 h-4" />
+                            Add Guest
                         </button>
                     </div>
                 </div>
@@ -179,8 +193,12 @@ export default function GuestsPage() {
                                 </td>
                                 <td className="p-4">
                                     <div className="flex gap-2">
-                                        <button className="text-foreground-muted hover:text-white text-sm">✏️</button>
-                                        <button className="text-foreground-muted hover:text-error text-sm">🗑️</button>
+                                        <button className="text-foreground-muted hover:text-white">
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                        <button className="text-foreground-muted hover:text-error">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -197,11 +215,13 @@ export default function GuestsPage() {
                             {selectedGuests.length} guest(s) selected
                         </p>
                         <div className="flex gap-2">
-                            <button className="btn-secondary text-sm">
-                                📧 Send Invite
+                            <button className="btn-secondary text-sm flex items-center gap-2">
+                                <Mail className="w-4 h-4" />
+                                Send Invite
                             </button>
-                            <button className="btn-secondary text-sm text-error">
-                                🗑️ Delete
+                            <button className="btn-secondary text-sm text-error flex items-center gap-2">
+                                <Trash2 className="w-4 h-4" />
+                                Delete
                             </button>
                         </div>
                     </div>
@@ -211,8 +231,9 @@ export default function GuestsPage() {
             {/* Continue Button (when no batch selection) */}
             {selectedGuests.length === 0 && (
                 <div className="max-w-6xl mx-auto mt-6 flex justify-end">
-                    <Link href={`/events/${id}/preview`} className="btn-primary">
-                        Continue to Preview →
+                    <Link href={`/events/${id}/preview`} className="btn-primary flex items-center gap-2">
+                        Continue to Preview
+                        <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             )}
@@ -260,5 +281,3 @@ export default function GuestsPage() {
         </div>
     );
 }
-
-

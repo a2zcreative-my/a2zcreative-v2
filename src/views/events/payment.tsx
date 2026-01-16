@@ -1,8 +1,18 @@
 "use client";
 import Link from "next/link";
-import { useState, use, useEffect } from "react";
-import { useSearchParams , useParams} from "next/navigation";
+import { useState, useEffect } from "react";
+import { useSearchParams, useParams } from "next/navigation";
 import StepIndicator from "@/components/StepIndicator";
+import {
+    CreditCard,
+    Landmark,
+    Smartphone,
+    AlertTriangle,
+    FlaskConical,
+    Lock,
+    Loader2,
+    ArrowLeft,
+} from "lucide-react";
 
 const orderDetails = {
     plan: "Premium Pack",
@@ -14,7 +24,8 @@ const orderDetails = {
 };
 
 export default function PaymentPage() {
-    const params = useParams(); const id = params?.id as string;
+    const params = useParams();
+    const id = params?.id as string;
     const searchParams = useSearchParams();
     const [isProcessing, setIsProcessing] = useState(false);
     const [promoCode, setPromoCode] = useState("");
@@ -78,7 +89,8 @@ export default function PaymentPage() {
             {/* Header */}
             <div className="max-w-4xl mx-auto mb-8">
                 <Link href={`/events/${id}/preview`} className="text-foreground-muted hover:text-white text-sm flex items-center gap-2 mb-4">
-                    ← Back to Preview
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Preview
                 </Link>
                 <h1 className="text-3xl font-bold text-white mb-2">Complete Payment</h1>
                 <p className="text-foreground-muted">Pay securely via Billplz</p>
@@ -89,7 +101,7 @@ export default function PaymentPage() {
                 <div className="max-w-4xl mx-auto mb-6">
                     <div className="glass-card p-4 border-error/30 bg-error/10">
                         <div className="flex items-center gap-3">
-                            <span className="text-xl">⚠️</span>
+                            <AlertTriangle className="w-5 h-5 text-error" />
                             <p className="text-error">{error}</p>
                         </div>
                     </div>
@@ -103,7 +115,7 @@ export default function PaymentPage() {
                     <div className="glass-card p-6">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center">
-                                <span className="text-2xl">💳</span>
+                                <CreditCard className="w-6 h-6 text-primary" />
                             </div>
                             <div>
                                 <h2 className="text-lg font-semibold text-white">Pay with Billplz</h2>
@@ -112,16 +124,22 @@ export default function PaymentPage() {
                         </div>
                         <div className="grid grid-cols-3 gap-3">
                             <div className="p-3 bg-background-tertiary rounded-lg text-center">
-                                <span className="text-xl">🏦</span>
-                                <p className="text-xs text-foreground-muted mt-1">FPX</p>
+                                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mx-auto mb-1">
+                                    <Landmark className="w-4 h-4 text-primary" />
+                                </div>
+                                <p className="text-xs text-foreground-muted">FPX</p>
                             </div>
                             <div className="p-3 bg-background-tertiary rounded-lg text-center">
-                                <span className="text-xl">💳</span>
-                                <p className="text-xs text-foreground-muted mt-1">Card</p>
+                                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mx-auto mb-1">
+                                    <CreditCard className="w-4 h-4 text-primary" />
+                                </div>
+                                <p className="text-xs text-foreground-muted">Card</p>
                             </div>
                             <div className="p-3 bg-background-tertiary rounded-lg text-center">
-                                <span className="text-xl">📱</span>
-                                <p className="text-xs text-foreground-muted mt-1">E-Wallet</p>
+                                <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center mx-auto mb-1">
+                                    <Smartphone className="w-4 h-4 text-primary" />
+                                </div>
+                                <p className="text-xs text-foreground-muted">E-Wallet</p>
                             </div>
                         </div>
                     </div>
@@ -144,7 +162,9 @@ export default function PaymentPage() {
                     {/* Sandbox Notice */}
                     <div className="glass-card p-4 border-warning/30 bg-warning/10">
                         <div className="flex items-center gap-3">
-                            <span className="text-xl">🧪</span>
+                            <div className="w-10 h-10 rounded-xl bg-warning/20 flex items-center justify-center">
+                                <FlaskConical className="w-5 h-5 text-warning" />
+                            </div>
                             <div>
                                 <p className="text-warning font-medium">Sandbox Mode</p>
                                 <p className="text-xs text-foreground-muted">This is a test payment. No real money will be charged.</p>
@@ -199,7 +219,7 @@ export default function PaymentPage() {
                         >
                             {isProcessing ? (
                                 <span className="flex items-center justify-center gap-2">
-                                    <span className="animate-spin">⏳</span>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                     Connecting to Billplz...
                                 </span>
                             ) : (
@@ -208,8 +228,9 @@ export default function PaymentPage() {
                         </button>
 
                         {/* Security Note */}
-                        <p className="text-xs text-foreground-muted text-center mt-4">
-                            🔒 Secured by Billplz. Your payment is safe.
+                        <p className="text-xs text-foreground-muted text-center mt-4 flex items-center justify-center gap-1">
+                            <Lock className="w-3 h-3" />
+                            Secured by Billplz. Your payment is safe.
                         </p>
 
                         {/* Billplz Logo */}
@@ -224,5 +245,3 @@ export default function PaymentPage() {
         </div>
     );
 }
-
-

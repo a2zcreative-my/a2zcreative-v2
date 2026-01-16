@@ -2,6 +2,24 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import {
+    Cake,
+    Heart,
+    Gem,
+    Crown,
+    Check,
+    X,
+    ArrowLeft,
+    ArrowRight,
+} from "lucide-react";
+import { type LucideIcon } from "lucide-react";
+
+const planIcons: Record<string, LucideIcon> = {
+    starter: Cake,
+    basic: Heart,
+    premium: Gem,
+    exclusive: Crown,
+};
 
 const plans = [
     {
@@ -90,7 +108,8 @@ export default function PlansPage() {
             {/* Header */}
             <div className="text-center mb-12 animate-fade-in">
                 <Link href="/auth/login" className="inline-flex items-center gap-2 text-foreground-muted hover:text-white mb-6">
-                    ← Back to Login
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Login
                 </Link>
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                     Choose Your Plan
@@ -102,91 +121,98 @@ export default function PlansPage() {
 
             {/* Plans Grid */}
             <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {plans.map((plan, index) => (
-                    <div
-                        key={plan.id}
-                        onClick={() => setSelectedPlan(plan.id)}
-                        className={`relative glass-card p-6 cursor-pointer transition-all duration-300 animate-fade-in ${selectedPlan === plan.id
-                            ? `ring-2 ring-${plan.color} shadow-lg shadow-${plan.color}/20`
-                            : "hover:border-white/20"
-                            }`}
-                        style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                        {/* Popular Badge */}
-                        {plan.popular && (
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                <span className="bg-basic text-white text-xs font-bold px-3 py-1 rounded-full">
-                                    POPULAR
-                                </span>
-                            </div>
-                        )}
-
-                        {/* Plan Header */}
-                        <div className="text-center mb-6">
-                            <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center text-3xl mb-4`}>
-                                {plan.id === "starter" && "🎂"}
-                                {plan.id === "basic" && "💝"}
-                                {plan.id === "premium" && "💎"}
-                                {plan.id === "exclusive" && "👑"}
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
-                            <p className="text-sm text-foreground-muted italic">&quot;{plan.tagline}&quot;</p>
-                        </div>
-
-                        {/* Price */}
-                        <div className="text-center mb-6">
-                            <span className={`text-4xl font-bold bg-gradient-to-r ${plan.gradient} bg-clip-text text-transparent`}>
-                                {plan.price}
-                            </span>
-                            <span className="text-sm text-foreground-muted ml-1">{plan.priceNote}</span>
-                        </div>
-
-                        {/* Suitable Events */}
-                        <div className="mb-6">
-                            <p className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2">
-                                Perfect for:
-                            </p>
-                            <div className="flex flex-wrap gap-1">
-                                {plan.events.slice(0, 3).map((event) => (
-                                    <span key={event} className="text-xs bg-background-tertiary text-foreground-muted px-2 py-1 rounded-lg">
-                                        {event}
-                                    </span>
-                                ))}
-                                {plan.events.length > 3 && (
-                                    <span className="text-xs text-foreground-muted px-2 py-1">
-                                        +{plan.events.length - 3} more
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Features */}
-                        <div className="space-y-2 mb-6">
-                            {plan.features.map((feature) => (
-                                <div key={feature} className="flex items-start gap-2 text-sm">
-                                    <span className="text-success mt-0.5">✓</span>
-                                    <span className="text-foreground">{feature}</span>
-                                </div>
-                            ))}
-                            {plan.notIncluded.slice(0, 2).map((feature) => (
-                                <div key={feature} className="flex items-start gap-2 text-sm">
-                                    <span className="text-foreground-muted mt-0.5">✗</span>
-                                    <span className="text-foreground-muted">{feature}</span>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Select Button */}
-                        <button
-                            className={`w-full py-3 rounded-xl font-semibold transition-all ${selectedPlan === plan.id
-                                ? `bg-gradient-to-r ${plan.gradient} text-white`
-                                : "bg-background-tertiary text-foreground-muted hover:text-white"
+                {plans.map((plan, index) => {
+                    const PlanIcon = planIcons[plan.id] || Cake;
+                    return (
+                        <div
+                            key={plan.id}
+                            onClick={() => setSelectedPlan(plan.id)}
+                            className={`relative glass-card p-6 cursor-pointer transition-all duration-300 animate-fade-in flex flex-col h-full ${selectedPlan === plan.id
+                                ? `ring-2 ring-${plan.color} shadow-lg shadow-${plan.color}/20`
+                                : "hover:border-white/20"
                                 }`}
+                            style={{ animationDelay: `${index * 100}ms` }}
                         >
-                            {selectedPlan === plan.id ? "✓ Selected" : "Select Plan"}
-                        </button>
-                    </div>
-                ))}
+                            {/* Popular Badge */}
+                            {plan.popular && (
+                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                    <span className="bg-basic text-white text-xs font-bold px-3 py-1 rounded-full">
+                                        POPULAR
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Plan Header */}
+                            <div className="text-center mb-6">
+                                <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center mb-4`}>
+                                    <PlanIcon className="w-8 h-8 text-white" />
+                                </div>
+                                <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
+                                <p className="text-sm text-foreground-muted italic">&quot;{plan.tagline}&quot;</p>
+                            </div>
+
+                            {/* Price */}
+                            <div className="text-center mb-6">
+                                <span className={`text-4xl font-bold bg-gradient-to-r ${plan.gradient} bg-clip-text text-transparent`}>
+                                    {plan.price}
+                                </span>
+                                <span className="text-sm text-foreground-muted ml-1">{plan.priceNote}</span>
+                            </div>
+
+                            {/* Suitable Events */}
+                            <div className="mb-6">
+                                <p className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2">
+                                    Perfect for:
+                                </p>
+                                <div className="flex flex-wrap gap-1">
+                                    {plan.events.slice(0, 3).map((event) => (
+                                        <span key={event} className="text-xs bg-background-tertiary text-foreground-muted px-2 py-1 rounded-lg">
+                                            {event}
+                                        </span>
+                                    ))}
+                                    {plan.events.length > 3 && (
+                                        <span className="text-xs text-foreground-muted px-2 py-1">
+                                            +{plan.events.length - 3} more
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Features */}
+                            <div className="space-y-2 mb-6 flex-1">
+                                {plan.features.map((feature) => (
+                                    <div key={feature} className="flex items-start gap-2 text-sm">
+                                        <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
+                                        <span className="text-foreground">{feature}</span>
+                                    </div>
+                                ))}
+                                {plan.notIncluded.slice(0, 2).map((feature) => (
+                                    <div key={feature} className="flex items-start gap-2 text-sm">
+                                        <X className="w-4 h-4 text-foreground-muted mt-0.5 shrink-0" />
+                                        <span className="text-foreground-muted">{feature}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Select Button */}
+                            <button
+                                className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${selectedPlan === plan.id
+                                    ? `bg-gradient-to-r ${plan.gradient} text-white`
+                                    : "bg-background-tertiary text-foreground-muted hover:text-white"
+                                    }`}
+                            >
+                                {selectedPlan === plan.id ? (
+                                    <>
+                                        <Check className="w-4 h-4" />
+                                        Selected
+                                    </>
+                                ) : (
+                                    "Select Plan"
+                                )}
+                            </button>
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Continue Button */}
@@ -203,9 +229,10 @@ export default function PlansPage() {
                         </div>
                         <Link
                             href={`/events/create?plan=${selectedPlan}`}
-                            className="btn-primary"
+                            className="btn-primary flex items-center gap-2"
                         >
-                            Continue to Create Event →
+                            Continue to Create Event
+                            <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
                 </div>

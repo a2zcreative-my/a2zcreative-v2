@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+    PlusCircle,
+    Eye,
+    Pencil,
+    MoreVertical,
+    AlertTriangle,
+    Inbox,
+} from "lucide-react";
 
 interface Event {
     id: string;
@@ -68,7 +76,8 @@ export default function EventsPage() {
                         <p className="text-foreground-muted">Manage all your events in one place</p>
                     </div>
                     <Link href="/plans" className="btn-primary flex items-center gap-2">
-                        ✨ Create New Event
+                        <PlusCircle className="w-5 h-5" />
+                        Create New Event
                     </Link>
                 </div>
 
@@ -110,7 +119,9 @@ export default function EventsPage() {
                 {/* Error State */}
                 {error && !loading && (
                     <div className="glass-card p-12 text-center border-red-500/30">
-                        <div className="text-5xl mb-4">⚠️</div>
+                        <div className="w-16 h-16 rounded-full bg-error/20 flex items-center justify-center mx-auto mb-4">
+                            <AlertTriangle className="w-8 h-8 text-error" />
+                        </div>
                         <h3 className="text-xl font-semibold text-white mb-2">Error Loading Events</h3>
                         <p className="text-foreground-muted">{error}</p>
                     </div>
@@ -152,14 +163,16 @@ export default function EventsPage() {
 
                                 {/* Actions */}
                                 <div className="p-4 pt-0 flex gap-2">
-                                    <Link href={`/events/${event.id}/preview`} className="flex-1 btn-secondary text-center text-sm py-2">
-                                        👁️ View
+                                    <Link href={`/events/${event.id}/preview`} className="flex-1 btn-secondary text-center text-sm py-2 flex items-center justify-center gap-2">
+                                        <Eye className="w-4 h-4" />
+                                        View
                                     </Link>
-                                    <Link href={`/events/${event.id}/builder`} className="flex-1 btn-secondary text-center text-sm py-2">
-                                        ✏️ Edit
+                                    <Link href={`/events/${event.id}/builder`} className="flex-1 btn-secondary text-center text-sm py-2 flex items-center justify-center gap-2">
+                                        <Pencil className="w-4 h-4" />
+                                        Edit
                                     </Link>
                                     <button className="btn-secondary text-sm py-2 px-3">
-                                        ⋮
+                                        <MoreVertical className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
@@ -170,12 +183,15 @@ export default function EventsPage() {
                 {/* Empty State */}
                 {!loading && !error && filteredEvents.length === 0 && (
                     <div className="glass-card p-12 text-center">
-                        <div className="text-5xl mb-4">📭</div>
+                        <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                            <Inbox className="w-8 h-8 text-primary" />
+                        </div>
                         <h3 className="text-xl font-semibold text-white mb-2">No Events Found</h3>
                         <p className="text-foreground-muted mb-6">
                             {searchQuery ? "Try a different search term" : "Create your first event to get started"}
                         </p>
-                        <Link href="/plans" className="btn-primary">
+                        <Link href="/plans" className="btn-primary inline-flex items-center gap-2">
+                            <PlusCircle className="w-5 h-5" />
                             Create Event
                         </Link>
                     </div>

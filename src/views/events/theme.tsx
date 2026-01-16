@@ -1,8 +1,29 @@
 "use client";
 import { useParams } from 'next/navigation';
 import Link from "next/link";
-import { useState, use } from "react";
+import { useState } from "react";
 import StepIndicator from "@/components/StepIndicator";
+import {
+    Palette,
+    PenTool,
+    Image,
+    Square,
+    Sparkles,
+    Star,
+    ArrowLeft,
+    ArrowRight,
+    Flower2,
+    type LucideIcon,
+} from "lucide-react";
+
+const backgroundIcons: Record<string, LucideIcon> = {
+    solid: Square,
+    gradient: Palette,
+    pattern: Image,
+    floral: Flower2,
+    particles: Sparkles,
+    sparkle: Star,
+};
 
 const colorPalettes = [
     { id: "gold-elegant", name: "Gold Elegant", colors: ["#D4AF37", "#1a1a24", "#ffffff", "#f5f5dc"] },
@@ -34,7 +55,8 @@ const backgrounds = [
 ];
 
 export default function ThemePage() {
-    const params = useParams(); const id = params?.id as string;
+    const params = useParams();
+    const id = params?.id as string;
     const [selectedPalette, setSelectedPalette] = useState("gold-elegant");
     const [selectedFont, setSelectedFont] = useState("classic");
     const [selectedBg, setSelectedBg] = useState("gradient");
@@ -47,7 +69,8 @@ export default function ThemePage() {
             {/* Header */}
             <div className="max-w-4xl mx-auto mb-8">
                 <Link href={`/events/${id}/template`} className="text-foreground-muted hover:text-white text-sm flex items-center gap-2 mb-4">
-                    ← Back to Templates
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Templates
                 </Link>
                 <h1 className="text-3xl font-bold text-white mb-2">Customize Theme</h1>
                 <p className="text-foreground-muted">Personalize your invitation with preset styles</p>
@@ -56,7 +79,10 @@ export default function ThemePage() {
             <div className="max-w-4xl mx-auto space-y-8">
                 {/* Color Palette */}
                 <div className="glass-card p-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">🎨 Color Palette</h2>
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Palette className="w-5 h-5 text-primary" />
+                        Color Palette
+                    </h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {colorPalettes.map((palette) => (
                             <button
@@ -84,7 +110,10 @@ export default function ThemePage() {
 
                 {/* Font Style */}
                 <div className="glass-card p-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">✒️ Font Style</h2>
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <PenTool className="w-5 h-5 text-primary" />
+                        Font Style
+                    </h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {fontStyles.map((font) => (
                             <button
@@ -109,51 +138,52 @@ export default function ThemePage() {
 
                 {/* Background Style */}
                 <div className="glass-card p-6">
-                    <h2 className="text-lg font-semibold text-white mb-4">🖼️ Background Style</h2>
+                    <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <Image className="w-5 h-5 text-primary" />
+                        Background Style
+                    </h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {backgrounds.map((bg) => (
-                            <button
-                                key={bg.id}
-                                onClick={() => !bg.premium && setSelectedBg(bg.id)}
-                                className={`p-4 rounded-xl text-center transition-all relative ${selectedBg === bg.id
-                                    ? "ring-2 ring-primary bg-primary/10"
-                                    : bg.premium
-                                        ? "bg-background-tertiary opacity-60 cursor-not-allowed"
-                                        : "bg-background-tertiary hover:bg-[var(--glass-bg)]"
-                                    }`}
-                            >
-                                <div className="text-3xl mb-2">
-                                    {bg.id === "solid" && "◼️"}
-                                    {bg.id === "gradient" && "🌈"}
-                                    {bg.id === "pattern" && "🔲"}
-                                    {bg.id === "floral" && "🌸"}
-                                    {bg.id === "particles" && "✨"}
-                                    {bg.id === "sparkle" && "💫"}
-                                </div>
-                                <p className="text-sm text-white font-medium">{bg.name}</p>
-                                <p className="text-xs text-foreground-muted capitalize">{bg.type}</p>
-                                {bg.premium && (
-                                    <span className="absolute top-2 right-2 text-xs bg-premium/20 text-premium px-2 py-0.5 rounded-full">
-                                        Premium+
-                                    </span>
-                                )}
-                            </button>
-                        ))}
+                        {backgrounds.map((bg) => {
+                            const BgIcon = backgroundIcons[bg.id] || Square;
+                            return (
+                                <button
+                                    key={bg.id}
+                                    onClick={() => !bg.premium && setSelectedBg(bg.id)}
+                                    className={`p-4 rounded-xl text-center transition-all relative ${selectedBg === bg.id
+                                        ? "ring-2 ring-primary bg-primary/10"
+                                        : bg.premium
+                                            ? "bg-background-tertiary opacity-60 cursor-not-allowed"
+                                            : "bg-background-tertiary hover:bg-[var(--glass-bg)]"
+                                        }`}
+                                >
+                                    <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-2">
+                                        <BgIcon className="w-6 h-6 text-primary" />
+                                    </div>
+                                    <p className="text-sm text-white font-medium">{bg.name}</p>
+                                    <p className="text-xs text-foreground-muted capitalize">{bg.type}</p>
+                                    {bg.premium && (
+                                        <span className="absolute top-2 right-2 text-xs bg-premium/20 text-premium px-2 py-0.5 rounded-full">
+                                            Premium+
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 
                 {/* Navigation */}
                 <div className="flex gap-4">
-                    <Link href={`/events/${id}/template`} className="btn-secondary flex-1 text-center">
-                        ← Back
+                    <Link href={`/events/${id}/template`} className="btn-secondary flex-1 text-center flex items-center justify-center gap-2">
+                        <ArrowLeft className="w-4 h-4" />
+                        Back
                     </Link>
-                    <Link href={`/events/${id}/music`} className="btn-primary flex-1 text-center">
-                        Continue to Music →
+                    <Link href={`/events/${id}/music`} className="btn-primary flex-1 text-center flex items-center justify-center gap-2">
+                        Continue to Music
+                        <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </div>
         </div>
     );
 }
-
-

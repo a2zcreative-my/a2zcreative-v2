@@ -1,13 +1,22 @@
 "use client";
 import { useParams } from 'next/navigation';
 import Link from "next/link";
-import { useState, use } from "react";
+import { useState } from "react";
 import StepIndicator from "@/components/StepIndicator";
+import {
+    User,
+    MessageCircle,
+    Trash2,
+    Plus,
+    ArrowLeft,
+    ArrowRight,
+} from "lucide-react";
 
 const roles = ["Bride", "Groom", "Father of Bride", "Mother of Bride", "Father of Groom", "Mother of Groom", "Organizer", "Event Coordinator", "Other"];
 
 export default function ContactPage() {
-    const params = useParams(); const id = params?.id as string;
+    const params = useParams();
+    const id = params?.id as string;
     const [contacts, setContacts] = useState([
         { id: "1", name: "", phone: "", whatsapp: true, role: "" },
     ]);
@@ -36,9 +45,13 @@ export default function ContactPage() {
             {/* Header */}
             <div className="max-w-3xl mx-auto mb-8">
                 <Link href={`/events/${id}/sections`} className="text-foreground-muted hover:text-white text-sm flex items-center gap-2 mb-4">
-                    ← Back to Sections
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Sections
                 </Link>
-                <h1 className="text-3xl font-bold text-white mb-2">Contact Person 👤</h1>
+                <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+                    Contact Person
+                    <User className="w-8 h-8 text-primary" />
+                </h1>
                 <p className="text-foreground-muted">Add contact details for guests to reach out</p>
             </div>
 
@@ -50,9 +63,10 @@ export default function ContactPage() {
                             {contacts.length > 1 && (
                                 <button
                                     onClick={() => removeContact(contact.id)}
-                                    className="text-error text-sm hover:text-error/80"
+                                    className="text-error text-sm hover:text-error/80 flex items-center gap-1"
                                 >
-                                    🗑️ Remove
+                                    <Trash2 className="w-4 h-4" />
+                                    Remove
                                 </button>
                             )}
                         </div>
@@ -92,7 +106,9 @@ export default function ContactPage() {
                             {/* WhatsApp Toggle */}
                             <div className="flex items-center justify-between p-3 bg-background-tertiary rounded-xl">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-xl">💬</span>
+                                    <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
+                                        <MessageCircle className="w-5 h-5 text-success" />
+                                    </div>
                                     <div>
                                         <p className="text-white font-medium">WhatsApp Click-to-Chat</p>
                                         <p className="text-xs text-foreground-muted">Allow guests to message via WhatsApp</p>
@@ -131,21 +147,22 @@ export default function ContactPage() {
                     onClick={addContact}
                     className="w-full p-4 rounded-xl border-2 border-dashed border-[var(--glass-border)] text-foreground-muted hover:text-white hover:border-primary transition-colors flex items-center justify-center gap-2"
                 >
-                    ➕ Add Another Contact
+                    <Plus className="w-5 h-5" />
+                    Add Another Contact
                 </button>
 
                 {/* Navigation */}
                 <div className="flex gap-4 pt-4">
-                    <Link href={`/events/${id}/sections`} className="btn-secondary flex-1 text-center">
-                        ← Back
+                    <Link href={`/events/${id}/sections`} className="btn-secondary flex-1 text-center flex items-center justify-center gap-2">
+                        <ArrowLeft className="w-4 h-4" />
+                        Back
                     </Link>
-                    <Link href={`/events/${id}/itinerary`} className="btn-primary flex-1 text-center">
-                        Continue to Itinerary →
+                    <Link href={`/events/${id}/itinerary`} className="btn-primary flex-1 text-center flex items-center justify-center gap-2">
+                        Continue to Itinerary
+                        <ArrowRight className="w-4 h-4" />
                     </Link>
                 </div>
             </div>
         </div>
     );
 }
-
-
