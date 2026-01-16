@@ -177,3 +177,5 @@ export default function CheckInPage({ params }: { params: Promise<{ id: string }
         </div>
     );
 }
+
+export const runtime = 'edge';

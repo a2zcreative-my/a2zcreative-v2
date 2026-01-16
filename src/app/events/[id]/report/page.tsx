@@ -163,3 +163,5 @@ export default function ReportPage({ params }: { params: Promise<{ id: string }>
         </div>
     );
 }
+
+export const runtime = 'edge';

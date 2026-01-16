@@ -179,3 +179,5 @@ export default function PublicInvitationPage({ params }: Props) {
         </>
     );
 }
+
+export const runtime = 'edge';

@@ -208,3 +208,5 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
         </div>
     );
 }
+
+export const runtime = 'edge';

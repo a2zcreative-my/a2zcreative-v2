@@ -33,3 +33,5 @@ export async function GET(request: NextRequest) {
     // Redirect to events page after auth
     return NextResponse.redirect(new URL('/events', request.url))
 }
+
+export const runtime = 'edge';

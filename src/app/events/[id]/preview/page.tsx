@@ -126,3 +126,5 @@ export default function PreviewPage({ params }: { params: Promise<{ id: string }
         </div>
     );
 }
+
+export const runtime = 'edge';

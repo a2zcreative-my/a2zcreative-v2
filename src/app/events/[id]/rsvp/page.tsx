@@ -149,3 +149,5 @@ export default function RSVPPage({ params }: { params: Promise<{ id: string }> }
         </div>
     );
 }
+
+export const runtime = 'edge';

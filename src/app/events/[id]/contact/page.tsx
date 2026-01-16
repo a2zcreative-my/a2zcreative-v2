@@ -147,3 +147,5 @@ export default function ContactPage({ params }: { params: Promise<{ id: string }
         </div>
     );
 }
+
+export const runtime = 'edge';

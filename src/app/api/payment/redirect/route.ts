@@ -56,3 +56,5 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${baseUrl}/events/${eventId}/payment?payment=failed`);
     }
 }
+
+export const runtime = 'edge';

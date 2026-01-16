@@ -119,3 +119,5 @@ export default function TemplatePage({ params }: { params: Promise<{ id: string 
         </div>
     );
 }
+
+export const runtime = 'edge';

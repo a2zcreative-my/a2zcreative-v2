@@ -154,3 +154,5 @@ export default function MusicPage({ params }: { params: Promise<{ id: string }> 
         </div>
     );
 }
+
+export const runtime = 'edge';

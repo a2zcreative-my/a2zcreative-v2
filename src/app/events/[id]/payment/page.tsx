@@ -225,3 +225,5 @@ export default function PaymentPage({ params }: { params: Promise<{ id: string }
         </div>
     );
 }
+
+export const runtime = 'edge';
