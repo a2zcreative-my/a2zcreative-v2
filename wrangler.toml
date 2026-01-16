@@ -6,7 +6,7 @@ pages_build_output_dir = ".vercel/output/static"
 [[d1_databases]]
 binding = "DB"
 database_name = "a2zcreative-db"
-database_id = "YOUR_DATABASE_ID_HERE"
+database_id = "162ce888-3358-4685-862b-3c97826abdfa"
 
 # Environment variables (set via Cloudflare dashboard or wrangler secret)
 # NEXT_PUBLIC_SUPABASE_URL
