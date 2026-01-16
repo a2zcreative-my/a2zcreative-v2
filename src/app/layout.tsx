@@ -22,6 +22,29 @@ export const metadata: Metadata = {
     shortcut: "/favicon.png",
     apple: "/favicon.png",
   },
+  metadataBase: new URL("https://a2zcreative.com.my"),
+  openGraph: {
+    title: "A2ZCreative - Digital Invitation Platform",
+    description: "Create beautiful digital invitations for weddings, birthdays, corporate events & more. Share via WhatsApp, track RSVPs instantly.",
+    url: "https://a2zcreative.com.my",
+    siteName: "A2ZCreative",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "A2ZCreative - Create Beautiful Digital Invitations",
+      },
+    ],
+    locale: "en_MY",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "A2ZCreative - Digital Invitation Platform",
+    description: "Create beautiful digital invitations for weddings, birthdays, corporate events & more.",
+    images: ["/og-image.png"],
+  },
 };
 
 
