@@ -3,20 +3,31 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import {
+    LayoutDashboard,
+    Calendar,
+    PlusCircle,
+    Users,
+    Mail,
+    QrCode,
+    BarChart3,
+    CreditCard,
+    Settings,
+} from "lucide-react";
 
 const navItems = [
-    { href: "/dashboard", label: "Dashboard", icon: "📊" },
-    { href: "/events", label: "My Events", icon: "📅" },
-    { href: "/plans", label: "Create Event", icon: "✨" },
-    { href: "/guests", label: "Guests", icon: "👥" },
-    { href: "/rsvp", label: "RSVP", icon: "✉️" },
-    { href: "/checkin", label: "Check-In", icon: "📱" },
-    { href: "/reports", label: "Reports", icon: "📈" },
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/events", label: "My Events", icon: Calendar },
+    { href: "/plans", label: "Create Event", icon: PlusCircle },
+    { href: "/guests", label: "Guests", icon: Users },
+    { href: "/rsvp", label: "RSVP", icon: Mail },
+    { href: "/checkin", label: "Check-In", icon: QrCode },
+    { href: "/reports", label: "Reports", icon: BarChart3 },
 ];
 
 const bottomNavItems = [
-    { href: "/billing", label: "Billing", icon: "💳" },
-    { href: "/settings", label: "Settings", icon: "⚙️" },
+    { href: "/billing", label: "Billing", icon: CreditCard },
+    { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -44,37 +55,43 @@ export default function Sidebar() {
             </div>
 
             {/* Main Navigation */}
-            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                {navItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
-                            ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                            : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
-                            }`}
-                    >
-                        <span className="text-xl">{item.icon}</span>
-                        <span className="font-medium">{item.label}</span>
-                    </Link>
-                ))}
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                {navItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
+                                ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
+                                : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
+                                }`}
+                        >
+                            <Icon className="w-5 h-5" strokeWidth={1.5} />
+                            <span className="font-medium">{item.label}</span>
+                        </Link>
+                    );
+                })}
             </nav>
 
             {/* Bottom Navigation */}
-            <div className="p-4 space-y-2 border-t border-[var(--glass-border)]">
-                {bottomNavItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
-                            ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                            : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
-                            }`}
-                    >
-                        <span className="text-xl">{item.icon}</span>
-                        <span className="font-medium">{item.label}</span>
-                    </Link>
-                ))}
+            <div className="p-4 space-y-1 border-t border-[var(--glass-border)]">
+                {bottomNavItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
+                                ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
+                                : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
+                                }`}
+                        >
+                            <Icon className="w-5 h-5" strokeWidth={1.5} />
+                            <span className="font-medium">{item.label}</span>
+                        </Link>
+                    );
+                })}
             </div>
 
             {/* User Profile */}

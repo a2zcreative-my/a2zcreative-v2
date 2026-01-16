@@ -2,6 +2,20 @@
 
 import Link from "next/link";
 import { DashboardLayout } from "@/components/layout";
+import {
+    Calendar,
+    DollarSign,
+    Sparkles,
+    Users,
+    Send,
+    FileEdit,
+    Eye,
+    BarChart3,
+    PlusCircle,
+    List,
+    Share2,
+    Building2,
+} from "lucide-react";
 
 // Mock data for published invitations
 const publishedInvitations = [
@@ -38,10 +52,10 @@ const draftEvents = [
 ];
 
 const stats = [
-    { label: "Total Events", value: "12", icon: "📅", color: "primary" },
-    { label: "Total Revenue", value: "RM 2,430", icon: "💰", color: "success" },
-    { label: "Active Events", value: "3", icon: "✨", color: "warning" },
-    { label: "Total Guests", value: "1,247", icon: "👥", color: "info" },
+    { label: "Total Events", value: "12", icon: Calendar, color: "primary", bgColor: "bg-primary/20" },
+    { label: "Total Revenue", value: "RM 2,430", icon: DollarSign, color: "success", bgColor: "bg-success/20" },
+    { label: "Active Events", value: "3", icon: Sparkles, color: "warning", bgColor: "bg-warning/20" },
+    { label: "Total Guests", value: "1,247", icon: Users, color: "info", bgColor: "bg-info/20" },
 ];
 
 export default function DashboardPage() {
@@ -59,31 +73,38 @@ export default function DashboardPage() {
                         </p>
                     </div>
                     <Link href="/plans" className="btn-primary flex items-center gap-2">
-                        ✨ Create New Event
+                        <PlusCircle className="w-5 h-5" />
+                        Create New Event
                     </Link>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {stats.map((stat) => (
-                        <div key={stat.label} className="glass-card p-5">
-                            <div className="flex items-center justify-between mb-3">
-                                <span className="text-2xl">{stat.icon}</span>
-                                <span className={`text-xs font-medium px-2 py-1 rounded-lg bg-${stat.color}/20 text-${stat.color}`}>
-                                    +12%
-                                </span>
+                    {stats.map((stat) => {
+                        const Icon = stat.icon;
+                        return (
+                            <div key={stat.label} className="glass-card p-5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className={`w-10 h-10 rounded-xl ${stat.bgColor} flex items-center justify-center`}>
+                                        <Icon className={`w-5 h-5 text-${stat.color}`} strokeWidth={1.5} />
+                                    </div>
+                                    <span className={`text-xs font-medium px-2 py-1 rounded-lg bg-${stat.color}/20 text-${stat.color}`}>
+                                        +12%
+                                    </span>
+                                </div>
+                                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                                <p className="text-sm text-foreground-muted">{stat.label}</p>
                             </div>
-                            <p className="text-2xl font-bold text-white">{stat.value}</p>
-                            <p className="text-sm text-foreground-muted">{stat.label}</p>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {/* Published Invitations - PROMINENT */}
                 <div>
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            📨 Published Invitations
+                            <Send className="w-5 h-5 text-primary" />
+                            Published Invitations
                         </h2>
                         <Link href="/events" className="text-primary text-sm hover:text-primary-hover">
                             View All →
@@ -135,18 +156,20 @@ export default function DashboardPage() {
                                     <div className="flex gap-2">
                                         <Link
                                             href={`/events/${invitation.id}/preview`}
-                                            className="flex-1 btn-secondary text-center text-sm py-2"
+                                            className="flex-1 btn-secondary text-center text-sm py-2 flex items-center justify-center gap-2"
                                         >
-                                            👁️ Preview
+                                            <Eye className="w-4 h-4" />
+                                            Preview
                                         </Link>
                                         <Link
                                             href={`/events/${invitation.id}/rsvp`}
-                                            className="flex-1 btn-secondary text-center text-sm py-2"
+                                            className="flex-1 btn-secondary text-center text-sm py-2 flex items-center justify-center gap-2"
                                         >
-                                            📊 RSVP
+                                            <BarChart3 className="w-4 h-4" />
+                                            RSVP
                                         </Link>
                                         <button className="btn-secondary text-sm py-2 px-3">
-                                            📤
+                                            <Share2 className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
@@ -154,7 +177,9 @@ export default function DashboardPage() {
                         </div>
                     ) : (
                         <div className="glass-card p-12 text-center">
-                            <div className="text-5xl mb-4">📭</div>
+                            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                                <Send className="w-8 h-8 text-primary" />
+                            </div>
                             <h3 className="text-xl font-semibold text-white mb-2">No Published Invitations</h3>
                             <p className="text-foreground-muted mb-6">Create your first event and publish an invitation</p>
                             <Link href="/plans" className="btn-primary">
@@ -168,7 +193,8 @@ export default function DashboardPage() {
                 {draftEvents.length > 0 && (
                     <div>
                         <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
-                            📝 Draft Events
+                            <FileEdit className="w-5 h-5 text-warning" />
+                            Draft Events
                         </h2>
                         <div className="space-y-3">
                             {draftEvents.map((event) => (
@@ -178,8 +204,8 @@ export default function DashboardPage() {
                                     className="glass-card p-4 flex items-center justify-between hover:border-primary/30 transition-all block"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-xl bg-${event.plan}/20 flex items-center justify-center text-lg`}>
-                                            🏢
+                                        <div className="w-12 h-12 rounded-xl bg-warning/20 flex items-center justify-center">
+                                            <Building2 className="w-6 h-6 text-warning" />
                                         </div>
                                         <div>
                                             <h3 className="font-semibold text-white">{event.title}</h3>
@@ -212,19 +238,27 @@ export default function DashboardPage() {
                     <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <Link href="/plans" className="glass-card glass-card-hover p-4 text-center">
-                            <div className="text-3xl mb-2">✨</div>
+                            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-2">
+                                <PlusCircle className="w-6 h-6 text-primary" />
+                            </div>
                             <p className="font-medium text-white">Create Event</p>
                         </Link>
                         <Link href="/events" className="glass-card glass-card-hover p-4 text-center">
-                            <div className="text-3xl mb-2">📋</div>
+                            <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center mx-auto mb-2">
+                                <List className="w-6 h-6 text-secondary" />
+                            </div>
                             <p className="font-medium text-white">View All Events</p>
                         </Link>
                         <Link href="/guests" className="glass-card glass-card-hover p-4 text-center">
-                            <div className="text-3xl mb-2">👥</div>
+                            <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mx-auto mb-2">
+                                <Users className="w-6 h-6 text-accent" />
+                            </div>
                             <p className="font-medium text-white">Manage Guests</p>
                         </Link>
                         <Link href="/reports" className="glass-card glass-card-hover p-4 text-center">
-                            <div className="text-3xl mb-2">📈</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center mx-auto mb-2">
+                                <BarChart3 className="w-6 h-6 text-success" />
+                            </div>
                             <p className="font-medium text-white">View Reports</p>
                         </Link>
                     </div>
