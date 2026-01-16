@@ -1,6 +1,5 @@
-import { useParams } from 'next/navigation';
 "use client";
-
+import { useParams } from 'next/navigation';
 import Link from "next/link";
 import { useState, use } from "react";
 import StepIndicator from "@/components/StepIndicator";
