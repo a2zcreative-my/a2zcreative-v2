@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Create Basic Auth header
-        const authHeader = Buffer.from(`${billplzConfig.apiKey}:`).toString('base64');
+        const authHeader = btoa(`${billplzConfig.apiKey}:`);
 
         // Build callback and redirect URLs
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';

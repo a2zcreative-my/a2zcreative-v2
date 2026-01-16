@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { billplzConfig } from '@/lib/billplz';
-import crypto from 'crypto';
+// import crypto from 'crypto'; // Removed for Edge Runtime compatibility
 
 // Verify Billplz webhook signature
-function verifySignature(data: Record<string, string>, signature: string): boolean {
+// Verify Billplz webhook signature
+async function verifySignature(data: Record<string, string>, signature: string): Promise<boolean> {
     // Sort keys alphabetically and build string
     const sortedKeys = Object.keys(data).sort();
     const signatureString = sortedKeys
@@ -11,10 +12,27 @@ function verifySignature(data: Record<string, string>, signature: string): boole
         .map(key => `${key}${data[key]}`)
         .join('|');
 
-    const expectedSignature = crypto
-        .createHmac('sha512', billplzConfig.xSignature)
-        .update(signatureString)
-        .digest('hex');
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(billplzConfig.xSignature);
+    const messageData = encoder.encode(signatureString);
+
+    const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+
+    const signatureBuffer = await crypto.subtle.sign(
+        'HMAC',
+        cryptoKey,
+        messageData
+    );
+
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
 
     return signature === expectedSignature;
 }
@@ -37,7 +55,7 @@ export async function POST(request: NextRequest) {
 
         // Verify signature for security
         if (data.x_signature) {
-            const isValid = verifySignature(data, data.x_signature);
+            const isValid = await verifySignature(data, data.x_signature);
             if (!isValid) {
                 console.error('Invalid Billplz signature');
                 return NextResponse.json(

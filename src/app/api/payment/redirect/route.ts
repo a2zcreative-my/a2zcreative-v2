@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { billplzConfig } from '@/lib/billplz';
-import crypto from 'crypto';
+// import crypto from 'crypto'; // Removed for Edge Runtime compatibility
 
 // Verify Billplz redirect signature
-function verifySignature(params: URLSearchParams): boolean {
+// Verify Billplz redirect signature
+async function verifySignature(params: URLSearchParams): Promise<boolean> {
     const data: Record<string, string> = {};
     params.forEach((value, key) => {
         if (key.startsWith('billplz[') && key !== 'billplz[x_signature]') {
@@ -20,10 +21,27 @@ function verifySignature(params: URLSearchParams): boolean {
         .map(key => `${key.replace('billplz[', '').replace(']', '')}${data[key]}`)
         .join('|');
 
-    const expectedSignature = crypto
-        .createHmac('sha512', billplzConfig.xSignature)
-        .update(signatureString)
-        .digest('hex');
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(billplzConfig.xSignature);
+    const messageData = encoder.encode(signatureString);
+
+    const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+
+    const signatureBuffer = await crypto.subtle.sign(
+        'HMAC',
+        cryptoKey,
+        messageData
+    );
+
+    const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
 
     return signature === expectedSignature;
 }
@@ -39,7 +57,7 @@ export async function GET(request: NextRequest) {
     console.log('Payment redirect:', { billId, isPaid, eventId });
 
     // Verify signature (optional but recommended)
-    const isValidSignature = verifySignature(searchParams);
+    const isValidSignature = await verifySignature(searchParams);
     if (!isValidSignature) {
         console.warn('Invalid redirect signature - proceeding with caution');
         // In production, you might want to re-verify via API call
