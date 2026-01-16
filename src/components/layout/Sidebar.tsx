@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import {
     LayoutDashboard,
     Calendar,
@@ -13,6 +14,7 @@ import {
     BarChart3,
     CreditCard,
     Settings,
+    LogOut,
 } from "lucide-react";
 
 const navItems = [
@@ -32,12 +34,32 @@ const bottomNavItems = [
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const { user, signOut } = useAuth();
 
     const isActive = (href: string) => {
         if (href === "/dashboard") {
             return pathname === href;
         }
         return pathname.startsWith(href);
+    };
+
+    const handleLogout = async () => {
+        await signOut();
+    };
+
+    // Get user initials
+    const getUserInitial = () => {
+        if (user?.user_metadata?.name) {
+            return user.user_metadata.name.charAt(0).toUpperCase();
+        }
+        if (user?.email) {
+            return user.email.charAt(0).toUpperCase();
+        }
+        return "U";
+    };
+
+    const getUserName = () => {
+        return user?.user_metadata?.name || user?.email?.split('@')[0] || "User";
     };
 
     return (
@@ -94,16 +116,23 @@ export default function Sidebar() {
                 })}
             </div>
 
-            {/* User Profile */}
+            {/* User Profile with Logout */}
             <div className="p-4 border-t border-[var(--glass-border)]">
                 <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--glass-bg)]">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-secondary flex items-center justify-center text-white font-semibold">
-                        O
+                        {getUserInitial()}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">Organizer</p>
+                        <p className="text-sm font-medium text-white truncate">{getUserName()}</p>
                         <p className="text-xs text-foreground-muted truncate">Pro Plan</p>
                     </div>
+                    <button
+                        onClick={handleLogout}
+                        className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors"
+                        title="Logout"
+                    >
+                        <LogOut className="w-4 h-4" />
+                    </button>
                 </div>
             </div>
         </aside>
