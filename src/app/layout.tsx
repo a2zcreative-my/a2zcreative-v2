@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "A2ZCreative - Digital Invitation Platform",
+  title: "A2ZCreative - Beautiful Digital Invitations for Events",
   description: "Create beautiful digital invitations for your special events. Wedding, Birthday, Corporate & more.",
   keywords: ["digital invitation", "e-kad", "wedding invitation", "event management", "Malaysia"],
   icons: {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   metadataBase: new URL("https://a2zcreative.com.my"),
   openGraph: {
-    title: "A2ZCreative - Digital Invitation Platform",
+    title: "A2ZCreative - Beautiful Digital Invitations for Events",
     description: "Create beautiful digital invitations for weddings, birthdays, corporate events & more. Share via WhatsApp, track RSVPs instantly.",
     url: "https://a2zcreative.com.my",
     siteName: "A2ZCreative",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "A2ZCreative - Digital Invitation Platform",
+    title: "A2ZCreative - Beautiful Digital Invitations for Events",
     description: "Create beautiful digital invitations for weddings, birthdays, corporate events & more.",
     images: ["/og-image.png"],
   },
