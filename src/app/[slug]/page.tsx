@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import DoorAnimation from '@/components/invitation/DoorAnimation';
 import InvitationSections from '@/components/invitation/InvitationSections';
 import FloatingDock from '@/components/invitation/FloatingDock';
@@ -128,6 +128,8 @@ export default function PublicInvitationPage({ params }: Props) {
     const invitation = mockInvitations[slug];
 
     if (!invitation) {
+        if (slug === 'login') redirect('/auth/login');
+        if (slug === 'register') redirect('/auth/register');
         notFound();
     }
 

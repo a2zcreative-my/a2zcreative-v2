@@ -30,6 +30,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session)
             setUser(session?.user ?? null)
+        }).catch((err) => {
+            console.error('Auth initialization error:', err)
+        }).finally(() => {
             setLoading(false)
         })
 
@@ -43,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (event === 'SIGNED_IN') {
                     router.push('/events')
                 } else if (event === 'SIGNED_OUT') {
-                    router.push('/login')
+                    router.push('/auth/login')
                 }
             }
         )

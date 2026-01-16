@@ -89,7 +89,7 @@ export default function PlansPage() {
         <div className="min-h-screen bg-background py-12 px-4">
             {/* Header */}
             <div className="text-center mb-12 animate-fade-in">
-                <Link href="/login" className="inline-flex items-center gap-2 text-foreground-muted hover:text-white mb-6">
+                <Link href="/auth/login" className="inline-flex items-center gap-2 text-foreground-muted hover:text-white mb-6">
                     ← Back to Login
                 </Link>
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -107,8 +107,8 @@ export default function PlansPage() {
                         key={plan.id}
                         onClick={() => setSelectedPlan(plan.id)}
                         className={`relative glass-card p-6 cursor-pointer transition-all duration-300 animate-fade-in ${selectedPlan === plan.id
-                                ? `ring-2 ring-${plan.color} shadow-lg shadow-${plan.color}/20`
-                                : "hover:border-white/20"
+                            ? `ring-2 ring-${plan.color} shadow-lg shadow-${plan.color}/20`
+                            : "hover:border-white/20"
                             }`}
                         style={{ animationDelay: `${index * 100}ms` }}
                     >
@@ -179,8 +179,8 @@ export default function PlansPage() {
                         {/* Select Button */}
                         <button
                             className={`w-full py-3 rounded-xl font-semibold transition-all ${selectedPlan === plan.id
-                                    ? `bg-gradient-to-r ${plan.gradient} text-white`
-                                    : "bg-background-tertiary text-foreground-muted hover:text-white"
+                                ? `bg-gradient-to-r ${plan.gradient} text-white`
+                                : "bg-background-tertiary text-foreground-muted hover:text-white"
                                 }`}
                         >
                             {selectedPlan === plan.id ? "✓ Selected" : "Select Plan"}

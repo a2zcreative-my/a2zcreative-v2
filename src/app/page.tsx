@@ -146,10 +146,10 @@ export default function LandingPage() {
             <a href="#testimonials" className="text-foreground-muted hover:text-white transition-colors">Testimonials</a>
           </div>
           <div className="flex items-center gap-3">
-            <Link href="/login" className="text-foreground-muted hover:text-white transition-colors">
+            <Link href="/auth/login" className="text-foreground-muted hover:text-white transition-colors">
               Login
             </Link>
-            <Link href="/register" className="btn-primary text-sm px-4 py-2">
+            <Link href="/auth/register" className="btn-primary text-sm px-4 py-2">
               Get Started
             </Link>
           </div>
@@ -183,7 +183,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Link href="/register" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
+            <Link href="/auth/register" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
               <span>Start Creating</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
@@ -336,7 +336,7 @@ export default function LandingPage() {
               <p className="text-foreground-muted mb-8 max-w-xl mx-auto">
                 Join thousands of couples who have made their celebration special with A2ZCreative.
               </p>
-              <Link href="/register" className="btn-primary text-lg px-8 py-4 inline-flex items-center gap-2">
+              <Link href="/auth/register" className="btn-primary text-lg px-8 py-4 inline-flex items-center gap-2">
                 <span>Get Started Free</span>
                 <ArrowRight className="w-5 h-5" />
               </Link>

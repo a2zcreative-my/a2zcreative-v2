@@ -86,7 +86,7 @@ export default function ForgotPasswordPage() {
                 <div className="flex justify-end items-center gap-4 mb-4">
                     <span className="text-foreground-muted">Remember your password?</span>
                     <Link
-                        href="/login"
+                        href="/auth/login"
                         className="px-6 py-2.5 rounded-xl border border-primary text-primary font-semibold hover:bg-primary hover:text-white transition-all duration-300"
                     >
                         Sign In
