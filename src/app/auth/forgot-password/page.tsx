@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Check } from "lucide-react";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -56,21 +57,27 @@ export default function ForgotPasswordPage() {
 
                     <div className="space-y-4 w-full max-w-sm">
                         <div className="flex items-center gap-4 glass-card p-4">
-                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+                                <Check className="w-6 h-6 text-success" />
+                            </div>
                             <div className="text-left">
                                 <p className="font-medium text-white">Easy to Create</p>
                                 <p className="text-sm text-foreground-muted">No design skills needed</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 glass-card p-4">
-                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+                                <Check className="w-6 h-6 text-success" />
+                            </div>
                             <div className="text-left">
                                 <p className="font-medium text-white">Instant Sharing</p>
                                 <p className="text-sm text-foreground-muted">Share via WhatsApp, SMS & more</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 glass-card p-4">
-                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+                                <Check className="w-6 h-6 text-success" />
+                            </div>
                             <div className="text-left">
                                 <p className="font-medium text-white">RSVP Tracking</p>
                                 <p className="text-sm text-foreground-muted">Know who&apos;s coming instantly</p>

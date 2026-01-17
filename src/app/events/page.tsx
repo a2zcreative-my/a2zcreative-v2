@@ -70,12 +70,12 @@ export default function EventsPage() {
         <DashboardLayout>
             <div className="space-y-6 animate-fade-in">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">My Events</h1>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">My Events</h1>
                         <p className="text-foreground-muted">Manage all your events in one place</p>
                     </div>
-                    <Link href="/plans" className="btn-primary flex items-center gap-2">
+                    <Link href="/plans" className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center">
                         <PlusCircle className="w-5 h-5" />
                         Create New Event
                     </Link>
@@ -92,7 +92,7 @@ export default function EventsPage() {
                             className="input-field"
                         />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                         {["all", "live", "draft", "completed"].map((status) => (
                             <button
                                 key={status}

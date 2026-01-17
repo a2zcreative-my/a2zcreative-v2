@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Check, Eye, EyeOff } from "lucide-react";
 
 function RegisterForm() {
     const [formData, setFormData] = useState({
@@ -75,7 +76,7 @@ function RegisterForm() {
             <div className="min-h-screen bg-background flex items-center justify-center p-8">
                 <div className="max-w-md w-full text-center space-y-6 animate-fade-in">
                     <div className="w-20 h-20 rounded-full bg-success/20 flex items-center justify-center mx-auto">
-                        <span className="text-4xl">✓</span>
+                        <Check className="w-10 h-10 text-success" />
                     </div>
                     <h2 className="text-2xl font-bold text-white">Check Your Email</h2>
                     <p className="text-foreground-muted">
@@ -117,21 +118,27 @@ function RegisterForm() {
 
                     <div className="space-y-4 w-full max-w-sm">
                         <div className="flex items-center gap-4 glass-card p-4">
-                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+                                <Check className="w-6 h-6 text-success" />
+                            </div>
                             <div className="text-left">
                                 <p className="font-medium text-white">Easy to Create</p>
                                 <p className="text-sm text-foreground-muted">No design skills needed</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 glass-card p-4">
-                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+                                <Check className="w-6 h-6 text-success" />
+                            </div>
                             <div className="text-left">
                                 <p className="font-medium text-white">Instant Sharing</p>
                                 <p className="text-sm text-foreground-muted">Share via WhatsApp, SMS & more</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 glass-card p-4">
-                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+                                <Check className="w-6 h-6 text-success" />
+                            </div>
                             <div className="text-left">
                                 <p className="font-medium text-white">RSVP Tracking</p>
                                 <p className="text-sm text-foreground-muted">Know who&apos;s coming instantly</p>
@@ -254,7 +261,7 @@ function RegisterForm() {
                                         onClick={() => setShowPassword(!showPassword)}
                                         className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-white"
                                     >
-                                        {showPassword ? "👁️" : "👁️‍🗨️"}
+                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                     </button>
                                 </div>
                             </div>

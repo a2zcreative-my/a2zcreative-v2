@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -15,6 +16,8 @@ import {
     CreditCard,
     Settings,
     LogOut,
+    Menu,
+    X,
 } from "lucide-react";
 
 const navItems = [
@@ -32,7 +35,12 @@ const bottomNavItems = [
     { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
     const { user, signOut } = useAuth();
 
@@ -62,79 +70,112 @@ export default function Sidebar() {
         return user?.user_metadata?.name || user?.email?.split('@')[0] || "User";
     };
 
+    const handleNavClick = () => {
+        // Close sidebar on mobile when navigating
+        if (window.innerWidth < 768) {
+            onClose();
+        }
+    };
+
     return (
-        <aside className="fixed left-0 top-0 h-screen w-64 bg-background-secondary border-r border-[var(--glass-border)] flex flex-col z-50">
-            {/* Logo */}
-            <div className="p-6 border-b border-[var(--glass-border)]">
-                <Link href="/dashboard" className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl overflow-hidden">
-                        <Image src="/logo.png" alt="A2ZCreative" width={40} height={40} />
-                    </div>
-                    <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                        A2ZCreative
-                    </span>
-                </Link>
-            </div>
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    onClick={onClose}
+                />
+            )}
 
-            {/* Main Navigation */}
-            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                {navItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
-                                ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                                : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
-                                }`}
-                        >
-                            <Icon className="w-5 h-5" strokeWidth={1.5} />
-                            <span className="font-medium">{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
-
-            {/* Bottom Navigation */}
-            <div className="p-4 space-y-1 border-t border-[var(--glass-border)]">
-                {bottomNavItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
-                                ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                                : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
-                                }`}
-                        >
-                            <Icon className="w-5 h-5" strokeWidth={1.5} />
-                            <span className="font-medium">{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </div>
-
-            {/* User Profile with Logout */}
-            <div className="p-4 border-t border-[var(--glass-border)]">
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--glass-bg)]">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-secondary flex items-center justify-center text-white font-semibold">
-                        {getUserInitial()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{getUserName()}</p>
-                        <p className="text-xs text-foreground-muted truncate">Pro Plan</p>
-                    </div>
+            {/* Sidebar */}
+            <aside
+                className={`fixed left-0 top-0 h-screen w-64 bg-background-secondary border-r border-[var(--glass-border)] flex flex-col z-50 transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full"
+                    } md:translate-x-0`}
+            >
+                {/* Logo */}
+                <div className="p-6 border-b border-[var(--glass-border)] flex items-center justify-between">
+                    <Link href="/dashboard" className="flex items-center gap-3" onClick={handleNavClick}>
+                        <div className="w-10 h-10 rounded-xl overflow-hidden">
+                            <Image src="/logo.png" alt="A2ZCreative" width={40} height={40} />
+                        </div>
+                        <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                            A2ZCreative
+                        </span>
+                    </Link>
+                    {/* Mobile close button */}
                     <button
-                        onClick={handleLogout}
-                        className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors"
-                        title="Logout"
+                        onClick={onClose}
+                        className="md:hidden p-2 rounded-lg hover:bg-[var(--glass-bg)] text-foreground-muted hover:text-white"
                     >
-                        <LogOut className="w-4 h-4" />
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
-            </div>
-        </aside>
+
+                {/* Main Navigation */}
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                    {navItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={handleNavClick}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
+                                    ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
+                                    : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
+                                    }`}
+                            >
+                                <Icon className="w-5 h-5" strokeWidth={1.5} />
+                                <span className="font-medium">{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                </nav>
+
+                {/* Bottom Navigation */}
+                <div className="p-4 space-y-1 border-t border-[var(--glass-border)]">
+                    {bottomNavItems.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={handleNavClick}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
+                                    ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
+                                    : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
+                                    }`}
+                            >
+                                <Icon className="w-5 h-5" strokeWidth={1.5} />
+                                <span className="font-medium">{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                </div>
+
+                {/* User Profile with Logout */}
+                <div className="p-4 border-t border-[var(--glass-border)]">
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--glass-bg)]">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-secondary flex items-center justify-center text-white font-semibold">
+                            {getUserInitial()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-white truncate">{getUserName()}</p>
+                            <p className="text-xs text-foreground-muted truncate">Pro Plan</p>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors"
+                            title="Logout"
+                        >
+                            <LogOut className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </>
     );
 }
+
+// Export menu icon for use in DashboardLayout
+export { Menu };

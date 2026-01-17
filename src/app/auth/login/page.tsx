@@ -5,16 +5,20 @@ import Image from "next/image";
 import { useState, useEffect, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Check, Eye, EyeOff } from "lucide-react";
 
 function LoginForm() {
     const [loginMethod, setLoginMethod] = useState<"email" | "phone">("email");
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [otpCode, setOtpCode] = useState("");
+    const [otpSent, setOtpSent] = useState(false);
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
-    const { signIn, signInWithGoogle, user, loading } = useAuth();
+    const { signIn, signInWithGoogle, signInWithPhone, verifyPhoneOtp, user, loading } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const plan = searchParams.get("plan");
@@ -44,6 +48,42 @@ function LoginForm() {
         await signInWithGoogle();
     };
 
+    const handleSendOtp = async () => {
+        if (!phoneNumber) {
+            setError("Please enter your phone number");
+            return;
+        }
+        setError("");
+        setIsLoading(true);
+
+        const result = await signInWithPhone(phoneNumber);
+
+        if (result.error) {
+            setError(result.error);
+        } else {
+            setOtpSent(true);
+        }
+        setIsLoading(false);
+    };
+
+    const handleVerifyOtp = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!otpCode) {
+            setError("Please enter the OTP code");
+            return;
+        }
+        setError("");
+        setIsLoading(true);
+
+        const result = await verifyPhoneOtp(phoneNumber, otpCode);
+
+        if (result.error) {
+            setError(result.error);
+            setIsLoading(false);
+        }
+        // Redirect is handled by AuthContext
+    };
+
     return (
         <div className="min-h-screen bg-background flex">
             {/* Left Side - Branding */}
@@ -71,21 +111,27 @@ function LoginForm() {
 
                     <div className="space-y-4 w-full max-w-sm">
                         <div className="flex items-center gap-4 glass-card p-4">
-                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+                                <Check className="w-6 h-6 text-success" />
+                            </div>
                             <div className="text-left">
                                 <p className="font-medium text-white">Easy to Create</p>
                                 <p className="text-sm text-foreground-muted">No design skills needed</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 glass-card p-4">
-                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+                                <Check className="w-6 h-6 text-success" />
+                            </div>
                             <div className="text-left">
                                 <p className="font-medium text-white">Instant Sharing</p>
                                 <p className="text-sm text-foreground-muted">Share via WhatsApp, SMS & more</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 glass-card p-4">
-                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center text-2xl shrink-0">✓</div>
+                            <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center shrink-0">
+                                <Check className="w-6 h-6 text-success" />
+                            </div>
                             <div className="text-left">
                                 <p className="font-medium text-white">RSVP Tracking</p>
                                 <p className="text-sm text-foreground-muted">Know who&apos;s coming instantly</p>
@@ -158,81 +204,189 @@ function LoginForm() {
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setLoginMethod("phone")}
-                                    className={`flex-1 py-2.5 rounded-lg font-medium transition-all ${loginMethod === "phone"
-                                        ? "bg-primary text-white"
-                                        : "text-foreground-muted hover:text-white"
-                                        }`}
                                     disabled
+                                    className="flex-1 py-2.5 rounded-lg font-medium transition-all text-foreground-muted opacity-50 cursor-not-allowed relative"
+                                    title="Phone login coming soon"
                                 >
                                     Phone
+                                    <span className="absolute -top-2 -right-1 text-[10px] bg-primary/80 text-white px-1.5 py-0.5 rounded-full">
+                                        Coming Soon
+                                    </span>
                                 </button>
                             </div>
 
-                            {/* Email Input */}
-                            <div>
-                                <label className="block text-sm font-medium text-foreground-muted mb-2">
-                                    Email Address
-                                </label>
-                                <input
-                                    type="email"
-                                    placeholder="you@example.com"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="input-field"
-                                    required
-                                />
-                            </div>
+                            {loginMethod === "email" ? (
+                                <>
+                                    {/* Email Input */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                            Email Address
+                                        </label>
+                                        <input
+                                            type="email"
+                                            placeholder="you@example.com"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="input-field"
+                                            required
+                                        />
+                                    </div>
 
-                            {/* Password Input */}
-                            <div>
-                                <label className="block text-sm font-medium text-foreground-muted mb-2">
-                                    Password
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="Enter your password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="input-field pr-12"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-white"
-                                    >
-                                        {showPassword ? "👁️" : "👁️‍🗨️"}
-                                    </button>
-                                </div>
-                            </div>
+                                    {/* Password Input */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                            Password
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                placeholder="Enter your password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                className="input-field pr-12"
+                                                required
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-white"
+                                            >
+                                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                            </button>
+                                        </div>
+                                    </div>
 
-                            {/* Forgot Password */}
-                            <div className="flex justify-end">
-                                <Link href="/auth/forgot-password" className="text-sm text-primary hover:text-primary-hover">
-                                    Forgot password?
-                                </Link>
-                            </div>
+                                    {/* Forgot Password */}
+                                    <div className="flex justify-end">
+                                        <Link href="/auth/forgot-password" className="text-sm text-primary hover:text-primary-hover">
+                                            Forgot password?
+                                        </Link>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    {/* Phone Number Input */}
+                                    {!otpSent ? (
+                                        <div>
+                                            <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                                Phone Number
+                                            </label>
+                                            <input
+                                                type="tel"
+                                                placeholder="+60123456789"
+                                                value={phoneNumber}
+                                                onChange={(e) => setPhoneNumber(e.target.value)}
+                                                className="input-field"
+                                                required
+                                            />
+                                            <p className="text-xs text-foreground-muted mt-2">
+                                                Enter your phone number with country code (e.g., +60 for Malaysia)
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* OTP Sent Confirmation */}
+                                            <div className="p-4 rounded-xl bg-success/10 border border-success/30 text-success text-sm">
+                                                OTP sent to {phoneNumber}. Please enter the 6-digit code below.
+                                            </div>
+
+                                            {/* OTP Code Input */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                                    Enter OTP Code
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="123456"
+                                                    value={otpCode}
+                                                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                                    className="input-field text-center text-2xl tracking-[0.5em]"
+                                                    maxLength={6}
+                                                    required
+                                                />
+                                            </div>
+
+                                            {/* Resend OTP */}
+                                            <div className="flex justify-between items-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setOtpSent(false)}
+                                                    className="text-sm text-foreground-muted hover:text-white"
+                                                >
+                                                    ← Change number
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleSendOtp}
+                                                    className="text-sm text-primary hover:text-primary-hover"
+                                                    disabled={isLoading}
+                                                >
+                                                    Resend OTP
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </>
+                            )}
 
                             {/* Login Button */}
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="btn-primary w-full flex items-center justify-center gap-2"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        <span>Signing in...</span>
-                                    </>
-                                ) : (
-                                    <span>Sign In</span>
-                                )}
-                            </button>
+                            {loginMethod === "email" ? (
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="btn-primary w-full flex items-center justify-center gap-2"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Signing in...</span>
+                                        </>
+                                    ) : (
+                                        <span>Sign In</span>
+                                    )}
+                                </button>
+                            ) : !otpSent ? (
+                                <button
+                                    type="button"
+                                    onClick={handleSendOtp}
+                                    disabled={isLoading}
+                                    className="btn-primary w-full flex items-center justify-center gap-2"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Sending OTP...</span>
+                                        </>
+                                    ) : (
+                                        <span>Send OTP</span>
+                                    )}
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={handleVerifyOtp}
+                                    disabled={isLoading || otpCode.length !== 6}
+                                    className="btn-primary w-full flex items-center justify-center gap-2"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Verifying...</span>
+                                        </>
+                                    ) : (
+                                        <span>Verify & Sign In</span>
+                                    )}
+                                </button>
+                            )}
 
                             {/* Divider */}
                             <div className="relative">

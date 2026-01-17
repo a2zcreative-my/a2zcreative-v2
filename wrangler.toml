@@ -9,6 +9,11 @@ binding = "DB"
 database_name = "a2zcreative-db"
 database_id = "162ce888-3358-4685-862b-3c97826abdfa"
 
+# R2 Storage binding for image uploads
+[[r2_buckets]]
+binding = "R2_BUCKET"
+bucket_name = "a2zcreative-images"
+
 # Environment variables (set via Cloudflare dashboard or wrangler secret)
 # NEXT_PUBLIC_SUPABASE_URL
 # NEXT_PUBLIC_SUPABASE_ANON_KEY

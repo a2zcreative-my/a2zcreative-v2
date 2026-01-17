@@ -63,16 +63,16 @@ export default function DashboardPage() {
         <DashboardLayout>
             <div className="space-y-8 animate-fade-in">
                 {/* Welcome Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-white mb-2">
-                            Welcome back, Organizer! 👋
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                            Welcome back, Organizer!
                         </h1>
                         <p className="text-foreground-muted">
                             Manage your events and invitations from your dashboard
                         </p>
                     </div>
-                    <Link href="/plans" className="btn-primary flex items-center gap-2">
+                    <Link href="/plans" className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center">
                         <PlusCircle className="w-5 h-5" />
                         Create New Event
                     </Link>
@@ -212,8 +212,8 @@ export default function DashboardPage() {
                                             <p className="text-sm text-foreground-muted">{event.eventType} • {event.plan.toUpperCase()}</p>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-32">
+                                    <div className="flex items-center gap-2 sm:gap-4">
+                                        <div className="w-20 sm:w-32">
                                             <div className="flex justify-between text-xs text-foreground-muted mb-1">
                                                 <span>Progress</span>
                                                 <span>{event.progress}%</span>

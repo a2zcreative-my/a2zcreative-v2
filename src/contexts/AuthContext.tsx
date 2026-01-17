@@ -14,6 +14,8 @@ interface AuthContextType {
     signOut: () => Promise<void>
     resetPassword: (email: string) => Promise<{ error?: string }>
     signInWithGoogle: () => Promise<void>
+    signInWithPhone: (phone: string) => Promise<{ error?: string }>
+    verifyPhoneOtp: (phone: string, token: string) => Promise<{ error?: string }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -125,6 +127,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         })
     }, [supabase.auth])
 
+    const signInWithPhone = useCallback(async (phone: string) => {
+        try {
+            const { error } = await supabase.auth.signInWithOtp({
+                phone,
+                options: {
+                    channel: 'sms'
+                }
+            })
+            if (error) return { error: error.message }
+            return {}
+        } catch (err) {
+            return { error: 'An unexpected error occurred' }
+        }
+    }, [supabase.auth])
+
+    const verifyPhoneOtp = useCallback(async (phone: string, token: string) => {
+        try {
+            const { error } = await supabase.auth.verifyOtp({
+                phone,
+                token,
+                type: 'sms'
+            })
+            if (error) return { error: error.message }
+            return {}
+        } catch (err) {
+            return { error: 'An unexpected error occurred' }
+        }
+    }, [supabase.auth])
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -134,7 +165,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             signUp,
             signOut,
             resetPassword,
-            signInWithGoogle
+            signInWithGoogle,
+            signInWithPhone,
+            verifyPhoneOtp
         }}>
             {children}
         </AuthContext.Provider>

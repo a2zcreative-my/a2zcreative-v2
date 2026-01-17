@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { DashboardLayout } from "@/components/layout";
+import { CreditCard, Building2, FileText } from "lucide-react";
 
 const paymentHistory = [
     { id: "1", event: "Majlis Perkahwinan Ahmad & Alia", plan: "Premium", amount: 134, date: "15 Jan 2026", status: "paid" },
@@ -53,7 +54,7 @@ export default function BillingPage() {
                         <div className="lg:col-span-2 space-y-6">
                             <div className="glass-card p-6">
                                 <h2 className="text-lg font-semibold text-white mb-4">Account Summary</h2>
-                                <div className="grid grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                     <div className="text-center p-4 bg-background-tertiary rounded-xl">
                                         <p className="text-3xl font-bold text-white">4</p>
                                         <p className="text-sm text-foreground-muted">Total Events</p>
@@ -72,13 +73,13 @@ export default function BillingPage() {
                             {/* Available Plans */}
                             <div className="glass-card p-6">
                                 <h2 className="text-lg font-semibold text-white mb-4">Available Plans</h2>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {plans.map((plan) => (
                                         <div
                                             key={plan.id}
                                             className={`p-4 rounded-xl border-2 transition-all ${plan.current
-                                                    ? "border-primary bg-primary/10"
-                                                    : "border-[var(--glass-border)] bg-background-tertiary"
+                                                ? "border-primary bg-primary/10"
+                                                : "border-[var(--glass-border)] bg-background-tertiary"
                                                 }`}
                                         >
                                             <div className="flex items-center justify-between mb-2">
@@ -107,7 +108,9 @@ export default function BillingPage() {
                             <h2 className="text-lg font-semibold text-white mb-4">Saved Payment Methods</h2>
                             <div className="space-y-3">
                                 <div className="p-4 rounded-xl bg-background-tertiary flex items-center gap-4">
-                                    <span className="text-2xl">💳</span>
+                                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                                        <CreditCard className="w-5 h-5 text-primary" />
+                                    </div>
                                     <div className="flex-1">
                                         <p className="text-white font-medium">•••• •••• •••• 4242</p>
                                         <p className="text-xs text-foreground-muted">Expires 12/28</p>
@@ -115,7 +118,9 @@ export default function BillingPage() {
                                     <span className="text-xs text-success">Default</span>
                                 </div>
                                 <div className="p-4 rounded-xl bg-background-tertiary flex items-center gap-4">
-                                    <span className="text-2xl">🏦</span>
+                                    <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center">
+                                        <Building2 className="w-5 h-5 text-secondary" />
+                                    </div>
                                     <div className="flex-1">
                                         <p className="text-white font-medium">Maybank FPX</p>
                                         <p className="text-xs text-foreground-muted">Online Banking</p>
@@ -130,8 +135,8 @@ export default function BillingPage() {
                 )}
 
                 {activeTab === "history" && (
-                    <div className="glass-card overflow-hidden">
-                        <table className="w-full">
+                    <div className="glass-card overflow-x-auto">
+                        <table className="w-full min-w-[600px]">
                             <thead>
                                 <tr className="border-b border-[var(--glass-border)]">
                                     <th className="p-4 text-left text-sm font-medium text-foreground-muted">Event</th>
@@ -163,8 +168,9 @@ export default function BillingPage() {
                                             </span>
                                         </td>
                                         <td className="p-4">
-                                            <button className="text-primary text-sm hover:text-primary-hover">
-                                                📄 Download
+                                            <button className="text-primary text-sm hover:text-primary-hover flex items-center gap-1">
+                                                <FileText className="w-4 h-4" />
+                                                Download
                                             </button>
                                         </td>
                                     </tr>
