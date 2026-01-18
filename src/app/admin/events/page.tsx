@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
     Calendar,
     Eye,
@@ -9,81 +10,102 @@ import {
     MoreVertical,
     ExternalLink,
     Trash2,
+    Loader2,
+    AlertTriangle,
 } from "lucide-react";
-import { useState } from "react";
 
-// Mock data for all platform events
-const allEvents = [
-    {
-        id: "1",
-        title: "Majlis Perkahwinan Ahmad & Siti",
-        owner: "Ahmad bin Hassan",
-        ownerEmail: "ahmad@example.com",
-        eventType: "Wedding",
-        date: "15 Feb 2026",
-        plan: "premium",
-        views: 342,
-        rsvpCount: 181,
-        status: "published",
-        createdAt: "2026-01-10",
-    },
-    {
-        id: "2",
-        title: "Birthday Bash - Aiman",
-        owner: "Fatimah Lee",
-        ownerEmail: "fatimah@example.com",
-        eventType: "Birthday",
-        date: "28 Jan 2026",
-        plan: "basic",
-        views: 87,
-        rsvpCount: 42,
-        status: "published",
-        createdAt: "2026-01-08",
-    },
-    {
-        id: "3",
-        title: "Corporate Annual Dinner",
-        owner: "TechCorp Sdn Bhd",
-        ownerEmail: "hr@techcorp.com",
-        eventType: "Corporate",
-        date: "20 Mar 2026",
-        plan: "exclusive",
-        views: 0,
-        rsvpCount: 0,
-        status: "draft",
-        createdAt: "2026-01-15",
-    },
-    {
-        id: "4",
-        title: "Hari Raya Open House",
-        owner: "Zainab Abdullah",
-        ownerEmail: "zainab@example.com",
-        eventType: "Celebration",
-        date: "10 Apr 2026",
-        plan: "premium",
-        views: 156,
-        rsvpCount: 89,
-        status: "published",
-        createdAt: "2026-01-12",
-    },
-];
+interface Event {
+    id: string;
+    title: string;
+    owner: string;
+    ownerEmail: string;
+    eventType: string;
+    date: string;
+    plan: string;
+    views: number;
+    rsvpCount: number;
+    status: string;
+    createdAt: string;
+}
 
-const stats = [
-    { label: "Total Events", value: "47", icon: Calendar, color: "primary", bgColor: "bg-primary/20" },
-    { label: "Published", value: "38", icon: Eye, color: "success", bgColor: "bg-success/20" },
-    { label: "Total RSVPs", value: "2,847", icon: Users, color: "info", bgColor: "bg-info/20" },
-];
+interface Stats {
+    totalEvents: number;
+    publishedEvents: number;
+    totalRsvps: number;
+}
 
 export default function AdminEventsPage() {
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [events, setEvents] = useState<Event[]>([]);
+    const [stats, setStats] = useState<Stats>({ totalEvents: 0, publishedEvents: 0, totalRsvps: 0 });
 
-    const filteredEvents = allEvents.filter((event) => {
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/admin/events');
+                if (!response.ok) throw new Error('Failed to fetch events');
+                const data = await response.json();
+                setStats(data.stats);
+                setEvents(data.events || []);
+            } catch (err) {
+                setError(String(err));
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    const filteredEvents = events.filter((event) => {
         const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
             event.owner.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === "all" || event.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
+
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return 'N/A';
+        return new Date(dateStr).toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+
+    const statItems = [
+        { label: "Total Events", value: stats.totalEvents.toString(), icon: Calendar, color: "primary", bgColor: "bg-primary/20" },
+        { label: "Published", value: stats.publishedEvents.toString(), icon: Eye, color: "success", bgColor: "bg-success/20" },
+        { label: "Total RSVPs", value: stats.totalRsvps.toLocaleString(), icon: Users, color: "info", bgColor: "bg-info/20" },
+    ];
+
+    if (loading) {
+        return (
+            <div className="space-y-8 animate-fade-in">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">All Events</h1>
+                    <p className="text-foreground-muted">Manage all events across the platform</p>
+                </div>
+                <div className="flex items-center justify-center py-20">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="space-y-8 animate-fade-in">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">All Events</h1>
+                </div>
+                <div className="glass-card p-8 text-center">
+                    <AlertTriangle className="w-12 h-12 text-error mx-auto mb-4" />
+                    <p className="text-error font-medium">Failed to load events</p>
+                    <p className="text-foreground-muted text-sm mt-2">{error}</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-fade-in">
@@ -99,7 +121,7 @@ export default function AdminEventsPage() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {stats.map((stat) => {
+                {statItems.map((stat) => {
                     const Icon = stat.icon;
                     return (
                         <div key={stat.label} className="glass-card p-5">
@@ -142,69 +164,81 @@ export default function AdminEventsPage() {
             </div>
 
             {/* Events Table */}
-            <div className="glass-card overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-[var(--glass-border)]">
-                                <th className="text-left p-4 text-sm font-medium text-foreground-muted">Event</th>
-                                <th className="text-left p-4 text-sm font-medium text-foreground-muted">Owner</th>
-                                <th className="text-left p-4 text-sm font-medium text-foreground-muted">Plan</th>
-                                <th className="text-left p-4 text-sm font-medium text-foreground-muted">Status</th>
-                                <th className="text-left p-4 text-sm font-medium text-foreground-muted">Views</th>
-                                <th className="text-left p-4 text-sm font-medium text-foreground-muted">RSVPs</th>
-                                <th className="text-left p-4 text-sm font-medium text-foreground-muted">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredEvents.map((event) => (
-                                <tr key={event.id} className="border-b border-[var(--glass-border)] hover:bg-white/5">
-                                    <td className="p-4">
-                                        <div>
-                                            <p className="font-medium text-white">{event.title}</p>
-                                            <p className="text-sm text-foreground-muted">{event.eventType} • {event.date}</p>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div>
-                                            <p className="text-white">{event.owner}</p>
-                                            <p className="text-sm text-foreground-muted">{event.ownerEmail}</p>
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`badge-${event.plan} text-xs font-bold px-2 py-1 rounded-full text-white`}>
-                                            {event.plan.toUpperCase()}
-                                        </span>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${event.status === "published"
-                                            ? "bg-success/20 text-success"
-                                            : "bg-warning/20 text-warning"
-                                            }`}>
-                                            {event.status}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-white">{event.views.toLocaleString()}</td>
-                                    <td className="p-4 text-white">{event.rsvpCount.toLocaleString()}</td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-2">
-                                            <button className="p-2 rounded-lg hover:bg-white/10 text-foreground-muted hover:text-white transition-colors">
-                                                <ExternalLink className="w-4 h-4" />
-                                            </button>
-                                            <button className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                            <button className="p-2 rounded-lg hover:bg-white/10 text-foreground-muted hover:text-white transition-colors">
-                                                <MoreVertical className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </td>
+            {filteredEvents.length > 0 ? (
+                <div className="glass-card overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-[var(--glass-border)]">
+                                    <th className="text-left p-4 text-sm font-medium text-foreground-muted">Event</th>
+                                    <th className="text-left p-4 text-sm font-medium text-foreground-muted">Owner</th>
+                                    <th className="text-left p-4 text-sm font-medium text-foreground-muted">Plan</th>
+                                    <th className="text-left p-4 text-sm font-medium text-foreground-muted">Status</th>
+                                    <th className="text-left p-4 text-sm font-medium text-foreground-muted">Views</th>
+                                    <th className="text-left p-4 text-sm font-medium text-foreground-muted">RSVPs</th>
+                                    <th className="text-left p-4 text-sm font-medium text-foreground-muted">Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {filteredEvents.map((event) => (
+                                    <tr key={event.id} className="border-b border-[var(--glass-border)] hover:bg-white/5">
+                                        <td className="p-4">
+                                            <div>
+                                                <p className="font-medium text-white">{event.title}</p>
+                                                <p className="text-sm text-foreground-muted">{event.eventType} • {formatDate(event.date)}</p>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <div>
+                                                <p className="text-white">{event.owner}</p>
+                                                <p className="text-sm text-foreground-muted">{event.ownerEmail}</p>
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`badge-${event.plan} text-xs font-bold px-2 py-1 rounded-full text-white`}>
+                                                {event.plan.toUpperCase()}
+                                            </span>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className={`px-2 py-1 rounded-lg text-xs font-medium ${event.status === "published"
+                                                ? "bg-success/20 text-success"
+                                                : "bg-warning/20 text-warning"
+                                                }`}>
+                                                {event.status}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-white">{event.views.toLocaleString()}</td>
+                                        <td className="p-4 text-white">{event.rsvpCount.toLocaleString()}</td>
+                                        <td className="p-4">
+                                            <div className="flex items-center gap-2">
+                                                <button className="p-2 rounded-lg hover:bg-white/10 text-foreground-muted hover:text-white transition-colors">
+                                                    <ExternalLink className="w-4 h-4" />
+                                                </button>
+                                                <button className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                                <button className="p-2 rounded-lg hover:bg-white/10 text-foreground-muted hover:text-white transition-colors">
+                                                    <MoreVertical className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="glass-card p-12 text-center">
+                    <Calendar className="w-12 h-12 text-foreground-muted mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-white mb-2">No Events Found</h3>
+                    <p className="text-foreground-muted">
+                        {searchQuery || statusFilter !== "all"
+                            ? "No events match your current filters."
+                            : "No events have been created yet."}
+                    </p>
+                </div>
+            )}
         </div>
     );
 }
