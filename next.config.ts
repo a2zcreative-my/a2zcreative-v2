@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
 
 const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: ['lucide-react', 'date-fns', 'lodash', 'recharts'],
+  },
   images: {
     remotePatterns: [
       {
