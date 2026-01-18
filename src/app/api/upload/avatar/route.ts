@@ -78,16 +78,6 @@ export async function POST(request: NextRequest) {
         // Construct public URL (using our proxy route)
         const publicUrl = `/api/images/${key}`
 
-        // Update user metadata in Supabase
-        const { error: updateError } = await supabase.auth.updateUser({
-            data: { avatar_url: publicUrl }
-        })
-
-        if (updateError) {
-            console.error('Failed to update user metadata:', updateError)
-            return NextResponse.json({ error: 'Failed to update user profile' }, { status: 500 })
-        }
-
         return NextResponse.json({
             success: true,
             url: publicUrl

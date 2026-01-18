@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
+import { createClient } from "@/lib/supabase/client";
 
 interface PlatformStats {
     totalUsers: number;
@@ -68,6 +69,7 @@ const plans = [
 
 export default function AdminSettingsPage() {
     const { user, isAdmin } = useAuth();
+    const supabase = createClient();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<PlatformStats>({ totalUsers: 0, totalEvents: 0, totalInvoices: 0 });
     const [activeTab, setActiveTab] = useState<"overview" | "plans" | "integrations" | "profile">("overview");
@@ -90,10 +92,17 @@ export default function AdminSettingsPage() {
             const data = await response.json();
 
             if (response.ok) {
-                // Determine if we need to reload to show new avatar or if auth context updates automatically
-                // Typically Supabase auth listener handles it, but we can force refresh if needed
-                alert("Avatar updated successfully! It may take a moment to reflect.");
-                window.location.reload();
+                // Update user metadata client-side to ensure session sync
+                const { error: updateError } = await supabase.auth.updateUser({
+                    data: { avatar_url: data.url }
+                });
+
+                if (updateError) {
+                    throw updateError;
+                }
+
+                alert("Avatar updated successfully!");
+                // No reload needed, AuthContext will pick up the change
             } else {
                 alert(`Upload failed: ${data.error}`);
             }

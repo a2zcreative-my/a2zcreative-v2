@@ -5,9 +5,11 @@ import { DashboardLayout } from "@/components/layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Shield, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SettingsPage() {
     const { user, userRole, isAdmin, loading } = useAuth();
+    const supabase = createClient();
     const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications" | "team">("profile");
 
     // Form state for profile
@@ -37,8 +39,15 @@ export default function SettingsPage() {
             const data = await response.json();
 
             if (response.ok) {
+                // Update user metadata client-side
+                const { error: updateError } = await supabase.auth.updateUser({
+                    data: { avatar_url: data.url }
+                });
+
+                if (updateError) throw updateError;
+
                 alert("Avatar updated successfully!");
-                window.location.reload();
+                // No reload needed
             } else {
                 alert(`Upload failed: ${data.error}`);
             }
