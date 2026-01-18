@@ -105,12 +105,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     await syncUserToD1(session.user)
                     await fetchUserRole()
                     // Check if already on a dashboard/admin page - avoid unnecessary redirects
+                    // Only redirect if we are on the root page or an auth page
                     const currentPath = window.location.pathname
-                    const isOnAdminPage = currentPath.startsWith('/admin')
-                    const isOnDashboardPage = currentPath.startsWith('/dashboard')
+                    const isAuthPage = currentPath.startsWith('/auth') || currentPath === '/'
 
-                    // Only redirect if not already on appropriate page
-                    if (!isOnAdminPage && !isOnDashboardPage) {
+                    if (isAuthPage) {
                         // Redirect based on role - need to fetch fresh role
                         const roleResponse = await fetch('/api/users/me')
                         if (roleResponse.ok) {
