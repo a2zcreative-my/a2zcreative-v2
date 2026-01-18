@@ -31,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true)
     const [roleLoading, setRoleLoading] = useState(true)
     const [userRole, setUserRole] = useState<UserRole>('client')
+    const [hasRedirected, setHasRedirected] = useState(false) // Prevent multiple redirects
     const router = useRouter()
     const supabase = createClient()
 
@@ -97,7 +98,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(session?.user ?? null)
                 setLoading(false)
 
-                if (event === 'SIGNED_IN' && session?.user) {
+                if (event === 'SIGNED_IN' && session?.user && !hasRedirected) {
+                    // Only redirect on actual fresh sign-in, not token refresh
+                    setHasRedirected(true)
                     // Sync user to D1 on sign-in
                     await syncUserToD1(session.user)
                     await fetchUserRole()
@@ -116,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 } else if (event === 'SIGNED_OUT') {
                     setUserRole('client')
                     setRoleLoading(false)
+                    setHasRedirected(false) // Reset on sign out
                     router.push('/auth/login')
                 }
                 // Note: INITIAL_SESSION and TOKEN_REFRESHED are handled by getSession above

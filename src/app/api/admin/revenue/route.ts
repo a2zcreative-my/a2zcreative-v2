@@ -39,13 +39,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Fetch all revenue data in batch
-        const [
-            totalRevenueResult,
-            thisMonthResult,
-            pendingResult,
-            transactionsResult,
-            planBreakdownResult
-        ] = await db.batch([
+        const results = await db.batch([
             db.prepare(`SELECT COALESCE(SUM(amount), 0) as total FROM invoices WHERE status = 'paid'`),
             db.prepare(`SELECT COALESCE(SUM(amount), 0) as total FROM invoices WHERE status = 'paid' AND created_at >= date('now', 'start of month')`),
             db.prepare(`SELECT COALESCE(SUM(amount), 0) as total FROM invoices WHERE status = 'pending'`),
@@ -69,6 +63,14 @@ export async function GET(request: NextRequest) {
                 GROUP BY COALESCE(e.plan, 'starter')
             `)
         ])
+
+        const [
+            totalRevenueResult,
+            thisMonthResult,
+            pendingResult,
+            transactionsResult,
+            planBreakdownResult
+        ] = results || []
 
         const stats = {
             totalRevenue: (totalRevenueResult.results?.[0] as any)?.total || 0,

@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Fetch stats and events in batch
-        const [totalResult, publishedResult, rsvpResult, eventsResult] = await db.batch([
+        const results = await db.batch([
             db.prepare(`SELECT COUNT(*) as count FROM events`),
             db.prepare(`SELECT COUNT(*) as count FROM events WHERE status = 'published'`),
             db.prepare(`SELECT COALESCE(SUM(rsvp_count), 0) as total FROM events`),
@@ -52,6 +52,8 @@ export async function GET(request: NextRequest) {
                 LIMIT 50
             `)
         ])
+
+        const [totalResult, publishedResult, rsvpResult, eventsResult] = results || []
 
         const stats = {
             totalEvents: (totalResult.results?.[0] as any)?.count || 0,

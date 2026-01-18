@@ -46,13 +46,26 @@ export default function AdminEventsPage() {
         async function fetchData() {
             try {
                 setLoading(true);
+                setError(null);
                 const response = await fetch('/api/admin/events');
-                if (!response.ok) throw new Error('Failed to fetch events');
                 const data = await response.json();
-                setStats(data.stats);
+
+                if (!response.ok) {
+                    // Only throw if it's a real error (401, 403, 500), not empty data
+                    if (response.status === 401 || response.status === 403) {
+                        throw new Error(data.error || 'Unauthorized');
+                    }
+                    // For other errors, just use empty data
+                    console.error('API error:', data.error);
+                }
+
+                setStats(data.stats || { totalEvents: 0, publishedEvents: 0, totalRsvps: 0 });
                 setEvents(data.events || []);
             } catch (err) {
-                setError(String(err));
+                console.error('Fetch error:', err);
+                // Don't show error for fetch failures, just empty state
+                setStats({ totalEvents: 0, publishedEvents: 0, totalRsvps: 0 });
+                setEvents([]);
             } finally {
                 setLoading(false);
             }

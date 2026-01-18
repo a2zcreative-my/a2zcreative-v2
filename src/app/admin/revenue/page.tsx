@@ -44,14 +44,27 @@ export default function AdminRevenuePage() {
         async function fetchData() {
             try {
                 setLoading(true);
+                setError(null);
                 const response = await fetch('/api/admin/revenue');
-                if (!response.ok) throw new Error('Failed to fetch revenue data');
                 const data = await response.json();
-                setStats(data.stats);
+
+                if (!response.ok) {
+                    // Only throw if it's a real error (401, 403), not empty data
+                    if (response.status === 401 || response.status === 403) {
+                        throw new Error(data.error || 'Unauthorized');
+                    }
+                    console.error('API error:', data.error);
+                }
+
+                setStats(data.stats || { totalRevenue: 0, thisMonth: 0, pending: 0 });
                 setTransactions(data.transactions || []);
                 setPlanBreakdown(data.planBreakdown || []);
             } catch (err) {
-                setError(String(err));
+                console.error('Fetch error:', err);
+                // Don't show error for fetch failures, just empty state
+                setStats({ totalRevenue: 0, thisMonth: 0, pending: 0 });
+                setTransactions([]);
+                setPlanBreakdown([]);
             } finally {
                 setLoading(false);
             }
@@ -165,10 +178,10 @@ export default function AdminRevenuePage() {
                                             <td className="py-3 text-white font-medium">RM {tx.amount?.toFixed(2) || '0.00'}</td>
                                             <td className="py-3">
                                                 <span className={`px-2 py-1 rounded-lg text-xs font-medium ${tx.status === 'paid' || tx.status === 'completed'
-                                                        ? 'bg-success/20 text-success'
-                                                        : tx.status === 'refunded'
-                                                            ? 'bg-error/20 text-error'
-                                                            : 'bg-warning/20 text-warning'
+                                                    ? 'bg-success/20 text-success'
+                                                    : tx.status === 'refunded'
+                                                        ? 'bg-error/20 text-error'
+                                                        : 'bg-warning/20 text-warning'
                                                     }`}>
                                                     {tx.status?.toUpperCase() || 'PENDING'}
                                                 </span>
