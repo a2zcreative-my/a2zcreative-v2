@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { Shield, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 export default function SettingsPage() {
     const { user, userRole, isAdmin, loading } = useAuth();
@@ -94,8 +95,8 @@ export default function SettingsPage() {
                             <h2 className="text-lg font-semibold text-white">Profile Information</h2>
                             {/* Role Badge */}
                             <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${isAdmin
-                                    ? "bg-warning/20 text-warning"
-                                    : "bg-primary/20 text-primary"
+                                ? "bg-warning/20 text-warning"
+                                : "bg-primary/20 text-primary"
                                 }`}>
                                 {isAdmin && <Shield className="w-3 h-3" />}
                                 {userRole.toUpperCase()}
@@ -103,11 +104,28 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="flex items-center gap-6 mb-8">
-                            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-3xl text-white font-bold">
-                                {getUserInitial()}
-                            </div>
+                            {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+                                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[var(--glass-border)]">
+                                    <Image
+                                        src={user.user_metadata.avatar_url || user.user_metadata.picture}
+                                        alt={`${firstName} ${lastName}`}
+                                        width={96}
+                                        height={96}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            ) : (
+                                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-3xl text-white font-bold">
+                                    {getUserInitial()}
+                                </div>
+                            )}
                             <div>
-                                <button className="btn-secondary text-sm">Change Photo</button>
+                                <button
+                                    onClick={() => alert("Photo upload feature is coming soon! Currently we use your authorized provider profile picture.")}
+                                    className="btn-secondary text-sm"
+                                >
+                                    Change Photo
+                                </button>
                                 <p className="text-xs text-foreground-muted mt-2">JPG, PNG max 2MB</p>
                             </div>
                         </div>

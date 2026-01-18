@@ -189,9 +189,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 {/* User Profile with Logout */}
                 <div className="p-4 border-t border-[var(--glass-border)]">
                     <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--glass-bg)]">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-secondary flex items-center justify-center text-white font-semibold">
-                            {getUserInitial()}
-                        </div>
+                        {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
+                                <Image
+                                    src={user.user_metadata.avatar_url || user.user_metadata.picture}
+                                    alt={getUserName()}
+                                    width={40}
+                                    height={40}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-secondary flex items-center justify-center text-white font-semibold">
+                                {getUserInitial()}
+                            </div>
+                        )}
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-white truncate">{getUserName()}</p>
                             <p className="text-xs text-foreground-muted truncate">Pro Plan</p>
