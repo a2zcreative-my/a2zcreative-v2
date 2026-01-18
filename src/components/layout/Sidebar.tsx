@@ -57,7 +57,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const navItems = isAdmin ? adminNavItems : clientNavItems;
 
     const isActive = (href: string) => {
-        if (href === "/dashboard") {
+        // For dashboard links, use exact match only
+        if (href === "/dashboard" || href === "/admin") {
             return pathname === href;
         }
         return pathname.startsWith(href);

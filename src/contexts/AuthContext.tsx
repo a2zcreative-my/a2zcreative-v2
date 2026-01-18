@@ -92,7 +92,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Sync user to D1 on sign-in
                     await syncUserToD1(session.user)
                     await fetchUserRole()
-                    router.push('/events')
+                    // Redirect based on role - need to fetch fresh role
+                    const roleResponse = await fetch('/api/users/me')
+                    if (roleResponse.ok) {
+                        const roleData = await roleResponse.json()
+                        if (roleData.role === 'admin') {
+                            router.push('/admin')
+                        } else {
+                            router.push('/dashboard')
+                        }
+                    } else {
+                        router.push('/dashboard')
+                    }
                 } else if (event === 'SIGNED_OUT') {
                     setUserRole('client')
                     router.push('/auth/login')
