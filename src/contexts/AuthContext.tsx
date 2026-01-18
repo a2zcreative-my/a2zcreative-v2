@@ -98,6 +98,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(session?.user ?? null)
                 setLoading(false)
 
+                if (event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {
+                    // Just update state (already done above), do not redirect
+                    return
+                }
+
                 if (event === 'SIGNED_IN' && session?.user && !hasRedirected) {
                     // Only redirect on actual fresh sign-in, not token refresh
                     setHasRedirected(true)
@@ -127,7 +132,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setUserRole('client')
                     setRoleLoading(false)
                     setHasRedirected(false) // Reset on sign out
-                    router.push('/auth/login')
+                    // Do not auto-redirect here. Let the logout button handle it.
+                    // This prevents redirects if SIGNED_OUT fires during profile updates.
                 }
                 // Note: INITIAL_SESSION and TOKEN_REFRESHED are handled by getSession above
             }
