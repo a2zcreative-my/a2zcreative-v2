@@ -18,6 +18,37 @@ export default function SettingsPage() {
     const [company, setCompany] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [saveMessage, setSaveMessage] = useState("");
+    const [isUploading, setIsUploading] = useState(false);
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch("/api/upload/avatar", {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("Avatar updated successfully!");
+                window.location.reload();
+            } else {
+                alert(`Upload failed: ${data.error}`);
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Upload failed. Please try again.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     // Populate form with user data
     useEffect(() => {
@@ -120,12 +151,23 @@ export default function SettingsPage() {
                                 </div>
                             )}
                             <div>
-                                <button
-                                    onClick={() => alert("Photo upload feature is coming soon! Currently we use your authorized provider profile picture.")}
-                                    className="btn-secondary text-sm"
-                                >
-                                    Change Photo
-                                </button>
+                                <label className="btn-secondary text-sm cursor-pointer relative overflow-hidden">
+                                    {isUploading ? (
+                                        <div className="flex items-center gap-2">
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Uploading...
+                                        </div>
+                                    ) : (
+                                        "Change Photo"
+                                    )}
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/jpeg,image/png,image/gif,image/webp"
+                                        onChange={handleAvatarUpload}
+                                        disabled={isUploading}
+                                    />
+                                </label>
                                 <p className="text-xs text-foreground-muted mt-2">JPG, PNG max 2MB</p>
                             </div>
                         </div>

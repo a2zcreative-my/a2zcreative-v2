@@ -15,7 +15,11 @@ import {
     Crown,
     Gem,
     ExternalLink,
+    User,
+    Upload,
 } from "lucide-react";
+import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PlatformStats {
     totalUsers: number;
@@ -63,9 +67,44 @@ const plans = [
 ];
 
 export default function AdminSettingsPage() {
+    const { user, isAdmin } = useAuth();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<PlatformStats>({ totalUsers: 0, totalEvents: 0, totalInvoices: 0 });
-    const [activeTab, setActiveTab] = useState<"overview" | "plans" | "integrations">("overview");
+    const [activeTab, setActiveTab] = useState<"overview" | "plans" | "integrations" | "profile">("overview");
+    const [uploading, setUploading] = useState(false);
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch("/api/upload/avatar", {
+                method: "POST",
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Determine if we need to reload to show new avatar or if auth context updates automatically
+                // Typically Supabase auth listener handles it, but we can force refresh if needed
+                alert("Avatar updated successfully! It may take a moment to reflect.");
+                window.location.reload();
+            } else {
+                alert(`Upload failed: ${data.error}`);
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Upload failed. Please try again.");
+        } finally {
+            setUploading(false);
+        }
+    };
+
 
     useEffect(() => {
         async function fetchStats() {
@@ -120,7 +159,7 @@ export default function AdminSettingsPage() {
 
             {/* Tabs */}
             <div className="flex flex-wrap gap-2">
-                {(["overview", "plans", "integrations"] as const).map((tab) => (
+                {(["overview", "profile", "plans", "integrations"] as const).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -206,6 +245,73 @@ export default function AdminSettingsPage() {
                                     You have full administrative access to the platform. All changes made here will affect the entire system.
                                     Please exercise caution when modifying platform settings.
                                 </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Profile Tab */}
+            {activeTab === "profile" && (
+                <div className="space-y-6">
+                    <div className="glass-card p-6">
+                        <h2 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                            <User className="w-5 h-5 text-primary" />
+                            Admin Profile
+                        </h2>
+
+                        <div className="flex flex-col sm:flex-row items-center gap-8">
+                            <div className="relative group">
+                                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[var(--glass-border)] bg-background-tertiary">
+                                    {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+                                        <Image
+                                            src={user.user_metadata.avatar_url || user.user_metadata.picture}
+                                            alt={user.email || "Admin"}
+                                            width={128}
+                                            height={128}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-secondary text-4xl text-white font-bold">
+                                            {(user?.email || "A").charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
+                                <label className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-white cursor-pointer hover:bg-primary/90 transition-colors shadow-lg">
+                                    {uploading ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <Upload className="w-5 h-5" />
+                                    )}
+                                    <input
+                                        type="file"
+                                        className="hidden"
+                                        accept="image/jpeg,image/png,image/gif,image/webp"
+                                        onChange={handleAvatarUpload}
+                                        disabled={uploading}
+                                    />
+                                </label>
+                            </div>
+
+                            <div className="flex-1 w-full space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground-muted mb-1">Email</label>
+                                    <input
+                                        type="text"
+                                        value={user?.email || ""}
+                                        disabled
+                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white opacity-60 cursor-not-allowed"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground-muted mb-1">Role</label>
+                                    <input
+                                        type="text"
+                                        value="Super Admin"
+                                        disabled
+                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-primary font-bold opacity-80 cursor-not-allowed"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
