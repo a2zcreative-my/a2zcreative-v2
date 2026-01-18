@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Resend } from 'resend'
 
 export const runtime = 'edge'
 
@@ -9,6 +10,8 @@ interface UserSyncRequest {
     phone?: string
     plan?: string
 }
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
     try {
@@ -36,6 +39,10 @@ export async function POST(request: NextRequest) {
             })
         }
 
+        // Check if user exists (to determine if we should send welcome email)
+        const existingUser = await db.prepare('SELECT id FROM users WHERE id = ?').bind(id).first()
+        const isNewUser = !existingUser
+
         // Upsert user to D1
         await db.prepare(`
             INSERT INTO users (id, email, name, phone, plan, updated_at)
@@ -48,9 +55,46 @@ export async function POST(request: NextRequest) {
                 updated_at = datetime('now')
         `).bind(id, email, name || null, phone || null, plan || 'starter').run()
 
+        // Send Welcome Email if new user
+        if (isNewUser) {
+            try {
+                if (process.env.RESEND_API_KEY) {
+                    await resend.emails.send({
+                        from: 'A2ZCreative <onboarding@resend.dev>', // Update this with your verified domain
+                        to: email,
+                        subject: 'Welcome to A2ZCreative! 🎉',
+                        html: `
+                            <div style="font-family: sans-serif; max-w-600px; margin: 0 auto;">
+                                <h1 style="color: #4F46E5;">Welcome to A2ZCreative!</h1>
+                                <p>Hi ${name || 'there'},</p>
+                                <p>We're thrilled to have you on board! You've just taken the first step towards creating unforgettable digital experiences for your events.</p>
+                                <p>Here is what you can do next:</p>
+                                <ul>
+                                    <li>Create your first event</li>
+                                    <li>Customize your invitation design</li>
+                                    <li>Manage your guest list</li>
+                                </ul>
+                                <p>If you have any questions, feel free to reply to this email.</p>
+                                <br/>
+                                <p>Best regards,</p>
+                                <p>The A2ZCreative Team</p>
+                            </div>
+                        `
+                    })
+                    console.log(`[Welcome Email] Sent to ${email}`)
+                } else {
+                    console.log(`[Welcome Email] Skipped - RESEND_API_KEY not found`)
+                }
+            } catch (emailError) {
+                console.error('[Welcome Email Error]:', emailError)
+                // Don't fail the sync request if email fails
+            }
+        }
+
         return NextResponse.json({
             success: true,
-            message: 'User synced to D1',
+            message: isNewUser ? 'User created and welcome email sent' : 'User synced',
+            isNewUser,
             user: { id, email }
         })
     } catch (error) {
