@@ -51,9 +51,29 @@ CREATE TABLE IF NOT EXISTS gift_contributions (
   FOREIGN KEY (event_id) REFERENCES events(id)
 );
 
+-- Support tickets table
+CREATE TABLE IF NOT EXISTS support_tickets (
+  id TEXT PRIMARY KEY,
+  ticket_number TEXT UNIQUE NOT NULL,
+  user_id TEXT NOT NULL,
+  user_email TEXT NOT NULL,
+  user_name TEXT,
+  category TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  description TEXT NOT NULL,
+  priority TEXT DEFAULT 'medium',
+  status TEXT DEFAULT 'open',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 -- Create indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_events_user ON events(user_id);
 CREATE INDEX IF NOT EXISTS idx_events_slug ON events(slug);
 CREATE INDEX IF NOT EXISTS idx_rsvp_event ON rsvp_responses(event_id);
 CREATE INDEX IF NOT EXISTS idx_gifts_event ON gift_contributions(event_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_user ON support_tickets(user_id);
+CREATE INDEX IF NOT EXISTS idx_tickets_status ON support_tickets(status);
+

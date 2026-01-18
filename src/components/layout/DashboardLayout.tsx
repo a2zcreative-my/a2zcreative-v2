@@ -1,8 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import Sidebar, { Menu } from "./Sidebar";
-import { Bell, HelpCircle } from "lucide-react";
+import { Bell, HelpCircle, X, Users, CreditCard, Calendar, Info } from "lucide-react";
+
+// Mock notifications data
+const notifications = [
+    {
+        id: "1",
+        type: "rsvp",
+        title: "New RSVP Received",
+        message: "Ahmad confirmed attendance",
+        time: "5 min ago",
+        read: false,
+        icon: Users,
+    },
+    {
+        id: "2",
+        type: "payment",
+        title: "Payment Successful",
+        message: "Premium plan - RM150",
+        time: "2 hours ago",
+        read: false,
+        icon: CreditCard,
+    },
+    {
+        id: "3",
+        type: "reminder",
+        title: "Event Reminder",
+        message: "Birthday Bash in 10 days",
+        time: "1 day ago",
+        read: true,
+        icon: Calendar,
+    },
+];
 
 export default function DashboardLayout({
     children,
@@ -10,6 +42,21 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [notificationOpen, setNotificationOpen] = useState(false);
+    const notificationRef = useRef<HTMLDivElement>(null);
+
+    const unreadCount = notifications.filter(n => !n.read).length;
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+                setNotificationOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     return (
         <div className="min-h-screen bg-background">
@@ -30,13 +77,97 @@ export default function DashboardLayout({
                         </div>
                         <div className="flex items-center gap-2 md:gap-4">
                             {/* Notifications */}
-                            <button className="w-10 h-10 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] flex items-center justify-center text-foreground-muted hover:text-white transition-colors">
-                                <Bell className="w-5 h-5" />
-                            </button>
+                            <div className="relative" ref={notificationRef}>
+                                <button
+                                    onClick={() => setNotificationOpen(!notificationOpen)}
+                                    className="relative w-10 h-10 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] flex items-center justify-center text-foreground-muted hover:text-white hover:border-primary/30 transition-colors"
+                                >
+                                    <Bell className="w-5 h-5" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full text-xs font-bold text-white flex items-center justify-center">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+
+                                {/* Notification Dropdown */}
+                                {notificationOpen && (
+                                    <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-background-secondary border border-[var(--glass-border)] rounded-2xl shadow-2xl overflow-hidden z-50">
+                                        {/* Header */}
+                                        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--glass-border)]">
+                                            <h3 className="font-semibold text-white">Notifications</h3>
+                                            <button
+                                                onClick={() => setNotificationOpen(false)}
+                                                className="p-1 rounded-lg hover:bg-white/10 text-foreground-muted hover:text-white"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+
+                                        {/* Notification List */}
+                                        <div className="max-h-80 overflow-y-auto">
+                                            {notifications.length > 0 ? (
+                                                notifications.map((notification) => {
+                                                    const Icon = notification.icon;
+                                                    return (
+                                                        <div
+                                                            key={notification.id}
+                                                            className={`flex items-start gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-[var(--glass-border)] last:border-b-0 ${!notification.read ? "bg-primary/5" : ""
+                                                                }`}
+                                                        >
+                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${notification.type === "rsvp" ? "bg-success/20" :
+                                                                    notification.type === "payment" ? "bg-primary/20" :
+                                                                        notification.type === "reminder" ? "bg-warning/20" :
+                                                                            "bg-info/20"
+                                                                }`}>
+                                                                <Icon className={`w-4 h-4 ${notification.type === "rsvp" ? "text-success" :
+                                                                        notification.type === "payment" ? "text-primary" :
+                                                                            notification.type === "reminder" ? "text-warning" :
+                                                                                "text-info"
+                                                                    }`} />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <p className={`text-sm font-medium truncate ${!notification.read ? "text-white" : "text-foreground-muted"}`}>
+                                                                        {notification.title}
+                                                                    </p>
+                                                                    {!notification.read && (
+                                                                        <span className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-xs text-foreground-muted truncate">{notification.message}</p>
+                                                                <p className="text-xs text-foreground-muted/60 mt-1">{notification.time}</p>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <div className="p-8 text-center">
+                                                    <Bell className="w-8 h-8 text-foreground-muted mx-auto mb-2" />
+                                                    <p className="text-sm text-foreground-muted">No notifications</p>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Footer */}
+                                        <Link
+                                            href="/notifications"
+                                            onClick={() => setNotificationOpen(false)}
+                                            className="block px-4 py-3 text-center text-sm text-primary hover:bg-white/5 border-t border-[var(--glass-border)]"
+                                        >
+                                            View all notifications
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Help */}
-                            <button className="hidden sm:flex w-10 h-10 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] items-center justify-center text-foreground-muted hover:text-white transition-colors">
+                            <Link
+                                href="/help"
+                                className="hidden sm:flex w-10 h-10 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] items-center justify-center text-foreground-muted hover:text-white hover:border-primary/30 transition-colors"
+                            >
                                 <HelpCircle className="w-5 h-5" />
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </header>

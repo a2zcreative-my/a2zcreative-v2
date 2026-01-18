@@ -10,8 +10,6 @@ import {
     FileEdit,
     Eye,
     BarChart3,
-    PlusCircle,
-    List,
     Share2,
     Building2,
 } from "lucide-react";
@@ -62,19 +60,13 @@ export default function DashboardPage() {
         <DashboardLayout>
             <div className="space-y-8 animate-fade-in">
                 {/* Welcome Header */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                            Welcome back!
-                        </h1>
-                        <p className="text-foreground-muted">
-                            Manage your events and track your invitations
-                        </p>
-                    </div>
-                    <Link href="/plans" className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center">
-                        <PlusCircle className="w-5 h-5" />
-                        Create New Event
-                    </Link>
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                        Welcome back!
+                    </h1>
+                    <p className="text-foreground-muted">
+                        Manage your events and track your invitations
+                    </p>
                 </div>
 
                 {/* Stats Grid */}
@@ -235,19 +227,7 @@ export default function DashboardPage() {
                 {/* Quick Actions */}
                 <div>
                     <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <Link href="/plans" className="glass-card glass-card-hover p-4 text-center">
-                            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-2">
-                                <PlusCircle className="w-6 h-6 text-primary" />
-                            </div>
-                            <p className="font-medium text-white">Create Event</p>
-                        </Link>
-                        <Link href="/events" className="glass-card glass-card-hover p-4 text-center">
-                            <div className="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center mx-auto mb-2">
-                                <List className="w-6 h-6 text-secondary" />
-                            </div>
-                            <p className="font-medium text-white">View All Events</p>
-                        </Link>
+                    <div className="grid grid-cols-2 gap-4">
                         <Link href="/guests" className="glass-card glass-card-hover p-4 text-center">
                             <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center mx-auto mb-2">
                                 <Users className="w-6 h-6 text-accent" />

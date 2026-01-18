@@ -5,10 +5,14 @@ import { createClient } from '@/lib/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
+export type UserRole = 'admin' | 'client'
+
 interface AuthContextType {
     user: User | null
     session: Session | null
     loading: boolean
+    userRole: UserRole
+    isAdmin: boolean
     signIn: (email: string, password: string) => Promise<{ error?: string }>
     signUp: (email: string, password: string, name: string, phone: string) => Promise<{ error?: string }>
     signOut: () => Promise<void>
@@ -24,14 +28,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(true)
+    const [userRole, setUserRole] = useState<UserRole>('client')
     const router = useRouter()
     const supabase = createClient()
+
+    // Fetch user role from API
+    const fetchUserRole = useCallback(async () => {
+        try {
+            const response = await fetch('/api/users/me')
+            if (response.ok) {
+                const data = await response.json()
+                setUserRole(data.role || 'client')
+            }
+        } catch (error) {
+            console.error('Failed to fetch user role:', error)
+            setUserRole('client')
+        }
+    }, [])
 
     useEffect(() => {
         // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session)
             setUser(session?.user ?? null)
+            if (session?.user) {
+                fetchUserRole()
+            }
         }).catch((err) => {
             console.error('Auth initialization error:', err)
         }).finally(() => {
@@ -46,15 +68,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setLoading(false)
 
                 if (event === 'SIGNED_IN') {
+                    await fetchUserRole()
                     router.push('/events')
                 } else if (event === 'SIGNED_OUT') {
+                    setUserRole('client')
                     router.push('/auth/login')
                 }
             }
         )
 
         return () => subscription.unsubscribe()
-    }, [router, supabase.auth])
+    }, [router, supabase.auth, fetchUserRole])
 
     const signIn = useCallback(async (email: string, password: string) => {
         try {
@@ -156,11 +180,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [supabase.auth])
 
+    const isAdmin = userRole === 'admin'
+
     return (
         <AuthContext.Provider value={{
             user,
             session,
             loading,
+            userRole,
+            isAdmin,
             signIn,
             signUp,
             signOut,

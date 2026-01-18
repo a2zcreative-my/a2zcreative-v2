@@ -18,9 +18,18 @@ import {
     LogOut,
     Menu,
     X,
+    Ticket,
 } from "lucide-react";
 
-const navItems = [
+const adminNavItems = [
+    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/events", label: "All Events", icon: Calendar },
+    { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/tickets", label: "Tickets", icon: Ticket },
+    { href: "/admin/revenue", label: "Revenue", icon: BarChart3 },
+];
+
+const clientNavItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/events", label: "My Events", icon: Calendar },
     { href: "/plans", label: "Create Event", icon: PlusCircle },
@@ -42,7 +51,10 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const { user, signOut } = useAuth();
+    const { user, signOut, isAdmin } = useAuth();
+
+    // Select navigation items based on role
+    const navItems = isAdmin ? adminNavItems : clientNavItems;
 
     const isActive = (href: string) => {
         if (href === "/dashboard") {
