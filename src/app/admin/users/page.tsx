@@ -41,6 +41,8 @@ export default function AdminUsersPage() {
     const [syncing, setSyncing] = useState(false);
     const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
     const [syncMessage, setSyncMessage] = useState<string | null>(null);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     // Fetch users from D1
     const fetchUsers = async () => {
@@ -102,6 +104,44 @@ export default function AdminUsersPage() {
             setSyncMessage(`✗ Sync failed: ${String(err)}`);
         } finally {
             setSyncing(false);
+        }
+    };
+
+    // Action Handlers
+    const handleEmail = (email: string) => {
+        window.location.href = `mailto:${email}`;
+    };
+
+    const handleSuspend = (user: User) => {
+        // Placeholder for future implementation
+        alert(`Suspend feature coming soon for ${user.name || user.email}`);
+    };
+
+    const handleToggleRole = async (user: User) => {
+        const newRole = user.role === "admin" ? "client" : "admin";
+        if (!confirm(`Are you sure you want to make ${user.name || user.email} a ${newRole}?`)) return;
+
+        setActionLoading(user.id);
+        setOpenMenuId(null);
+
+        try {
+            const response = await fetch("/api/admin/users", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id, role: newRole }),
+            });
+
+            if (response.ok) {
+                // Update local state
+                setUsers(users.map(u => u.id === user.id ? { ...u, role: newRole } : u));
+            } else {
+                alert("Failed to update user role");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update user role");
+        } finally {
+            setActionLoading(null);
         }
     };
 
@@ -290,16 +330,62 @@ export default function AdminUsersPage() {
                                             {new Date(user.created_at).toLocaleDateString()}
                                         </td>
                                         <td className="p-4">
-                                            <div className="flex items-center gap-2">
-                                                <button className="p-2 rounded-lg hover:bg-white/10 text-foreground-muted hover:text-white transition-colors" title="Send Email">
+                                            <div className="flex items-center gap-2 relative">
+                                                <button
+                                                    onClick={() => handleEmail(user.email)}
+                                                    className="p-2 rounded-lg hover:bg-white/10 text-foreground-muted hover:text-white transition-colors"
+                                                    title="Send Email"
+                                                >
                                                     <Mail className="w-4 h-4" />
                                                 </button>
-                                                <button className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors" title="Suspend User">
+                                                <button
+                                                    onClick={() => handleSuspend(user)}
+                                                    className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors"
+                                                    title="Suspend User"
+                                                >
                                                     <Ban className="w-4 h-4" />
                                                 </button>
-                                                <button className="p-2 rounded-lg hover:bg-white/10 text-foreground-muted hover:text-white transition-colors">
-                                                    <MoreVertical className="w-4 h-4" />
-                                                </button>
+                                                <div className="relative">
+                                                    <button
+                                                        onClick={() => setOpenMenuId(openMenuId === user.id ? null : user.id)}
+                                                        className="p-2 rounded-lg hover:bg-white/10 text-foreground-muted hover:text-white transition-colors"
+                                                    >
+                                                        {actionLoading === user.id ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                        ) : (
+                                                            <MoreVertical className="w-4 h-4" />
+                                                        )}
+                                                    </button>
+
+                                                    {/* Dropdown Menu */}
+                                                    {openMenuId === user.id && (
+                                                        <div className="absolute right-0 mt-2 w-48 bg-background-secondary border border-[var(--glass-border)] rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in">
+                                                            <button
+                                                                onClick={() => handleToggleRole(user)}
+                                                                className="w-full text-left px-4 py-3 text-sm text-foreground-muted hover:bg-white/5 hover:text-white flex items-center gap-2"
+                                                            >
+                                                                {user.role === "admin" ? (
+                                                                    <>
+                                                                        <Shield className="w-4 h-4" />
+                                                                        Demote to Client
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <ShieldCheck className="w-4 h-4" />
+                                                                        Promote to Admin
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {/* Backdrop to close menu */}
+                                                {openMenuId === user.id && (
+                                                    <div
+                                                        className="fixed inset-0 z-40"
+                                                        onClick={() => setOpenMenuId(null)}
+                                                    />
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
