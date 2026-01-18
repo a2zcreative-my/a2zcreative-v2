@@ -1,28 +1,38 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useState } from "react";
-import { Search, Mail, Clock, CheckCircle2, XCircle, Send, Filter, Calendar, Bell, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Mail, Clock, CheckCircle2, XCircle, Send, Filter, Calendar, Bell, Users, Loader2 } from "lucide-react";
 
-// Mock RSVP data
-const mockRSVPs = [
-    { id: 1, name: "Ahmad bin Ali", email: "ahmad@email.com", event: "Wedding Reception", status: "confirmed", pax: 4, respondedAt: "2024-01-15", message: "Can't wait! We'll be there." },
-    { id: 2, name: "Siti Nurhaliza", email: "siti@email.com", event: "Wedding Reception", status: "pending", pax: 0, respondedAt: null, message: null },
-    { id: 3, name: "Muhammad Haziq", email: "haziq@email.com", event: "Birthday Party", status: "confirmed", pax: 1, respondedAt: "2024-01-14", message: "Happy to attend!" },
-    { id: 4, name: "Nurul Izzah", email: "nurul@email.com", event: "Corporate Event", status: "declined", pax: 0, respondedAt: "2024-01-13", message: "Sorry, I have a conflicting schedule." },
-    { id: 5, name: "Amirul Hakim", email: "amirul@email.com", event: "Wedding Reception", status: "confirmed", pax: 3, respondedAt: "2024-01-12", message: "Looking forward to it!" },
-    { id: 6, name: "Farah Diana", email: "farah@email.com", event: "Birthday Party", status: "pending", pax: 0, respondedAt: null, message: null },
-    { id: 7, name: "Zulkifli Rahman", email: "zulkifli@email.com", event: "Wedding Reception", status: "confirmed", pax: 5, respondedAt: "2024-01-11", message: "Bringing the whole family!" },
-    { id: 8, name: "Aishah Hasanah", email: "aishah@email.com", event: "Corporate Event", status: "pending", pax: 0, respondedAt: null, message: null },
-];
+interface RSVP {
+    id: string | number;
+    name: string;
+    email: string;
+    event: string;
+    status: string;
+    pax: number;
+    respondedAt: string | null;
+    message: string | null;
+}
 
-const statusConfig = {
+interface RSVPStats {
+    total: number;
+    confirmed: number;
+    pending: number;
+    declined: number;
+    totalPax: number;
+}
+
+const statusConfig: Record<string, { icon: typeof CheckCircle2; color: string; bg: string; label: string }> = {
     confirmed: { icon: CheckCircle2, color: "text-success", bg: "bg-success/20", label: "Confirmed" },
     pending: { icon: Clock, color: "text-warning", bg: "bg-warning/20", label: "Pending" },
     declined: { icon: XCircle, color: "text-error", bg: "bg-error/20", label: "Declined" },
 };
 
 export default function RSVPPage() {
+    const [rsvps, setRsvps] = useState<RSVP[]>([]);
+    const [stats, setStats] = useState<RSVPStats>({ total: 0, confirmed: 0, pending: 0, declined: 0, totalPax: 0 });
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
     const [showReminderModal, setShowReminderModal] = useState(false);
@@ -31,7 +41,25 @@ export default function RSVPPage() {
     const [emailResults, setEmailResults] = useState<{ sent: number; failed: number; results: { id: number | string; email: string; success: boolean; error?: string }[] } | null>(null);
     const [sendError, setSendError] = useState<string | null>(null);
 
-    const pendingGuests = mockRSVPs.filter(r => r.status === "pending");
+    useEffect(() => {
+        async function fetchRSVPs() {
+            try {
+                const response = await fetch('/api/client/rsvp');
+                if (response.ok) {
+                    const data = await response.json();
+                    setRsvps(data.rsvps || []);
+                    setStats(data.stats || { total: 0, confirmed: 0, pending: 0, declined: 0, totalPax: 0 });
+                }
+            } catch (error) {
+                console.error('Failed to fetch RSVPs:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchRSVPs();
+    }, []);
+
+    const pendingGuests = rsvps.filter(r => r.status === "pending");
 
     const handleSendReminders = async () => {
         setSendingReminders(true);
@@ -66,19 +94,29 @@ export default function RSVPPage() {
         }
     };
 
-    const filteredRSVPs = mockRSVPs.filter(rsvp => {
+    const filteredRSVPs = rsvps.filter(rsvp => {
         const matchesSearch = rsvp.name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = filterStatus === "all" || rsvp.status === filterStatus;
         return matchesSearch && matchesStatus;
     });
 
-    const stats = {
-        total: mockRSVPs.length,
-        confirmed: mockRSVPs.filter(r => r.status === "confirmed").length,
-        pending: mockRSVPs.filter(r => r.status === "pending").length,
-        declined: mockRSVPs.filter(r => r.status === "declined").length,
-        totalPax: mockRSVPs.reduce((sum, r) => sum + r.pax, 0),
-    };
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <div className="p-6 md:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">RSVP Tracking</h1>
+                            <p className="text-foreground-muted">Track and manage guest responses</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>
@@ -335,7 +373,7 @@ export default function RSVPPage() {
                                         <p className="text-white font-medium">{stats.pending} Pending Guests</p>
                                     </div>
                                     <div className="max-h-48 overflow-y-auto space-y-2">
-                                        {mockRSVPs.filter(r => r.status === "pending").map(guest => (
+                                        {pendingGuests.map(guest => (
                                             <div key={guest.id} className="flex items-center justify-between py-2 border-b border-[var(--glass-border)] last:border-0">
                                                 <div>
                                                     <p className="text-white text-sm">{guest.name}</p>

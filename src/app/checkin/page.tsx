@@ -1,9 +1,9 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { QrCode, Search, UserCheck, Clock, Users, CheckCircle2, Camera, Keyboard, AlertCircle } from "lucide-react";
+import { QrCode, Search, UserCheck, Clock, Users, CheckCircle2, Camera, Keyboard, AlertCircle, Loader2 } from "lucide-react";
 
 // Dynamically import QR Scanner (requires browser APIs)
 const QrScanner = dynamic(() => import("@/components/QrScanner"), {
@@ -20,49 +20,68 @@ const QrScanner = dynamic(() => import("@/components/QrScanner"), {
     ),
 });
 
-// Mock check-in data with event field and QR codes
-const initialGuests = [
-    { id: 1, name: "Ahmad bin Ali", pax: 4, checkedIn: true, checkInTime: "10:30 AM", table: "VIP 1", event: "Wedding Reception", qrCode: "GUEST-001" },
-    { id: 2, name: "Amirul Hakim", pax: 3, checkedIn: true, checkInTime: "10:45 AM", table: "A5", event: "Wedding Reception", qrCode: "GUEST-002" },
-    { id: 3, name: "Zulkifli Rahman", pax: 5, checkedIn: true, checkInTime: "11:00 AM", table: "B2", event: "Wedding Reception", qrCode: "GUEST-003" },
-    { id: 4, name: "Muhammad Haziq", pax: 1, checkedIn: false, checkInTime: null, table: "C8", event: "Birthday Party", qrCode: "GUEST-004" },
-    { id: 5, name: "Siti Nurhaliza", pax: 2, checkedIn: false, checkInTime: null, table: "A3", event: "Wedding Reception", qrCode: "GUEST-005" },
-    { id: 6, name: "Farah Diana", pax: 2, checkedIn: false, checkInTime: null, table: "B7", event: "Birthday Party", qrCode: "GUEST-006" },
-    { id: 7, name: "Nurul Izzah", pax: 3, checkedIn: false, checkInTime: null, table: "C2", event: "Corporate Event", qrCode: "GUEST-007" },
-    { id: 8, name: "Aishah Hasanah", pax: 2, checkedIn: false, checkInTime: null, table: "D1", event: "Corporate Event", qrCode: "GUEST-008" },
-];
+interface Guest {
+    id: string | number;
+    name: string;
+    pax: number;
+    checkedIn: boolean;
+    checkInTime: string | null;
+    table: string;
+    event: string;
+    qrCode: string;
+}
 
-const events = [
-    { id: "all", name: "All Events" },
-    { id: "wedding", name: "Wedding Reception - Today" },
-    { id: "birthday", name: "Birthday Party - Tomorrow" },
-    { id: "corporate", name: "Corporate Event - Next Week" },
-];
-
-const eventMapping: Record<string, string> = {
-    "wedding": "Wedding Reception",
-    "birthday": "Birthday Party",
-    "corporate": "Corporate Event",
-};
+interface EventOption {
+    id: string;
+    name: string;
+}
 
 export default function CheckInPage() {
+    const [guests, setGuests] = useState<Guest[]>([]);
+    const [events, setEvents] = useState<EventOption[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [scanMode, setScanMode] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState("all");
-    const [guests, setGuests] = useState(initialGuests);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [lastCheckedIn, setLastCheckedIn] = useState<string | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
 
+    useEffect(() => {
+        async function fetchCheckinData() {
+            try {
+                const response = await fetch('/api/client/checkin');
+                if (response.ok) {
+                    const data = await response.json();
+                    setGuests(data.guests || []);
+                    // Build events list from unique event names
+                    const eventNames = [...new Set((data.guests || []).map((g: Guest) => g.event))] as string[];
+                    const eventOptions: EventOption[] = [
+                        { id: "all", name: "All Events" },
+                        ...eventNames.map((name, idx) => ({ id: `event-${idx}`, name }))
+                    ];
+                    setEvents(eventOptions);
+                }
+            } catch (error) {
+                console.error('Failed to fetch check-in data:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchCheckinData();
+    }, []);
+
     // Filter guests by search and event
     const filteredGuests = guests.filter(guest => {
         const matchesSearch = guest.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesEvent = selectedEvent === "all" || guest.event === eventMapping[selectedEvent];
+        const selectedEventName = events.find(e => e.id === selectedEvent)?.name;
+        const matchesEvent = selectedEvent === "all" || guest.event === selectedEventName;
         return matchesSearch && matchesEvent;
     });
 
     // Stats based on filtered guests (or all if "all" selected)
-    const statsGuests = selectedEvent === "all" ? guests : guests.filter(g => g.event === eventMapping[selectedEvent]);
+    const selectedEventName = events.find(e => e.id === selectedEvent)?.name;
+    const statsGuests = selectedEvent === "all" ? guests : guests.filter(g => g.event === selectedEventName);
     const stats = {
         total: statsGuests.length,
         checkedIn: statsGuests.filter(g => g.checkedIn).length,
@@ -72,7 +91,7 @@ export default function CheckInPage() {
     };
 
     // Handle check-in
-    const handleCheckIn = (guestId: number) => {
+    const handleCheckIn = (guestId: string | number) => {
         const now = new Date();
         const timeString = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
@@ -111,6 +130,24 @@ export default function CheckInPage() {
         handleCheckIn(guest.id);
         setScanMode(false); // Switch back to manual mode after successful scan
     };
+
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <div className="p-6 md:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Guest Check-In</h1>
+                            <p className="text-foreground-muted">Scan QR codes or search guests to check in</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>

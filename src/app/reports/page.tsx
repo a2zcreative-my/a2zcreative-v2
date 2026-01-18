@@ -1,23 +1,17 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useState } from "react";
-import { BarChart3, TrendingUp, Users, Calendar, Download, Eye, UserCheck, Percent, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { BarChart3, TrendingUp, Users, Calendar, Download, Eye, UserCheck, Percent, CheckCircle, Loader2 } from "lucide-react";
 
-// Mock report data
-const mockEventStats = [
-    { name: "Wedding Reception", guests: 150, confirmed: 120, checkedIn: 95, views: 1250 },
-    { name: "Birthday Party", guests: 45, confirmed: 38, checkedIn: 32, views: 320 },
-    { name: "Corporate Event", guests: 80, confirmed: 55, checkedIn: 0, views: 450 },
-];
-
-const recentActivity = [
-    { action: "RSVP Confirmed", guest: "Ahmad bin Ali", event: "Wedding Reception", time: "5 min ago" },
-    { action: "Check-In", guest: "Amirul Hakim", event: "Wedding Reception", time: "10 min ago" },
-    { action: "RSVP Declined", guest: "Nurul Izzah", event: "Corporate Event", time: "1 hour ago" },
-    { action: "Invitation Viewed", guest: "Farah Diana", event: "Birthday Party", time: "2 hours ago" },
-    { action: "RSVP Confirmed", guest: "Zulkifli Rahman", event: "Wedding Reception", time: "3 hours ago" },
-];
+interface EventStat {
+    id: string;
+    title: string;
+    guests: number;
+    confirmed: number;
+    checkedIn: number;
+    views: number;
+}
 
 const timeRanges = [
     { id: "7", label: "Last 7 Days", multiplier: 0.3 },
@@ -27,17 +21,46 @@ const timeRanges = [
 ];
 
 export default function ReportsPage() {
+    const [eventStats, setEventStats] = useState<EventStat[]>([]);
+    const [loading, setLoading] = useState(true);
     const [selectedRange, setSelectedRange] = useState("30");
     const [isExporting, setIsExporting] = useState(false);
     const [exportSuccess, setExportSuccess] = useState(false);
 
+    useEffect(() => {
+        async function fetchReportData() {
+            try {
+                const response = await fetch('/api/client/dashboard');
+                if (response.ok) {
+                    const data = await response.json();
+                    // Transform dashboard data to event stats format
+                    const allEvents = [...(data.publishedInvitations || []), ...(data.draftEvents || [])];
+                    const stats: EventStat[] = allEvents.map((e: { id: string; title: string; views?: number; rsvp?: { confirmed: number } }) => ({
+                        id: e.id,
+                        title: e.title,
+                        guests: e.rsvp?.confirmed || 0,
+                        confirmed: e.rsvp?.confirmed || 0,
+                        checkedIn: 0,
+                        views: e.views || 0
+                    }));
+                    setEventStats(stats);
+                }
+            } catch (error) {
+                console.error('Failed to fetch report data:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchReportData();
+    }, []);
+
     // Get multiplier for dynamic stats based on selected range
     const multiplier = timeRanges.find(r => r.id === selectedRange)?.multiplier || 1;
 
-    const totalGuests = Math.round(mockEventStats.reduce((sum, e) => sum + e.guests, 0) * multiplier);
-    const totalConfirmed = Math.round(mockEventStats.reduce((sum, e) => sum + e.confirmed, 0) * multiplier);
-    const totalCheckedIn = Math.round(mockEventStats.reduce((sum, e) => sum + e.checkedIn, 0) * multiplier);
-    const totalViews = Math.round(mockEventStats.reduce((sum, e) => sum + e.views, 0) * multiplier);
+    const totalGuests = Math.round(eventStats.reduce((sum, e) => sum + e.guests, 0) * multiplier);
+    const totalConfirmed = Math.round(eventStats.reduce((sum, e) => sum + e.confirmed, 0) * multiplier);
+    const totalCheckedIn = Math.round(eventStats.reduce((sum, e) => sum + e.checkedIn, 0) * multiplier);
+    const totalViews = Math.round(eventStats.reduce((sum, e) => sum + e.views, 0) * multiplier);
 
     // Handle export
     const handleExport = () => {
@@ -45,7 +68,7 @@ export default function ReportsPage() {
 
         // Generate CSV content
         const headers = ["Event Name", "Total Guests", "Confirmed", "Checked In", "Views"];
-        const rows = mockEventStats.map(e => [e.name, e.guests, e.confirmed, e.checkedIn, e.views]);
+        const rows = eventStats.map(e => [e.title, e.guests, e.confirmed, e.checkedIn, e.views]);
         const csvContent = [
             headers.join(","),
             ...rows.map(row => row.join(","))
@@ -68,6 +91,24 @@ export default function ReportsPage() {
             setTimeout(() => setExportSuccess(false), 2000);
         }, 500);
     };
+
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <div className="p-6 md:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Reports & Analytics</h1>
+                            <p className="text-foreground-muted">Track your event performance</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>
@@ -181,12 +222,14 @@ export default function ReportsPage() {
                             <BarChart3 className="w-5 h-5 text-foreground-muted" />
                         </div>
                         <div className="space-y-4">
-                            {mockEventStats.map((event, idx) => {
-                                const confirmRate = Math.round((event.confirmed / event.guests) * 100);
+                            {eventStats.length === 0 ? (
+                                <div className="p-8 text-center text-foreground-muted">No events to display</div>
+                            ) : eventStats.map((event, idx) => {
+                                const confirmRate = event.guests > 0 ? Math.round((event.confirmed / event.guests) * 100) : 0;
                                 return (
                                     <div key={idx} className="p-4 bg-background-tertiary rounded-xl">
                                         <div className="flex items-center justify-between mb-2">
-                                            <p className="font-medium text-white">{event.name}</p>
+                                            <p className="font-medium text-white">{event.title}</p>
                                             <span className="text-foreground-muted text-sm">{event.guests} guests</span>
                                         </div>
                                         <div className="grid grid-cols-3 gap-4 mb-3 text-sm">
@@ -220,19 +263,7 @@ export default function ReportsPage() {
                             <Calendar className="w-5 h-5 text-foreground-muted" />
                         </div>
                         <div className="space-y-3">
-                            {recentActivity.map((activity, idx) => (
-                                <div key={idx} className="flex items-start gap-3 p-3 bg-background-tertiary rounded-lg">
-                                    <div className={`w-2 h-2 mt-2 rounded-full ${activity.action.includes("Confirmed") ? "bg-success" :
-                                        activity.action.includes("Declined") ? "bg-error" :
-                                            activity.action.includes("Check") ? "bg-secondary" : "bg-warning"
-                                        }`} />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm text-white">{activity.action}</p>
-                                        <p className="text-xs text-foreground-muted truncate">{activity.guest} • {activity.event}</p>
-                                    </div>
-                                    <p className="text-xs text-foreground-muted whitespace-nowrap">{activity.time}</p>
-                                </div>
-                            ))}
+                            <div className="p-8 text-center text-foreground-muted">No recent activity</div>
                         </div>
                     </div>
                 </div>

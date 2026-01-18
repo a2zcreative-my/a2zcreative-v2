@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout";
-import { CreditCard, Building2, FileText, Check, Sparkles, Crown, Star, Gem, ArrowRight, Info, Eye } from "lucide-react";
+import { CreditCard, Building2, FileText, Check, Sparkles, Crown, Star, Gem, ArrowRight, Info, Eye, Loader2 } from "lucide-react";
 
 interface PaymentRecord {
     id: string;
@@ -15,11 +15,11 @@ interface PaymentRecord {
     method: string;
 }
 
-const paymentHistory: PaymentRecord[] = [
-    { id: "1", event: "Majlis Perkahwinan Ahmad & Alia", plan: "Premium", amount: 134, date: "15 Jan 2026", status: "paid", method: "Card •••• 4242" },
-    { id: "2", event: "Birthday Bash - Aiman", plan: "Basic", amount: 49, date: "10 Jan 2026", status: "paid", method: "FPX Maybank" },
-    { id: "3", event: "Aqiqah Baby Arya", plan: "Starter", amount: 20, date: "1 Dec 2025", status: "paid", method: "FPX CIMB" },
-];
+interface BillingSummary {
+    totalEvents: number;
+    totalSpent: number;
+    lastPlan: string;
+}
 
 const plans = [
     {
@@ -70,7 +70,44 @@ const plans = [
 ];
 
 export default function BillingPage() {
+    const [payments, setPayments] = useState<PaymentRecord[]>([]);
+    const [summary, setSummary] = useState<BillingSummary>({ totalEvents: 0, totalSpent: 0, lastPlan: 'None' });
+    const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
+
+    useEffect(() => {
+        async function fetchBillingData() {
+            try {
+                const response = await fetch('/api/client/billing');
+                if (response.ok) {
+                    const data = await response.json();
+                    setPayments(data.payments || []);
+                    setSummary(data.summary || { totalEvents: 0, totalSpent: 0, lastPlan: 'None' });
+                }
+            } catch (error) {
+                console.error('Failed to fetch billing data:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchBillingData();
+    }, []);
+
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <div className="space-y-6 animate-fade-in">
+                    <div>
+                        <h1 className="text-3xl font-bold text-white mb-2">Billing & Plans</h1>
+                        <p className="text-foreground-muted">View your payment history and explore plans</p>
+                    </div>
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>
@@ -106,15 +143,15 @@ export default function BillingPage() {
                             <h2 className="text-lg font-semibold text-white mb-4">Account Summary</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <div className="text-center p-4 bg-background-tertiary rounded-xl">
-                                    <p className="text-3xl font-bold text-white">4</p>
+                                    <p className="text-3xl font-bold text-white">{summary.totalEvents}</p>
                                     <p className="text-sm text-foreground-muted">Total Events</p>
                                 </div>
                                 <div className="text-center p-4 bg-background-tertiary rounded-xl">
-                                    <p className="text-3xl font-bold text-success">RM 203</p>
+                                    <p className="text-3xl font-bold text-success">RM {summary.totalSpent}</p>
                                     <p className="text-sm text-foreground-muted">Total Spent</p>
                                 </div>
                                 <div className="text-center p-4 bg-background-tertiary rounded-xl">
-                                    <p className="text-3xl font-bold text-primary">Premium</p>
+                                    <p className="text-3xl font-bold text-primary">{summary.lastPlan}</p>
                                     <p className="text-sm text-foreground-muted">Last Plan</p>
                                 </div>
                             </div>
@@ -241,7 +278,11 @@ export default function BillingPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {paymentHistory.map((payment) => (
+                                {payments.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="p-8 text-center text-foreground-muted">No payment history</td>
+                                    </tr>
+                                ) : payments.map((payment) => (
                                     <tr key={payment.id} className="border-b border-[var(--glass-border)] hover:bg-[var(--glass-bg)]">
                                         <td className="p-4">
                                             <span className="text-white font-medium">{payment.event}</span>

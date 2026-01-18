@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout";
 import {
     Calendar,
@@ -12,50 +13,87 @@ import {
     BarChart3,
     Share2,
     Building2,
+    Loader2,
 } from "lucide-react";
 
-// Mock data for published invitations
-const publishedInvitations = [
-    {
-        id: "1",
-        title: "Majlis Perkahwinan",
-        eventType: "Wedding",
-        date: "15 Feb 2026",
-        plan: "premium",
-        views: 342,
-        rsvp: { confirmed: 124, pending: 45, declined: 12 },
-        status: "live",
-    },
-    {
-        id: "2",
-        title: "Birthday Bash - Aiman",
-        eventType: "Birthday",
-        date: "28 Jan 2026",
-        plan: "basic",
-        views: 87,
-        rsvp: { confirmed: 32, pending: 8, declined: 2 },
-        status: "live",
-    },
-];
+interface PublishedInvitation {
+    id: string;
+    title: string;
+    eventType: string;
+    date: string;
+    plan: string;
+    views: number;
+    rsvp: { confirmed: number; pending: number; declined: number };
+    status: string;
+}
 
-const draftEvents = [
-    {
-        id: "3",
-        title: "Corporate Annual Dinner",
-        eventType: "Corporate",
-        plan: "exclusive",
-        progress: 65,
-    },
-];
+interface DraftEvent {
+    id: string;
+    title: string;
+    eventType: string;
+    plan: string;
+    progress: number;
+}
 
-const stats = [
-    { label: "My Events", value: "3", icon: Calendar, color: "primary", bgColor: "bg-primary/20" },
-    { label: "Total Views", value: "429", icon: Eye, color: "success", bgColor: "bg-success/20" },
-    { label: "Active Events", value: "2", icon: Sparkles, color: "warning", bgColor: "bg-warning/20" },
-    { label: "Total RSVPs", value: "181", icon: Users, color: "info", bgColor: "bg-info/20" },
-];
+interface DashboardData {
+    stats: {
+        totalEvents: number;
+        totalViews: number;
+        activeEvents: number;
+        totalRsvps: number;
+    };
+    publishedInvitations: PublishedInvitation[];
+    draftEvents: DraftEvent[];
+}
 
 export default function DashboardPage() {
+    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<DashboardData>({
+        stats: { totalEvents: 0, totalViews: 0, activeEvents: 0, totalRsvps: 0 },
+        publishedInvitations: [],
+        draftEvents: []
+    });
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/client/dashboard');
+                if (response.ok) {
+                    const result = await response.json();
+                    setData(result);
+                }
+            } catch (error) {
+                console.error('Failed to fetch dashboard data:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    const stats = [
+        { label: "My Events", value: data.stats.totalEvents.toString(), icon: Calendar, color: "primary", bgColor: "bg-primary/20" },
+        { label: "Total Views", value: data.stats.totalViews.toString(), icon: Eye, color: "success", bgColor: "bg-success/20" },
+        { label: "Active Events", value: data.stats.activeEvents.toString(), icon: Sparkles, color: "warning", bgColor: "bg-warning/20" },
+        { label: "Total RSVPs", value: data.stats.totalRsvps.toString(), icon: Users, color: "info", bgColor: "bg-info/20" },
+    ];
+
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <div className="space-y-8 animate-fade-in">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Welcome back!</h1>
+                        <p className="text-foreground-muted">Manage your events and track your invitations</p>
+                    </div>
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
     return (
         <DashboardLayout>
             <div className="space-y-8 animate-fade-in">
@@ -102,9 +140,9 @@ export default function DashboardPage() {
                         </Link>
                     </div>
 
-                    {publishedInvitations.length > 0 ? (
+                    {data.publishedInvitations.length > 0 ? (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                            {publishedInvitations.map((invitation) => (
+                            {data.publishedInvitations.map((invitation) => (
                                 <div
                                     key={invitation.id}
                                     className="glass-card glass-card-hover p-5 cursor-pointer"
@@ -181,14 +219,14 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Draft Events */}
-                {draftEvents.length > 0 && (
+                {data.draftEvents.length > 0 && (
                     <div>
                         <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-4">
                             <FileEdit className="w-5 h-5 text-warning" />
                             Draft Events
                         </h2>
                         <div className="space-y-3">
-                            {draftEvents.map((event) => (
+                            {data.draftEvents.map((event) => (
                                 <Link
                                     key={event.id}
                                     href={`/events/${event.id}/builder`}

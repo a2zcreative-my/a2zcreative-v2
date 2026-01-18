@@ -1,35 +1,58 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useState, useRef } from "react";
-import { Search, Plus, Upload, MoreVertical, Mail, Phone, Check, X, Filter, FileSpreadsheet, UserPlus } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, Plus, Upload, MoreVertical, Mail, Phone, Check, X, Filter, FileSpreadsheet, UserPlus, Loader2, Users } from "lucide-react";
 
-// Mock guest data - will be replaced with real data
-const initialGuests = [
-    { id: 1, name: "Ahmad bin Ali", email: "ahmad@email.com", phone: "+60 12-345 6789", event: "Wedding Reception", status: "confirmed", pax: 4 },
-    { id: 2, name: "Siti Nurhaliza", email: "siti@email.com", phone: "+60 13-456 7890", event: "Wedding Reception", status: "pending", pax: 2 },
-    { id: 3, name: "Muhammad Haziq", email: "haziq@email.com", phone: "+60 14-567 8901", event: "Birthday Party", status: "confirmed", pax: 1 },
-    { id: 4, name: "Nurul Izzah", email: "nurul@email.com", phone: "+60 15-678 9012", event: "Corporate Event", status: "declined", pax: 0 },
-    { id: 5, name: "Amirul Hakim", email: "amirul@email.com", phone: "+60 16-789 0123", event: "Wedding Reception", status: "confirmed", pax: 3 },
-    { id: 6, name: "Farah Diana", email: "farah@email.com", phone: "+60 17-890 1234", event: "Birthday Party", status: "pending", pax: 2 },
-    { id: 7, name: "Zulkifli Rahman", email: "zul@email.com", phone: "+60 18-901 2345", event: "Wedding Reception", status: "confirmed", pax: 5 },
-    { id: 8, name: "Aishah Hasanah", email: "aishah@email.com", phone: "+60 19-012 3456", event: "Corporate Event", status: "pending", pax: 1 },
-];
+interface Guest {
+    id: string | number;
+    name: string;
+    email: string;
+    phone: string;
+    event: string;
+    status: string;
+    pax: number;
+}
 
-const statusColors = {
+interface EventOption {
+    id: string;
+    name: string;
+}
+
+const statusColors: Record<string, string> = {
     confirmed: "bg-success/20 text-success",
     pending: "bg-warning/20 text-warning",
     declined: "bg-error/20 text-error",
 };
 
 export default function GuestsPage() {
-    const [guests, setGuests] = useState(initialGuests);
+    const [guests, setGuests] = useState<Guest[]>([]);
+    const [events, setEvents] = useState<EventOption[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterEvent, setFilterEvent] = useState("all");
     const [showAddModal, setShowAddModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
-    const [newGuest, setNewGuest] = useState({ name: "", email: "", phone: "", event: "", pax: 1 });
+    const [newGuest, setNewGuest] = useState({ name: "", email: "", phone: "", eventId: "", pax: 1 });
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        async function fetchGuests() {
+            try {
+                const response = await fetch('/api/client/guests');
+                if (response.ok) {
+                    const data = await response.json();
+                    setGuests(data.guests || []);
+                    setEvents(data.events || []);
+                }
+            } catch (error) {
+                console.error('Failed to fetch guests:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchGuests();
+    }, []);
 
     const filteredGuests = guests.filter(guest => {
         const matchesSearch = guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -38,21 +61,21 @@ export default function GuestsPage() {
         return matchesSearch && matchesEvent;
     });
 
-    const events = [...new Set(guests.map(g => g.event))];
+    const eventNames = [...new Set(guests.map(g => g.event))];
 
     const handleAddGuest = () => {
         if (!newGuest.name.trim()) return;
-        const guest = {
+        const guest: Guest = {
             id: Date.now(),
             name: newGuest.name,
             email: newGuest.email,
             phone: newGuest.phone,
-            event: newGuest.event || "Uncategorized",
-            status: "pending" as const,
+            event: events.find(e => e.id === newGuest.eventId)?.name || "Uncategorized",
+            status: "pending",
             pax: newGuest.pax,
         };
         setGuests(prev => [...prev, guest]);
-        setNewGuest({ name: "", email: "", phone: "", event: "", pax: 1 });
+        setNewGuest({ name: "", email: "", phone: "", eventId: "", pax: 1 });
         setShowAddModal(false);
     };
 
@@ -91,6 +114,24 @@ export default function GuestsPage() {
         reader.readAsText(file);
         e.target.value = ''; // Reset file input
     };
+
+    if (loading) {
+        return (
+            <DashboardLayout>
+                <div className="p-6 md:p-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Guest Management</h1>
+                            <p className="text-foreground-muted">Manage guests across all your events</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    </div>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     return (
         <DashboardLayout>
@@ -154,8 +195,8 @@ export default function GuestsPage() {
                             className="input-field"
                         >
                             <option value="all">All Events</option>
-                            {events.map(event => (
-                                <option key={event} value={event}>{event}</option>
+                            {eventNames.map(eventName => (
+                                <option key={eventName} value={eventName}>{eventName}</option>
                             ))}
                         </select>
                     </div>
@@ -265,12 +306,12 @@ export default function GuestsPage() {
                                     <label className="text-sm text-foreground-muted block mb-1">Event</label>
                                     <select
                                         className="input-field w-full"
-                                        value={newGuest.event}
-                                        onChange={(e) => setNewGuest({ ...newGuest, event: e.target.value })}
+                                        value={newGuest.eventId}
+                                        onChange={(e) => setNewGuest({ ...newGuest, eventId: e.target.value })}
                                     >
                                         <option value="">Select event</option>
                                         {events.map(event => (
-                                            <option key={event} value={event}>{event}</option>
+                                            <option key={event.id} value={event.id}>{event.name}</option>
                                         ))}
                                         <option value="Other">Other</option>
                                     </select>
@@ -291,7 +332,7 @@ export default function GuestsPage() {
                             <button
                                 onClick={() => {
                                     setShowAddModal(false);
-                                    setNewGuest({ name: "", email: "", phone: "", event: "", pax: 1 });
+                                    setNewGuest({ name: "", email: "", phone: "", eventId: "", pax: 1 });
                                 }}
                                 className="btn-secondary flex-1"
                             >
