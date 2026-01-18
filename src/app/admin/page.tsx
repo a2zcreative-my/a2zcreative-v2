@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
     TrendingUp,
@@ -8,40 +9,118 @@ import {
     Calendar,
     FileText,
     ArrowUpRight,
-    ArrowDownRight,
-    Eye,
     CreditCard,
     Activity,
+    Loader2,
+    AlertTriangle,
 } from "lucide-react";
 
-// Mock admin data - in production this would come from API
-const platformStats = {
-    totalRevenue: 45230.00,
-    revenueGrowth: 12.5,
-    totalUsers: 156,
-    newUsersThisMonth: 23,
-    totalEvents: 342,
-    activeEvents: 47,
-    totalInvoices: 289,
-    pendingPayments: 12,
-};
+interface PlatformStats {
+    totalRevenue: number;
+    totalUsers: number;
+    newUsersThisMonth: number;
+    totalEvents: number;
+    activeEvents: number;
+    totalInvoices: number;
+    pendingPayments: number;
+}
 
-const recentTransactions = [
-    { id: "INV-2026-001", user: "Ahmad bin Ali", amount: 99.00, date: "18 Jan 2026", status: "paid" },
-    { id: "INV-2026-002", user: "Nurul Aina", amount: 49.00, date: "17 Jan 2026", status: "paid" },
-    { id: "INV-2026-003", user: "Farah Diana", amount: 199.00, date: "16 Jan 2026", status: "pending" },
-    { id: "INV-2026-004", user: "Razak Hassan", amount: 99.00, date: "15 Jan 2026", status: "paid" },
-    { id: "INV-2026-005", user: "Siti Aminah", amount: 49.00, date: "14 Jan 2026", status: "paid" },
-];
+interface Transaction {
+    id: string;
+    user: string;
+    amount: number;
+    date: string;
+    status: string;
+}
 
-const topUsers = [
-    { name: "Ahmad bin Ali", events: 12, revenue: 1240.00 },
-    { name: "Nurul Aina", events: 8, revenue: 890.00 },
-    { name: "Farah Diana", events: 6, revenue: 720.00 },
-    { name: "Razak Hassan", events: 5, revenue: 495.00 },
-];
+interface TopUser {
+    name: string;
+    events: number;
+    revenue: number;
+}
 
 export default function AdminDashboard() {
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [stats, setStats] = useState<PlatformStats>({
+        totalRevenue: 0,
+        totalUsers: 0,
+        newUsersThisMonth: 0,
+        totalEvents: 0,
+        activeEvents: 0,
+        totalInvoices: 0,
+        pendingPayments: 0
+    });
+    const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+    const [topUsers, setTopUsers] = useState<TopUser[]>([]);
+
+    useEffect(() => {
+        async function fetchStats() {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await fetch('/api/admin/stats');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch stats');
+                }
+
+                const data = await response.json();
+                setStats(data.stats);
+                setRecentTransactions(data.recentTransactions || []);
+                setTopUsers(data.topUsers || []);
+            } catch (err) {
+                setError(String(err));
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchStats();
+    }, []);
+
+    // Format date for display
+    const formatDate = (dateStr: string) => {
+        if (!dateStr) return 'N/A';
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+
+    if (loading) {
+        return (
+            <div className="space-y-8 animate-fade-in pt-8">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                        Admin Dashboard
+                    </h1>
+                    <p className="text-foreground-muted">
+                        Platform overview and analytics
+                    </p>
+                </div>
+                <div className="flex items-center justify-center py-20">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="space-y-8 animate-fade-in pt-8">
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                        Admin Dashboard
+                    </h1>
+                </div>
+                <div className="glass-card p-8 text-center">
+                    <AlertTriangle className="w-12 h-12 text-error mx-auto mb-4" />
+                    <p className="text-error font-medium">Failed to load dashboard data</p>
+                    <p className="text-foreground-muted text-sm mt-2">{error}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-8 animate-fade-in pt-8">
             {/* Header */}
@@ -64,10 +143,10 @@ export default function AdminDashboard() {
                         </div>
                         <span className="text-xs font-medium px-2 py-1 rounded-lg bg-success/20 text-success flex items-center gap-1">
                             <ArrowUpRight className="w-3 h-3" />
-                            {platformStats.revenueGrowth}%
+                            Live
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-white">RM {platformStats.totalRevenue.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-white">RM {stats.totalRevenue.toLocaleString()}</p>
                     <p className="text-sm text-foreground-muted">Total Revenue</p>
                 </div>
 
@@ -78,10 +157,10 @@ export default function AdminDashboard() {
                             <Users className="w-5 h-5 text-primary" />
                         </div>
                         <span className="text-xs font-medium px-2 py-1 rounded-lg bg-primary/20 text-primary">
-                            +{platformStats.newUsersThisMonth} this month
+                            +{stats.newUsersThisMonth} this month
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-white">{platformStats.totalUsers}</p>
+                    <p className="text-2xl font-bold text-white">{stats.totalUsers}</p>
                     <p className="text-sm text-foreground-muted">Total Users</p>
                 </div>
 
@@ -92,10 +171,10 @@ export default function AdminDashboard() {
                             <Calendar className="w-5 h-5 text-secondary" />
                         </div>
                         <span className="text-xs font-medium px-2 py-1 rounded-lg bg-secondary/20 text-secondary">
-                            {platformStats.activeEvents} active
+                            {stats.activeEvents} active
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-white">{platformStats.totalEvents}</p>
+                    <p className="text-2xl font-bold text-white">{stats.totalEvents}</p>
                     <p className="text-sm text-foreground-muted">Total Events</p>
                 </div>
 
@@ -106,10 +185,10 @@ export default function AdminDashboard() {
                             <FileText className="w-5 h-5 text-warning" />
                         </div>
                         <span className="text-xs font-medium px-2 py-1 rounded-lg bg-warning/20 text-warning">
-                            {platformStats.pendingPayments} pending
+                            {stats.pendingPayments} pending
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-white">{platformStats.totalInvoices}</p>
+                    <p className="text-2xl font-bold text-white">{stats.totalInvoices}</p>
                     <p className="text-sm text-foreground-muted">Total Invoices</p>
                 </div>
             </div>
@@ -123,28 +202,34 @@ export default function AdminDashboard() {
                             <CreditCard className="w-5 h-5 text-primary" />
                             Recent Transactions
                         </h2>
-                        <Link href="/admin/invoices" className="text-primary text-sm hover:text-primary-hover">
+                        <Link href="/admin/revenue" className="text-primary text-sm hover:text-primary-hover">
                             View All →
                         </Link>
                     </div>
                     <div className="space-y-3">
-                        {recentTransactions.map((tx) => (
-                            <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg bg-background-tertiary/50">
-                                <div>
-                                    <p className="font-medium text-white">{tx.user}</p>
-                                    <p className="text-xs text-foreground-muted">{tx.id} • {tx.date}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-semibold text-white">RM {tx.amount.toFixed(2)}</p>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full ${tx.status === 'paid'
+                        {recentTransactions.length > 0 ? (
+                            recentTransactions.map((tx) => (
+                                <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg bg-background-tertiary/50">
+                                    <div>
+                                        <p className="font-medium text-white">{tx.user}</p>
+                                        <p className="text-xs text-foreground-muted">{tx.id} • {formatDate(tx.date)}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-semibold text-white">RM {tx.amount?.toFixed(2) || '0.00'}</p>
+                                        <span className={`text-xs px-2 py-0.5 rounded-full ${tx.status === 'paid'
                                             ? 'bg-success/20 text-success'
                                             : 'bg-warning/20 text-warning'
-                                        }`}>
-                                        {tx.status.toUpperCase()}
-                                    </span>
+                                            }`}>
+                                            {tx.status?.toUpperCase() || 'PENDING'}
+                                        </span>
+                                    </div>
                                 </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-foreground-muted">
+                                No transactions yet
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
 
@@ -160,20 +245,26 @@ export default function AdminDashboard() {
                         </Link>
                     </div>
                     <div className="space-y-3">
-                        {topUsers.map((user, idx) => (
-                            <div key={user.name} className="flex items-center justify-between p-3 rounded-lg bg-background-tertiary/50">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                                        {idx + 1}
+                        {topUsers.length > 0 ? (
+                            topUsers.map((user, idx) => (
+                                <div key={user.name + idx} className="flex items-center justify-between p-3 rounded-lg bg-background-tertiary/50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                                            {idx + 1}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-white">{user.name}</p>
+                                            <p className="text-xs text-foreground-muted">{user.events} events</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-medium text-white">{user.name}</p>
-                                        <p className="text-xs text-foreground-muted">{user.events} events</p>
-                                    </div>
+                                    <p className="font-semibold text-success">RM {user.revenue?.toFixed(2) || '0.00'}</p>
                                 </div>
-                                <p className="font-semibold text-success">RM {user.revenue.toFixed(2)}</p>
+                            ))
+                        ) : (
+                            <div className="text-center py-8 text-foreground-muted">
+                                No user data yet
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </div>
@@ -188,7 +279,7 @@ export default function AdminDashboard() {
                         </div>
                         <p className="font-medium text-white">Manage Users</p>
                     </Link>
-                    <Link href="/admin/invoices" className="glass-card glass-card-hover p-4 text-center">
+                    <Link href="/admin/revenue" className="glass-card glass-card-hover p-4 text-center">
                         <div className="w-12 h-12 rounded-xl bg-success/20 flex items-center justify-center mx-auto mb-2">
                             <FileText className="w-6 h-6 text-success" />
                         </div>
@@ -200,11 +291,11 @@ export default function AdminDashboard() {
                         </div>
                         <p className="font-medium text-white">All Events</p>
                     </Link>
-                    <Link href="/admin/analytics" className="glass-card glass-card-hover p-4 text-center">
+                    <Link href="/admin/tickets" className="glass-card glass-card-hover p-4 text-center">
                         <div className="w-12 h-12 rounded-xl bg-warning/20 flex items-center justify-center mx-auto mb-2">
                             <Activity className="w-6 h-6 text-warning" />
                         </div>
-                        <p className="font-medium text-white">Analytics</p>
+                        <p className="font-medium text-white">Tickets</p>
                     </Link>
                 </div>
             </div>
