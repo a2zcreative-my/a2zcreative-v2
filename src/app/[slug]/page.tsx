@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { notFound, redirect } from 'next/navigation';
-import DoorAnimation from '@/components/invitation/DoorAnimation';
-import InvitationSections from '@/components/invitation/InvitationSections';
-import FloatingDock from '@/components/invitation/FloatingDock';
-import ContactModal from '@/components/invitation/ContactModal';
+import dynamic from 'next/dynamic';
+
+const DoorAnimation = dynamic(() => import('@/components/invitation/DoorAnimation'), { ssr: false });
+const InvitationSections = dynamic(() => import('@/components/invitation/InvitationSections'), { ssr: false });
+const FloatingDock = dynamic(() => import('@/components/invitation/FloatingDock'), { ssr: false });
+const ContactModal = dynamic(() => import('@/components/invitation/ContactModal'), { ssr: false });
 
 // This would come from your database in production
 const mockInvitations: Record<string, {

@@ -5,21 +5,22 @@ import { notFound } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
 // Dynamic imports to split code (though bundled in worker, helps local dev)
-const BuilderPage = dynamic(() => import('@/views/events/builder'));
-const CheckinPage = dynamic(() => import('@/views/events/checkin'));
-const ContactPage = dynamic(() => import('@/views/events/contact'));
-const GiftPage = dynamic(() => import('@/views/events/gift'));
-const GuestsPage = dynamic(() => import('@/views/events/guests'));
-const ItineraryPage = dynamic(() => import('@/views/events/itinerary'));
-const MusicPage = dynamic(() => import('@/views/events/music'));
-const PaymentPage = dynamic(() => import('@/views/events/payment'));
-const PreviewPage = dynamic(() => import('@/views/events/preview'));
-const ReportPage = dynamic(() => import('@/views/events/report'));
-const RsvpPage = dynamic(() => import('@/views/events/rsvp'));
-const SectionsPage = dynamic(() => import('@/views/events/sections'));
-const SendPage = dynamic(() => import('@/views/events/send'));
-const TemplatePage = dynamic(() => import('@/views/events/template'));
-const ThemePage = dynamic(() => import('@/views/events/theme'));
+// Dynamic imports to split code (though bundled in worker, helps local dev)
+const BuilderPage = dynamic(() => import('@/views/events/builder'), { ssr: false });
+const CheckinPage = dynamic(() => import('@/views/events/checkin'), { ssr: false });
+const ContactPage = dynamic(() => import('@/views/events/contact'), { ssr: false });
+const GiftPage = dynamic(() => import('@/views/events/gift'), { ssr: false });
+const GuestsPage = dynamic(() => import('@/views/events/guests'), { ssr: false });
+const ItineraryPage = dynamic(() => import('@/views/events/itinerary'), { ssr: false });
+const MusicPage = dynamic(() => import('@/views/events/music'), { ssr: false });
+const PaymentPage = dynamic(() => import('@/views/events/payment'), { ssr: false });
+const PreviewPage = dynamic(() => import('@/views/events/preview'), { ssr: false });
+const ReportPage = dynamic(() => import('@/views/events/report'), { ssr: false });
+const RsvpPage = dynamic(() => import('@/views/events/rsvp'), { ssr: false });
+const SectionsPage = dynamic(() => import('@/views/events/sections'), { ssr: false });
+const SendPage = dynamic(() => import('@/views/events/send'), { ssr: false });
+const TemplatePage = dynamic(() => import('@/views/events/template'), { ssr: false });
+const ThemePage = dynamic(() => import('@/views/events/theme'), { ssr: false });
 
 export const runtime = 'edge';
 
