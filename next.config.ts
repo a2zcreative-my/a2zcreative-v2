@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
 
 const nextConfig: NextConfig = {
   images: {
@@ -30,5 +31,15 @@ const nextConfig: NextConfig = {
     ]
   },
 };
+
+if (process.env.NODE_ENV === 'development') {
+  (async () => {
+    try {
+      await setupDevPlatform();
+    } catch (e) {
+      console.error('Failed to setup Cloudflare Dev Platform:', e);
+    }
+  })();
+}
 
 export default nextConfig;

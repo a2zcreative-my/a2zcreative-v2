@@ -1,7 +1,8 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { BarChart3, TrendingUp, Users, Calendar, Download, Eye, UserCheck, Percent } from "lucide-react";
+import { useState } from "react";
+import { BarChart3, TrendingUp, Users, Calendar, Download, Eye, UserCheck, Percent, CheckCircle } from "lucide-react";
 
 // Mock report data
 const mockEventStats = [
@@ -18,11 +19,55 @@ const recentActivity = [
     { action: "RSVP Confirmed", guest: "Zulkifli Rahman", event: "Wedding Reception", time: "3 hours ago" },
 ];
 
+const timeRanges = [
+    { id: "7", label: "Last 7 Days", multiplier: 0.3 },
+    { id: "30", label: "Last 30 Days", multiplier: 1 },
+    { id: "90", label: "Last 90 Days", multiplier: 2.5 },
+    { id: "all", label: "All Time", multiplier: 4 },
+];
+
 export default function ReportsPage() {
-    const totalGuests = mockEventStats.reduce((sum, e) => sum + e.guests, 0);
-    const totalConfirmed = mockEventStats.reduce((sum, e) => sum + e.confirmed, 0);
-    const totalCheckedIn = mockEventStats.reduce((sum, e) => sum + e.checkedIn, 0);
-    const totalViews = mockEventStats.reduce((sum, e) => sum + e.views, 0);
+    const [selectedRange, setSelectedRange] = useState("30");
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportSuccess, setExportSuccess] = useState(false);
+
+    // Get multiplier for dynamic stats based on selected range
+    const multiplier = timeRanges.find(r => r.id === selectedRange)?.multiplier || 1;
+
+    const totalGuests = Math.round(mockEventStats.reduce((sum, e) => sum + e.guests, 0) * multiplier);
+    const totalConfirmed = Math.round(mockEventStats.reduce((sum, e) => sum + e.confirmed, 0) * multiplier);
+    const totalCheckedIn = Math.round(mockEventStats.reduce((sum, e) => sum + e.checkedIn, 0) * multiplier);
+    const totalViews = Math.round(mockEventStats.reduce((sum, e) => sum + e.views, 0) * multiplier);
+
+    // Handle export
+    const handleExport = () => {
+        setIsExporting(true);
+
+        // Generate CSV content
+        const headers = ["Event Name", "Total Guests", "Confirmed", "Checked In", "Views"];
+        const rows = mockEventStats.map(e => [e.name, e.guests, e.confirmed, e.checkedIn, e.views]);
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n");
+
+        // Create and download file
+        setTimeout(() => {
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `a2zcreative-report-${selectedRange}days.csv`);
+            link.style.visibility = "hidden";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            setIsExporting(false);
+            setExportSuccess(true);
+            setTimeout(() => setExportSuccess(false), 2000);
+        }, 500);
+    };
 
     return (
         <DashboardLayout>
@@ -34,15 +79,36 @@ export default function ReportsPage() {
                         <p className="text-foreground-muted">Track your event performance</p>
                     </div>
                     <div className="flex gap-2">
-                        <select className="input-field">
-                            <option>Last 30 Days</option>
-                            <option>Last 7 Days</option>
-                            <option>Last 90 Days</option>
-                            <option>All Time</option>
+                        <select
+                            className="input-field"
+                            value={selectedRange}
+                            onChange={(e) => setSelectedRange(e.target.value)}
+                        >
+                            {timeRanges.map(range => (
+                                <option key={range.id} value={range.id}>{range.label}</option>
+                            ))}
                         </select>
-                        <button className="btn-secondary flex items-center gap-2">
-                            <Download className="w-4 h-4" />
-                            Export
+                        <button
+                            className="btn-secondary flex items-center gap-2"
+                            onClick={handleExport}
+                            disabled={isExporting}
+                        >
+                            {exportSuccess ? (
+                                <>
+                                    <CheckCircle className="w-4 h-4 text-success" />
+                                    Exported!
+                                </>
+                            ) : isExporting ? (
+                                <>
+                                    <span className="animate-spin">⏳</span>
+                                    Exporting...
+                                </>
+                            ) : (
+                                <>
+                                    <Download className="w-4 h-4" />
+                                    Export
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>

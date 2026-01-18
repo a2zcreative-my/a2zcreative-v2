@@ -163,7 +163,7 @@ export default function PublicInvitationPage({ params }: Props) {
             {/* Main Invitation Content */}
             {!showDoor && (
                 <>
-                    <InvitationSections data={invitation} />
+                    <InvitationSections data={invitation} eventSlug={slug} />
 
                     <FloatingDock
                         onContactClick={() => setShowContactModal(true)}

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { DashboardLayout } from "@/components/layout";
 import {
     Calendar,
-    DollarSign,
     Sparkles,
     Users,
     Send,
@@ -52,10 +51,10 @@ const draftEvents = [
 ];
 
 const stats = [
-    { label: "Total Events", value: "12", icon: Calendar, color: "primary", bgColor: "bg-primary/20" },
-    { label: "Total Revenue", value: "RM 2,430", icon: DollarSign, color: "success", bgColor: "bg-success/20" },
-    { label: "Active Events", value: "3", icon: Sparkles, color: "warning", bgColor: "bg-warning/20" },
-    { label: "Total Guests", value: "1,247", icon: Users, color: "info", bgColor: "bg-info/20" },
+    { label: "My Events", value: "3", icon: Calendar, color: "primary", bgColor: "bg-primary/20" },
+    { label: "Total Views", value: "429", icon: Eye, color: "success", bgColor: "bg-success/20" },
+    { label: "Active Events", value: "2", icon: Sparkles, color: "warning", bgColor: "bg-warning/20" },
+    { label: "Total RSVPs", value: "181", icon: Users, color: "info", bgColor: "bg-info/20" },
 ];
 
 export default function DashboardPage() {
@@ -66,10 +65,10 @@ export default function DashboardPage() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                            Welcome back, Organizer!
+                            Welcome back!
                         </h1>
                         <p className="text-foreground-muted">
-                            Manage your events and invitations from your dashboard
+                            Manage your events and track your invitations
                         </p>
                     </div>
                     <Link href="/plans" className="btn-primary flex items-center gap-2 w-full sm:w-auto justify-center">

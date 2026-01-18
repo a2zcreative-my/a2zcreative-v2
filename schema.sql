@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
   name TEXT,
   phone TEXT,
   plan TEXT DEFAULT 'starter',
+  role TEXT DEFAULT 'client', -- 'admin' or 'client'
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -46,3 +47,23 @@ CREATE TABLE IF NOT EXISTS guests (
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_events_user_id ON events(user_id);
 CREATE INDEX IF NOT EXISTS idx_guests_event_id ON guests(event_id);
+
+-- Invoices table
+CREATE TABLE IF NOT EXISTS invoices (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  event_id TEXT,
+  customer_name TEXT,
+  customer_email TEXT,
+  customer_phone TEXT,
+  amount REAL NOT NULL,
+  status TEXT DEFAULT 'pending',
+  payment_method TEXT,
+  paid_at TEXT,
+  items TEXT,
+  due_date TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);

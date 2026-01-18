@@ -1,11 +1,11 @@
 "use client";
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { useState } from "react";
-import { Search, Plus, Upload, MoreVertical, Mail, Phone, Check, X, Filter } from "lucide-react";
+import { useState, useRef } from "react";
+import { Search, Plus, Upload, MoreVertical, Mail, Phone, Check, X, Filter, FileSpreadsheet, UserPlus } from "lucide-react";
 
-// Mock guest data
-const mockGuests = [
+// Mock guest data - will be replaced with real data
+const initialGuests = [
     { id: 1, name: "Ahmad bin Ali", email: "ahmad@email.com", phone: "+60 12-345 6789", event: "Wedding Reception", status: "confirmed", pax: 4 },
     { id: 2, name: "Siti Nurhaliza", email: "siti@email.com", phone: "+60 13-456 7890", event: "Wedding Reception", status: "pending", pax: 2 },
     { id: 3, name: "Muhammad Haziq", email: "haziq@email.com", phone: "+60 14-567 8901", event: "Birthday Party", status: "confirmed", pax: 1 },
@@ -23,17 +23,74 @@ const statusColors = {
 };
 
 export default function GuestsPage() {
+    const [guests, setGuests] = useState(initialGuests);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterEvent, setFilterEvent] = useState("all");
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [newGuest, setNewGuest] = useState({ name: "", email: "", phone: "", event: "", pax: 1 });
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const filteredGuests = mockGuests.filter(guest => {
+    const filteredGuests = guests.filter(guest => {
         const matchesSearch = guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             guest.email.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesEvent = filterEvent === "all" || guest.event === filterEvent;
         return matchesSearch && matchesEvent;
     });
 
-    const events = [...new Set(mockGuests.map(g => g.event))];
+    const events = [...new Set(guests.map(g => g.event))];
+
+    const handleAddGuest = () => {
+        if (!newGuest.name.trim()) return;
+        const guest = {
+            id: Date.now(),
+            name: newGuest.name,
+            email: newGuest.email,
+            phone: newGuest.phone,
+            event: newGuest.event || "Uncategorized",
+            status: "pending" as const,
+            pax: newGuest.pax,
+        };
+        setGuests(prev => [...prev, guest]);
+        setNewGuest({ name: "", email: "", phone: "", event: "", pax: 1 });
+        setShowAddModal(false);
+    };
+
+    const handleImportCSV = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const text = event.target?.result as string;
+            const lines = text.split('\n').filter(line => line.trim());
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+            const newGuests = lines.slice(1).map((line, index) => {
+                const values = line.split(',').map(v => v.trim());
+                const nameIdx = headers.findIndex(h => h.includes('name'));
+                const emailIdx = headers.findIndex(h => h.includes('email'));
+                const phoneIdx = headers.findIndex(h => h.includes('phone'));
+                const eventIdx = headers.findIndex(h => h.includes('event'));
+                const paxIdx = headers.findIndex(h => h.includes('pax') || h.includes('guest'));
+
+                return {
+                    id: Date.now() + index,
+                    name: nameIdx >= 0 ? values[nameIdx] : `Guest ${index + 1}`,
+                    email: emailIdx >= 0 ? values[emailIdx] : "",
+                    phone: phoneIdx >= 0 ? values[phoneIdx] : "",
+                    event: eventIdx >= 0 ? values[eventIdx] : "Imported",
+                    status: "pending" as const,
+                    pax: paxIdx >= 0 ? parseInt(values[paxIdx]) || 1 : 1,
+                };
+            }).filter(g => g.name);
+
+            setGuests(prev => [...prev, ...newGuests]);
+            setShowImportModal(false);
+        };
+        reader.readAsText(file);
+        e.target.value = ''; // Reset file input
+    };
 
     return (
         <DashboardLayout>
@@ -45,11 +102,11 @@ export default function GuestsPage() {
                         <p className="text-foreground-muted">Manage guests across all your events</p>
                     </div>
                     <div className="flex gap-2">
-                        <button className="btn-secondary flex items-center gap-2">
+                        <button onClick={() => setShowImportModal(true)} className="btn-secondary flex items-center gap-2">
                             <Upload className="w-4 h-4" />
                             Import CSV
                         </button>
-                        <button className="btn-primary flex items-center gap-2">
+                        <button onClick={() => setShowAddModal(true)} className="btn-primary flex items-center gap-2">
                             <Plus className="w-4 h-4" />
                             Add Guest
                         </button>
@@ -60,19 +117,19 @@ export default function GuestsPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="glass-card p-4">
                         <p className="text-foreground-muted text-sm">Total Guests</p>
-                        <p className="text-2xl font-bold text-white">{mockGuests.length}</p>
+                        <p className="text-2xl font-bold text-white">{guests.length}</p>
                     </div>
                     <div className="glass-card p-4">
                         <p className="text-foreground-muted text-sm">Confirmed</p>
-                        <p className="text-2xl font-bold text-success">{mockGuests.filter(g => g.status === "confirmed").length}</p>
+                        <p className="text-2xl font-bold text-success">{guests.filter(g => g.status === "confirmed").length}</p>
                     </div>
                     <div className="glass-card p-4">
                         <p className="text-foreground-muted text-sm">Pending</p>
-                        <p className="text-2xl font-bold text-warning">{mockGuests.filter(g => g.status === "pending").length}</p>
+                        <p className="text-2xl font-bold text-warning">{guests.filter(g => g.status === "pending").length}</p>
                     </div>
                     <div className="glass-card p-4">
                         <p className="text-foreground-muted text-sm">Total Pax</p>
-                        <p className="text-2xl font-bold text-primary">{mockGuests.reduce((sum, g) => sum + g.pax, 0)}</p>
+                        <p className="text-2xl font-bold text-primary">{guests.reduce((sum, g) => sum + g.pax, 0)}</p>
                     </div>
                 </div>
 
@@ -161,6 +218,135 @@ export default function GuestsPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Add Guest Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="glass-card p-6 w-full max-w-md animate-fade-in">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                                <UserPlus className="w-5 h-5 text-primary" />
+                            </div>
+                            <h2 className="text-xl font-bold text-white">Add New Guest</h2>
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-sm text-foreground-muted block mb-1">Full Name *</label>
+                                <input
+                                    type="text"
+                                    className="input-field w-full"
+                                    placeholder="Guest name"
+                                    value={newGuest.name}
+                                    onChange={(e) => setNewGuest({ ...newGuest, name: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-foreground-muted block mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    className="input-field w-full"
+                                    placeholder="email@example.com"
+                                    value={newGuest.email}
+                                    onChange={(e) => setNewGuest({ ...newGuest, email: e.target.value })}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm text-foreground-muted block mb-1">Phone</label>
+                                <input
+                                    type="tel"
+                                    className="input-field w-full"
+                                    placeholder="+60..."
+                                    value={newGuest.phone}
+                                    onChange={(e) => setNewGuest({ ...newGuest, phone: e.target.value })}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm text-foreground-muted block mb-1">Event</label>
+                                    <select
+                                        className="input-field w-full"
+                                        value={newGuest.event}
+                                        onChange={(e) => setNewGuest({ ...newGuest, event: e.target.value })}
+                                    >
+                                        <option value="">Select event</option>
+                                        {events.map(event => (
+                                            <option key={event} value={event}>{event}</option>
+                                        ))}
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="text-sm text-foreground-muted block mb-1">Pax</label>
+                                    <input
+                                        type="number"
+                                        className="input-field w-full"
+                                        min="1"
+                                        value={newGuest.pax}
+                                        onChange={(e) => setNewGuest({ ...newGuest, pax: parseInt(e.target.value) || 1 })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 mt-6">
+                            <button
+                                onClick={() => {
+                                    setShowAddModal(false);
+                                    setNewGuest({ name: "", email: "", phone: "", event: "", pax: 1 });
+                                }}
+                                className="btn-secondary flex-1"
+                            >
+                                Cancel
+                            </button>
+                            <button onClick={handleAddGuest} className="btn-primary flex-1">
+                                Add Guest
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Import CSV Modal */}
+            {showImportModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="glass-card p-6 w-full max-w-md animate-fade-in">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center">
+                                <FileSpreadsheet className="w-5 h-5 text-secondary" />
+                            </div>
+                            <h2 className="text-xl font-bold text-white">Import Guests from CSV</h2>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="border-2 border-dashed border-[var(--glass-border)] rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
+                                <Upload className="w-12 h-12 text-foreground-muted mx-auto mb-4" />
+                                <p className="text-white font-medium mb-2">Drop your CSV file here</p>
+                                <p className="text-foreground-muted text-sm mb-4">or click to browse</p>
+                                <input
+                                    type="file"
+                                    ref={fileInputRef}
+                                    accept=".csv"
+                                    onChange={handleImportCSV}
+                                    className="hidden"
+                                />
+                                <button
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="btn-secondary"
+                                >
+                                    Choose File
+                                </button>
+                            </div>
+                            <div className="glass-card p-4 bg-background-tertiary/50">
+                                <p className="text-sm text-foreground-muted mb-2">CSV Format:</p>
+                                <code className="text-xs text-primary">name, email, phone, event, pax</code>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 mt-6">
+                            <button onClick={() => setShowImportModal(false)} className="btn-secondary flex-1">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
     );
 }

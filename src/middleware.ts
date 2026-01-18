@@ -1,0 +1,69 @@
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+
+export async function middleware(request: NextRequest) {
+    let response = NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    });
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return request.cookies.getAll();
+                },
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value }) =>
+                        request.cookies.set(name, value)
+                    );
+                    response = NextResponse.next({
+                        request: {
+                            headers: request.headers,
+                        },
+                    });
+                    cookiesToSet.forEach(({ name, value, options }) =>
+                        response.cookies.set(name, value, options)
+                    );
+                },
+            },
+        }
+    );
+
+    // Refresh session if expired
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Check admin routes
+    if (request.nextUrl.pathname.startsWith('/admin')) {
+        if (!user) {
+            // Not logged in - redirect to login
+            return NextResponse.redirect(new URL('/auth/login', request.url));
+        }
+
+        // Check if user is admin by fetching from D1
+        // For now, we'll check a hardcoded admin email list
+        // In production, this should query the D1 database
+        const adminEmails = [
+            'admin@a2zcreative.my',
+            'support@a2zcreative.my',
+            // Add your admin email here
+        ];
+
+        if (!adminEmails.includes(user.email || '')) {
+            // Not an admin - redirect to dashboard
+            return NextResponse.redirect(new URL('/dashboard', request.url));
+        }
+    }
+
+    return response;
+}
+
+export const config = {
+    matcher: [
+        '/admin/:path*',
+        // Optionally add other protected routes
+    ],
+};

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import QRCode from "qrcode";
 import {
     Heart,
     Calendar,
@@ -38,9 +39,10 @@ interface InvitationData {
 
 interface InvitationSectionsProps {
     data: InvitationData;
+    eventSlug?: string;
 }
 
-export default function InvitationSections({ data }: InvitationSectionsProps) {
+export default function InvitationSections({ data, eventSlug = 'unknown' }: InvitationSectionsProps) {
     const [wishes, setWishes] = useState<Array<{ name: string; message: string }>>([
         { name: "Auntie Salmah", message: "Selamat Pengantin Baru! Semoga bahagia ke anak cucu 💕" },
         { name: "Cousin Hafiz", message: "Congrats bro! Finally! 😂🎉" },
@@ -49,6 +51,9 @@ export default function InvitationSections({ data }: InvitationSectionsProps) {
     const [newWish, setNewWish] = useState({ name: "", message: "" });
     const [rsvpData, setRsvpData] = useState({ name: "", phone: "", pax: 1, attending: "yes" });
     const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
+    const [rsvpLoading, setRsvpLoading] = useState(false);
+    const [qrCode, setQrCode] = useState<string | null>(null);
+    const [guestId, setGuestId] = useState<string | null>(null);
 
     const handleWishSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,10 +63,64 @@ export default function InvitationSections({ data }: InvitationSectionsProps) {
         }
     };
 
-    const handleRsvpSubmit = (e: React.FormEvent) => {
+    const handleRsvpSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("RSVP submitted:", rsvpData);
-        setRsvpSubmitted(true);
+        setRsvpLoading(true);
+
+        try {
+            const response = await fetch('/api/rsvp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventSlug,
+                    name: rsvpData.name,
+                    phone: rsvpData.phone,
+                    pax: rsvpData.pax,
+                    attending: rsvpData.attending
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success && result.guestId) {
+                setGuestId(result.guestId);
+
+                // Generate QR code on client-side
+                try {
+                    const qrDataUrl = await QRCode.toDataURL(result.guestId, {
+                        width: 300,
+                        margin: 2,
+                        color: {
+                            dark: '#1a1a2e',
+                            light: '#ffffff'
+                        }
+                    });
+                    setQrCode(qrDataUrl);
+                } catch (qrError) {
+                    console.error('QR generation error:', qrError);
+                }
+
+                setRsvpSubmitted(true);
+            } else {
+                console.error('RSVP failed:', result.error);
+                setRsvpSubmitted(true);
+            }
+        } catch (error) {
+            console.error('RSVP error:', error);
+            setRsvpSubmitted(true);
+        } finally {
+            setRsvpLoading(false);
+        }
+    };
+
+    const handleDownloadQr = () => {
+        if (!qrCode) return;
+        const link = document.createElement('a');
+        link.href = qrCode;
+        link.download = `${guestId || 'guest'}-qr-code.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
@@ -291,7 +350,39 @@ export default function InvitationSections({ data }: InvitationSectionsProps) {
                         <div className="glass-card p-8 text-center">
                             <CheckCircle className="w-16 h-16 text-success mx-auto mb-4" />
                             <h3 className="text-xl font-bold text-white mb-2">Thank You!</h3>
-                            <p className="text-foreground-muted">Your attendance has been confirmed.</p>
+                            <p className="text-foreground-muted mb-6">
+                                {rsvpData.attending === 'yes'
+                                    ? 'Your attendance has been confirmed.'
+                                    : 'Thank you for letting us know.'}
+                            </p>
+
+                            {/* QR Code Display */}
+                            {qrCode && rsvpData.attending === 'yes' && (
+                                <div className="mt-6">
+                                    <p className="text-sm text-foreground-muted mb-4">
+                                        Show this QR code at the event entrance
+                                    </p>
+                                    <div className="bg-white p-4 rounded-2xl inline-block mb-4">
+                                        <img
+                                            src={qrCode}
+                                            alt="Your RSVP QR Code"
+                                            className="w-48 h-48 mx-auto"
+                                        />
+                                    </div>
+                                    {guestId && (
+                                        <p className="text-xs text-foreground-muted mb-4">
+                                            Guest ID: {guestId}
+                                        </p>
+                                    )}
+                                    <button
+                                        onClick={handleDownloadQr}
+                                        className="btn-primary flex items-center justify-center gap-2 mx-auto"
+                                    >
+                                        <Send className="w-4 h-4" />
+                                        Download QR Code
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <form onSubmit={handleRsvpSubmit} className="glass-card p-6 space-y-4">
@@ -323,8 +414,8 @@ export default function InvitationSections({ data }: InvitationSectionsProps) {
                                         type="button"
                                         onClick={() => setRsvpData({ ...rsvpData, attending: "yes" })}
                                         className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${rsvpData.attending === "yes"
-                                                ? "border-success bg-success/20 text-success"
-                                                : "border-[var(--glass-border)] text-foreground-muted"
+                                            ? "border-success bg-success/20 text-success"
+                                            : "border-[var(--glass-border)] text-foreground-muted"
                                             }`}
                                     >
                                         <CheckCircle className="w-5 h-5" />
@@ -334,8 +425,8 @@ export default function InvitationSections({ data }: InvitationSectionsProps) {
                                         type="button"
                                         onClick={() => setRsvpData({ ...rsvpData, attending: "no" })}
                                         className={`p-3 rounded-xl border-2 transition-all flex items-center justify-center gap-2 ${rsvpData.attending === "no"
-                                                ? "border-error bg-error/20 text-error"
-                                                : "border-[var(--glass-border)] text-foreground-muted"
+                                            ? "border-error bg-error/20 text-error"
+                                            : "border-[var(--glass-border)] text-foreground-muted"
                                             }`}
                                     >
                                         <XCircle className="w-5 h-5" />
@@ -357,9 +448,17 @@ export default function InvitationSections({ data }: InvitationSectionsProps) {
                                     </select>
                                 </div>
                             )}
-                            <button type="submit" className="btn-primary w-full mt-4 flex items-center justify-center gap-2">
-                                <Send className="w-4 h-4" />
-                                <span>Confirm Attendance</span>
+                            <button
+                                type="submit"
+                                className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
+                                disabled={rsvpLoading}
+                            >
+                                {rsvpLoading ? (
+                                    <span className="animate-spin">⏳</span>
+                                ) : (
+                                    <Send className="w-4 h-4" />
+                                )}
+                                <span>{rsvpLoading ? 'Submitting...' : 'Confirm Attendance'}</span>
                             </button>
                         </form>
                     )}

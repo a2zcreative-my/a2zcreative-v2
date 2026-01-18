@@ -70,16 +70,35 @@ export async function POST(request: NextRequest) {
         const isPaid = data.paid === 'true';
         const paidAt = data.paid_at;
 
-        if (isPaid) {
-            // TODO: Update your database here
-            // Example: await db.payments.update({ billId, status: 'paid', paidAt })
-            console.log(`✅ Payment successful: Bill ${billId} paid at ${paidAt}`);
+        // Get invoiceId from query params (we appended it in create-bill)
+        const url = new URL(request.url);
+        const invoiceId = url.searchParams.get('invoiceId');
 
-            // For now, we'll log the success
-            // In production, you would update the event status in your database
-        } else {
-            console.log(`❌ Payment not completed: Bill ${billId}`);
+        if (isPaid && invoiceId) {
+            // @ts-expect-error - Cloudflare bindings
+            const db = request.cf?.env?.DB || globalThis.DB;
+
+            if (db) {
+                try {
+                    await db.prepare(`
+                        UPDATE invoices 
+                        SET status = ?, paid_at = ?, payment_method = ?
+                        WHERE id = ?
+                    `).bind(
+                        'paid',
+                        paidAt,
+                        'FPX (Billplz)', // Or extract from metadata if available
+                        invoiceId
+                    ).run();
+                    console.log(`✅ Invoice ${invoiceId} marked as paid`);
+                } catch (dbError) {
+                    console.error('[Callback] Database update failed:', dbError);
+                }
+            } else {
+                console.log(`[Callback] Skip DB update (no binding) for Invoice ${invoiceId}`);
+            }
         }
+
 
         // Billplz expects a 200 response
         return NextResponse.json({ received: true });
