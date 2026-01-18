@@ -51,7 +51,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const { user, signOut, isAdmin } = useAuth();
+    const { user, signOut, isAdmin, roleLoading } = useAuth();
 
     // Select navigation items based on role
     const navItems = isAdmin ? adminNavItems : clientNavItems;
@@ -126,23 +126,35 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
                 {/* Main Navigation */}
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                    {navItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={handleNavClick}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
-                                    ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
-                                    : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
-                                    }`}
-                            >
-                                <Icon className="w-5 h-5" strokeWidth={1.5} />
-                                <span className="font-medium">{item.label}</span>
-                            </Link>
-                        );
-                    })}
+                    {roleLoading ? (
+                        // Skeleton loading placeholders
+                        <>
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl">
+                                    <div className="w-5 h-5 rounded bg-foreground-muted/20 animate-pulse" />
+                                    <div className="h-4 rounded bg-foreground-muted/20 animate-pulse" style={{ width: `${60 + i * 10}%` }} />
+                                </div>
+                            ))}
+                        </>
+                    ) : (
+                        navItems.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    onClick={handleNavClick}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ${isActive(item.href)
+                                        ? "bg-gradient-to-r from-primary/20 to-secondary/20 text-white border border-primary/30"
+                                        : "text-foreground-muted hover:bg-[var(--glass-bg)] hover:text-white"
+                                        }`}
+                                >
+                                    <Icon className="w-5 h-5" strokeWidth={1.5} />
+                                    <span className="font-medium">{item.label}</span>
+                                </Link>
+                            );
+                        })
+                    )}
                 </nav>
 
                 {/* Bottom Navigation */}

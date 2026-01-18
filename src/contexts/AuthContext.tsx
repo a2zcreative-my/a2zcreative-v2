@@ -11,6 +11,7 @@ interface AuthContextType {
     user: User | null
     session: Session | null
     loading: boolean
+    roleLoading: boolean
     userRole: UserRole
     isAdmin: boolean
     signIn: (email: string, password: string) => Promise<{ error?: string }>
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(true)
+    const [roleLoading, setRoleLoading] = useState(true)
     const [userRole, setUserRole] = useState<UserRole>('client')
     const router = useRouter()
     const supabase = createClient()
@@ -35,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Fetch user role from API
     const fetchUserRole = useCallback(async () => {
         try {
+            setRoleLoading(true)
             const response = await fetch('/api/users/me')
             if (response.ok) {
                 const data = await response.json()
@@ -43,6 +46,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
             console.error('Failed to fetch user role:', error)
             setUserRole('client')
+        } finally {
+            setRoleLoading(false)
         }
     }, [])
 
@@ -222,6 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             user,
             session,
             loading,
+            roleLoading,
             userRole,
             isAdmin,
             signIn,
