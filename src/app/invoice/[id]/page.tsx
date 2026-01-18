@@ -1,6 +1,6 @@
 "use client";
 
-export const runtime = 'edge';
+// Note: This is a client component - no edge runtime needed
 
 import { useEffect, useState, useRef, use } from "react";
 import { useRouter } from "next/navigation";
