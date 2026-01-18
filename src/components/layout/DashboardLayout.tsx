@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Sidebar, { Menu } from "./Sidebar";
-import { Bell, HelpCircle, X, Users, CreditCard, Calendar, Info } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Bell, HelpCircle, X, Users, CreditCard, Calendar, Info, Shield } from "lucide-react";
 
 // Mock notifications data
 const notifications = [
@@ -44,6 +45,7 @@ export default function DashboardLayout({
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const notificationRef = useRef<HTMLDivElement>(null);
+    const { isAdmin } = useAuth();
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -76,6 +78,13 @@ export default function DashboardLayout({
                             <h1 className="text-lg font-semibold text-white">Dashboard</h1>
                         </div>
                         <div className="flex items-center gap-2 md:gap-4">
+                            {/* Admin Mode Badge */}
+                            {isAdmin && (
+                                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-500/20 border border-red-500/50">
+                                    <Shield className="w-3.5 h-3.5 text-red-400" />
+                                    <span className="text-xs font-bold text-red-400">ADMIN</span>
+                                </div>
+                            )}
                             {/* Notifications */}
                             <div className="relative" ref={notificationRef}>
                                 <button
@@ -116,14 +125,14 @@ export default function DashboardLayout({
                                                                 }`}
                                                         >
                                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${notification.type === "rsvp" ? "bg-success/20" :
-                                                                    notification.type === "payment" ? "bg-primary/20" :
-                                                                        notification.type === "reminder" ? "bg-warning/20" :
-                                                                            "bg-info/20"
+                                                                notification.type === "payment" ? "bg-primary/20" :
+                                                                    notification.type === "reminder" ? "bg-warning/20" :
+                                                                        "bg-info/20"
                                                                 }`}>
                                                                 <Icon className={`w-4 h-4 ${notification.type === "rsvp" ? "text-success" :
-                                                                        notification.type === "payment" ? "text-primary" :
-                                                                            notification.type === "reminder" ? "text-warning" :
-                                                                                "text-info"
+                                                                    notification.type === "payment" ? "text-primary" :
+                                                                        notification.type === "reminder" ? "text-warning" :
+                                                                            "text-info"
                                                                     }`} />
                                                             </div>
                                                             <div className="flex-1 min-w-0">
