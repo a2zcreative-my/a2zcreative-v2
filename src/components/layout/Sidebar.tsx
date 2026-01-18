@@ -19,6 +19,7 @@ import {
     Menu,
     X,
     Ticket,
+    Bell,
 } from "lucide-react";
 
 const adminNavItems = [
@@ -39,9 +40,15 @@ const clientNavItems = [
     { href: "/reports", label: "Reports", icon: BarChart3 },
 ];
 
-const bottomNavItems = [
+const clientBottomNavItems = [
     { href: "/billing", label: "Billing", icon: CreditCard },
     { href: "/settings", label: "Settings", icon: Settings },
+];
+
+const adminBottomNavItems = [
+    { href: "/admin/billing", label: "Billing", icon: CreditCard },
+    { href: "/admin/notifications", label: "Notifications", icon: Bell },
+    { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 interface SidebarProps {
@@ -55,6 +62,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
     // Select navigation items based on role
     const navItems = isAdmin ? adminNavItems : clientNavItems;
+    const bottomNavItems = isAdmin ? adminBottomNavItems : clientBottomNavItems;
 
     const isActive = (href: string) => {
         // For dashboard links, use exact match only

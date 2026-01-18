@@ -164,7 +164,7 @@ export default function DashboardLayout({
 
                                         {/* Footer */}
                                         <Link
-                                            href="/notifications"
+                                            href={isAdmin ? "/admin/notifications" : "/notifications"}
                                             onClick={() => setNotificationOpen(false)}
                                             className="block px-4 py-3 text-center text-sm text-primary hover:bg-white/5 border-t border-[var(--glass-border)]"
                                         >
@@ -174,13 +174,15 @@ export default function DashboardLayout({
                                 )}
                             </div>
 
-                            {/* Help */}
-                            <Link
-                                href="/help"
-                                className="hidden sm:flex w-10 h-10 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] items-center justify-center text-foreground-muted hover:text-white hover:border-primary/30 transition-colors"
-                            >
-                                <HelpCircle className="w-5 h-5" />
-                            </Link>
+                            {/* Help - Only for clients */}
+                            {!isAdmin && (
+                                <Link
+                                    href="/help"
+                                    className="hidden sm:flex w-10 h-10 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] items-center justify-center text-foreground-muted hover:text-white hover:border-primary/30 transition-colors"
+                                >
+                                    <HelpCircle className="w-5 h-5" />
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </header>
