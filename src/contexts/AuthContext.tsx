@@ -78,10 +78,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (session?.user) {
                 // Sync user to D1 on initial load
                 await syncUserToD1(session.user)
-                fetchUserRole()
+                await fetchUserRole() // Must await to prevent flash
+            } else {
+                // No user, stop role loading
+                setRoleLoading(false)
             }
         }).catch((err) => {
             console.error('Auth initialization error:', err)
+            setRoleLoading(false)
         }).finally(() => {
             setLoading(false)
         })
@@ -111,8 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     }
                 } else if (event === 'SIGNED_OUT') {
                     setUserRole('client')
+                    setRoleLoading(false)
                     router.push('/auth/login')
                 }
+                // Note: INITIAL_SESSION and TOKEN_REFRESHED are handled by getSession above
             }
         )
 
