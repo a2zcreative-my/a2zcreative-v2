@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 const adminNavItems = [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/events", label: "All Events", icon: Calendar },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/tickets", label: "Tickets", icon: Ticket },
@@ -106,7 +106,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             >
                 {/* Logo */}
                 <div className="p-6 border-b border-[var(--glass-border)] flex items-center justify-between">
-                    <Link href="/dashboard" className="flex items-center gap-3" onClick={handleNavClick}>
+                    <Link href={isAdmin ? "/admin" : "/dashboard"} className="flex items-center gap-3" onClick={handleNavClick}>
                         <div className="w-10 h-10 rounded-xl overflow-hidden">
                             <Image src="/logo.png" alt="A2ZCreative" width={40} height={40} />
                         </div>
