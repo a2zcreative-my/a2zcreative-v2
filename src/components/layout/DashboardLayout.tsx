@@ -4,38 +4,23 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Sidebar, { Menu } from "./Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell, HelpCircle, X, Users, CreditCard, Calendar, Info, Shield } from "lucide-react";
+import { Bell, HelpCircle, X, Users, CreditCard, Calendar, Info, Shield, Loader2 } from "lucide-react";
 
-// Mock notifications data
-const notifications = [
-    {
-        id: "1",
-        type: "rsvp",
-        title: "New RSVP Received",
-        message: "Ahmad confirmed attendance",
-        time: "5 min ago",
-        read: false,
-        icon: Users,
-    },
-    {
-        id: "2",
-        type: "payment",
-        title: "Payment Successful",
-        message: "Premium plan - RM150",
-        time: "2 hours ago",
-        read: false,
-        icon: CreditCard,
-    },
-    {
-        id: "3",
-        type: "reminder",
-        title: "Event Reminder",
-        message: "Birthday Bash in 10 days",
-        time: "1 day ago",
-        read: true,
-        icon: Calendar,
-    },
-];
+interface Notification {
+    id: string;
+    type: string;
+    title: string;
+    message: string;
+    time: string;
+    read: boolean;
+}
+
+const iconMap: Record<string, typeof Bell> = {
+    rsvp: Users,
+    payment: CreditCard,
+    reminder: Calendar,
+    info: Info,
+};
 
 export default function DashboardLayout({
     children,
@@ -44,10 +29,24 @@ export default function DashboardLayout({
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
     const notificationRef = useRef<HTMLDivElement>(null);
     const { isAdmin } = useAuth();
 
     const unreadCount = notifications.filter(n => !n.read).length;
+
+    // Fetch notifications when dropdown opens
+    useEffect(() => {
+        if (notificationOpen && notifications.length === 0) {
+            setLoadingNotifications(true);
+            fetch('/api/client/notifications')
+                .then(res => res.ok ? res.json() : { notifications: [] })
+                .then(data => setNotifications(data.notifications || []))
+                .catch(() => setNotifications([]))
+                .finally(() => setLoadingNotifications(false));
+        }
+    }, [notificationOpen, notifications.length]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -115,9 +114,14 @@ export default function DashboardLayout({
 
                                         {/* Notification List */}
                                         <div className="max-h-80 overflow-y-auto">
-                                            {notifications.length > 0 ? (
+                                            {loadingNotifications ? (
+                                                <div className="p-8 text-center">
+                                                    <Loader2 className="w-6 h-6 text-primary mx-auto mb-2 animate-spin" />
+                                                    <p className="text-sm text-foreground-muted">Loading...</p>
+                                                </div>
+                                            ) : notifications.length > 0 ? (
                                                 notifications.map((notification) => {
-                                                    const Icon = notification.icon;
+                                                    const Icon = iconMap[notification.type] || Info;
                                                     return (
                                                         <div
                                                             key={notification.id}
