@@ -135,6 +135,26 @@ body {
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
+/* ===== Select Dropdown Styles ===== */
+select {
+  background-color: var(--background-secondary);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+select option {
+  background-color: var(--background-secondary);
+  color: var(--foreground);
+  padding: 8px 12px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: var(--primary);
+  color: white;
+}
+
 /* ===== Plan Badge Colors ===== */
 .badge-starter {
   background: linear-gradient(135deg, #22c55e, #16a34a);

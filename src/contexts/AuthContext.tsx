@@ -104,17 +104,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Sync user to D1 on sign-in
                     await syncUserToD1(session.user)
                     await fetchUserRole()
-                    // Redirect based on role - need to fetch fresh role
-                    const roleResponse = await fetch('/api/users/me')
-                    if (roleResponse.ok) {
-                        const roleData = await roleResponse.json()
-                        if (roleData.role === 'admin') {
-                            router.push('/admin')
+                    // Check if already on a dashboard/admin page - avoid unnecessary redirects
+                    const currentPath = window.location.pathname
+                    const isOnAdminPage = currentPath.startsWith('/admin')
+                    const isOnDashboardPage = currentPath.startsWith('/dashboard')
+
+                    // Only redirect if not already on appropriate page
+                    if (!isOnAdminPage && !isOnDashboardPage) {
+                        // Redirect based on role - need to fetch fresh role
+                        const roleResponse = await fetch('/api/users/me')
+                        if (roleResponse.ok) {
+                            const roleData = await roleResponse.json()
+                            if (roleData.role === 'admin') {
+                                router.push('/admin')
+                            } else {
+                                router.push('/dashboard')
+                            }
                         } else {
                             router.push('/dashboard')
                         }
-                    } else {
-                        router.push('/dashboard')
                     }
                 } else if (event === 'SIGNED_OUT') {
                     setUserRole('client')
