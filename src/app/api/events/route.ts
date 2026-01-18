@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { getRequestContext } from '@cloudflare/next-on-pages'
 
 export const runtime = 'edge'
 
@@ -26,10 +27,16 @@ async function getCurrentUser(request: NextRequest) {
     return user
 }
 
-// Helper to get D1 database
-function getDB(request: NextRequest) {
-    // @ts-expect-error - Cloudflare bindings
-    return request.cf?.env?.DB || globalThis.DB
+// Helper to get D1 database using proper Cloudflare binding
+function getDB() {
+    try {
+        const { env } = getRequestContext()
+        return env.DB
+    } catch {
+        // Fallback for local development
+        // @ts-expect-error - Cloudflare bindings available at runtime
+        return globalThis.DB
+    }
 }
 
 // GET /api/events - List current user's events
@@ -40,7 +47,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const db = getDB(request)
+        const db = getDB()
         if (!db) {
             // Return empty array if D1 not available
             return NextResponse.json({ events: [], message: 'D1 not configured' })
@@ -74,7 +81,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Title is required' }, { status: 400 })
         }
 
-        const db = getDB(request)
+        const db = getDB()
         if (!db) {
             return NextResponse.json({ error: 'Database not available' }, { status: 503 })
         }

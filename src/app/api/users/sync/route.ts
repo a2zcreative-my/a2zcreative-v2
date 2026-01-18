@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { getRequestContext } from '@cloudflare/next-on-pages'
 
 export const runtime = 'edge'
 
@@ -9,14 +10,27 @@ interface UserSyncRequest {
     name?: string
     phone?: string
     plan?: string
+    role?: string  // Add role to sync request
 }
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+// Helper to get D1 database using proper Cloudflare binding
+function getDB() {
+    try {
+        const { env } = getRequestContext()
+        return env.DB
+    } catch {
+        // Fallback for local development
+        // @ts-expect-error - Cloudflare bindings available at runtime
+        return globalThis.DB
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body: UserSyncRequest = await request.json()
-        const { id, email, name, phone, plan } = body
+        const { id, email, name, phone, plan, role } = body
 
         if (!id || !email) {
             return NextResponse.json(
@@ -26,8 +40,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Access D1 binding from Cloudflare environment
-        // @ts-expect-error - Cloudflare bindings available at runtime
-        const db = request.cf?.env?.DB || globalThis.DB
+        const db = getDB()
 
         if (!db) {
             // D1 not available - log but don't fail
@@ -40,20 +53,21 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if user exists (to determine if we should send welcome email)
-        const existingUser = await db.prepare('SELECT id FROM users WHERE id = ?').bind(id).first()
+        const existingUser = await db.prepare('SELECT id, role FROM users WHERE id = ?').bind(id).first() as { id: string; role?: string } | null
         const isNewUser = !existingUser
 
-        // Upsert user to D1
+        // Upsert user to D1 (preserve existing role if not provided)
         await db.prepare(`
-            INSERT INTO users (id, email, name, phone, plan, updated_at)
-            VALUES (?, ?, ?, ?, ?, datetime('now'))
+            INSERT INTO users (id, email, name, phone, plan, role, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
             ON CONFLICT(id) DO UPDATE SET
                 email = excluded.email,
                 name = COALESCE(excluded.name, users.name),
                 phone = COALESCE(excluded.phone, users.phone),
                 plan = COALESCE(excluded.plan, users.plan),
+                role = COALESCE(excluded.role, users.role),
                 updated_at = datetime('now')
-        `).bind(id, email, name || null, phone || null, plan || 'starter').run()
+        `).bind(id, email, name || null, phone || null, plan || 'starter', role || (isNewUser ? 'client' : existingUser?.role || 'client')).run()
 
         // Send Welcome Email if new user
         if (isNewUser) {

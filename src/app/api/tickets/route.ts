@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getRequestContext } from '@cloudflare/next-on-pages'
 
 export const runtime = 'edge'
+
+// Helper to get D1 database using proper Cloudflare binding
+function getDB() {
+    try {
+        const { env } = getRequestContext()
+        return env.DB
+    } catch {
+        // Fallback for local development
+        // @ts-expect-error - Cloudflare bindings available at runtime
+        return globalThis.DB
+    }
+}
 
 interface TicketSubmitRequest {
     category: string
@@ -43,8 +56,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Access D1 binding from Cloudflare environment
-        // @ts-expect-error - Cloudflare bindings available at runtime
-        const db = request.cf?.env?.DB || globalThis.DB
+        const db = getDB()
 
         if (!db) {
             // D1 not available - return simulated success for development
@@ -104,8 +116,7 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        // @ts-expect-error - Cloudflare bindings available at runtime
-        const db = request.cf?.env?.DB || globalThis.DB
+        const db = getDB()
 
         if (!db) {
             return NextResponse.json({ tickets: [] })

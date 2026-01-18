@@ -46,12 +46,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [])
 
+    // Sync user to D1 database
+    const syncUserToD1 = useCallback(async (user: User) => {
+        try {
+            await fetch('/api/users/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: user.id,
+                    email: user.email,
+                    name: user.user_metadata?.name || user.user_metadata?.full_name,
+                    phone: user.user_metadata?.phone
+                })
+            })
+        } catch (error) {
+            console.error('User sync failed:', error)
+            // Don't fail - sync is non-critical
+        }
+    }, [])
+
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSession(session)
             setUser(session?.user ?? null)
             if (session?.user) {
+                // Sync user to D1 on initial load
+                await syncUserToD1(session.user)
                 fetchUserRole()
             }
         }).catch((err) => {
@@ -67,7 +88,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(session?.user ?? null)
                 setLoading(false)
 
-                if (event === 'SIGNED_IN') {
+                if (event === 'SIGNED_IN' && session?.user) {
+                    // Sync user to D1 on sign-in
+                    await syncUserToD1(session.user)
                     await fetchUserRole()
                     router.push('/events')
                 } else if (event === 'SIGNED_OUT') {
@@ -78,7 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         )
 
         return () => subscription.unsubscribe()
-    }, [router, supabase.auth, fetchUserRole])
+    }, [router, supabase.auth, fetchUserRole, syncUserToD1])
+
 
     const signIn = useCallback(async (email: string, password: string) => {
         try {

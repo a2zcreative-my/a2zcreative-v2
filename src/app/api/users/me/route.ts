@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { getRequestContext } from '@cloudflare/next-on-pages'
 
 export const runtime = 'edge'
 
@@ -15,9 +16,16 @@ export async function GET(request: NextRequest) {
             )
         }
 
-        // Access D1 binding from Cloudflare environment
-        // @ts-expect-error - Cloudflare bindings available at runtime
-        const db = request.cf?.env?.DB || globalThis.DB
+        // Access D1 binding from Cloudflare environment using proper method
+        let db = null
+        try {
+            const { env } = getRequestContext()
+            db = env.DB
+        } catch {
+            // Fallback for local development
+            // @ts-expect-error - Cloudflare bindings available at runtime
+            db = globalThis.DB
+        }
 
         if (!db) {
             // D1 not available - return default role

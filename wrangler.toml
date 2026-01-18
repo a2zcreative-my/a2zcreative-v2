@@ -17,4 +17,5 @@ bucket_name = "a2zcreative-images"
 # Environment variables (set via Cloudflare dashboard or wrangler secret)
 # NEXT_PUBLIC_SUPABASE_URL
 # NEXT_PUBLIC_SUPABASE_ANON_KEY
+# SUPABASE_SERVICE_ROLE_KEY  # Required for syncing users from Supabase to D1
 # RESEND_API_KEY
