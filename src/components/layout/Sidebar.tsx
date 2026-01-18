@@ -195,11 +195,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--glass-bg)]">
                         {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
                             <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
-                                <Image
+                                <img
                                     src={user.user_metadata.avatar_url || user.user_metadata.picture}
                                     alt={getUserName()}
-                                    width={40}
-                                    height={40}
                                     className="w-full h-full object-cover"
                                 />
                             </div>

@@ -146,11 +146,9 @@ export default function SettingsPage() {
                         <div className="flex items-center gap-6 mb-8">
                             {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
                                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[var(--glass-border)]">
-                                    <Image
+                                    <img
                                         src={user.user_metadata.avatar_url || user.user_metadata.picture}
                                         alt={`${firstName} ${lastName}`}
-                                        width={96}
-                                        height={96}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>

@@ -273,11 +273,9 @@ export default function AdminSettingsPage() {
                             <div className="relative group">
                                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[var(--glass-border)] bg-background-tertiary">
                                     {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
-                                        <Image
+                                        <img
                                             src={user.user_metadata.avatar_url || user.user_metadata.picture}
                                             alt={user.email || "Admin"}
-                                            width={128}
-                                            height={128}
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (
