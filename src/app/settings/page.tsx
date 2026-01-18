@@ -8,7 +8,7 @@ import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SettingsPage() {
-    const { user, userRole, isAdmin, loading } = useAuth();
+    const { user, userRole, isAdmin, loading, persistentAvatarUrl, refreshAvatar } = useAuth();
     const supabase = createClient();
     const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications" | "team">("profile");
 
@@ -46,8 +46,10 @@ export default function SettingsPage() {
 
                 if (updateError) throw updateError;
 
+                // Refresh avatar from D1 to update UI immediately
+                await refreshAvatar();
+
                 alert("Avatar updated successfully!");
-                // No reload needed
             } else {
                 alert(`Upload failed: ${data.error}`);
             }
@@ -144,10 +146,10 @@ export default function SettingsPage() {
                         </div>
 
                         <div className="flex items-center gap-6 mb-8">
-                            {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+                            {persistentAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
                                 <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[var(--glass-border)]">
                                     <img
-                                        src={user.user_metadata.avatar_url || user.user_metadata.picture}
+                                        src={persistentAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
                                         alt={`${firstName} ${lastName}`}
                                         className="w-full h-full object-cover"
                                     />

@@ -36,16 +36,17 @@ export async function GET(request: NextRequest) {
             })
         }
 
-        // Fetch user with role from D1
+        // Fetch user with role and avatar from D1
         const dbUser = await db.prepare(
-            'SELECT id, email, name, role FROM users WHERE id = ?'
+            'SELECT id, email, name, role, avatar_url FROM users WHERE id = ?'
         ).bind(user.id).first()
 
         return NextResponse.json({
             id: user.id,
             email: user.email,
             name: dbUser?.name || user.user_metadata?.name,
-            role: dbUser?.role || 'client' // Default to client
+            role: dbUser?.role || 'client', // Default to client
+            avatar_url: dbUser?.avatar_url || null // Avatar from D1 (persists across OAuth)
         })
     } catch (error) {
         console.error('[Get User Error]:', error)

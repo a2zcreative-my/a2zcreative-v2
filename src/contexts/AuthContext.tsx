@@ -14,6 +14,7 @@ interface AuthContextType {
     roleLoading: boolean
     userRole: UserRole
     isAdmin: boolean
+    persistentAvatarUrl: string | null
     signIn: (email: string, password: string) => Promise<{ error?: string }>
     signUp: (email: string, password: string, name: string, phone: string) => Promise<{ error?: string }>
     signOut: () => Promise<void>
@@ -21,6 +22,7 @@ interface AuthContextType {
     signInWithGoogle: () => Promise<void>
     signInWithPhone: (phone: string) => Promise<{ error?: string }>
     verifyPhoneOtp: (phone: string, token: string) => Promise<{ error?: string }>
+    refreshAvatar: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -31,11 +33,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true)
     const [roleLoading, setRoleLoading] = useState(true)
     const [userRole, setUserRole] = useState<UserRole>('client')
+    const [persistentAvatarUrl, setPersistentAvatarUrl] = useState<string | null>(null)
     const [hasRedirected, setHasRedirected] = useState(false) // Prevent multiple redirects
     const router = useRouter()
     const supabase = createClient()
 
-    // Fetch user role from API
+    // Fetch user role and avatar from API
     const fetchUserRole = useCallback(async () => {
         try {
             setRoleLoading(true)
@@ -43,12 +46,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (response.ok) {
                 const data = await response.json()
                 setUserRole(data.role || 'client')
+                setPersistentAvatarUrl(data.avatar_url || null)
             }
         } catch (error) {
             console.error('Failed to fetch user role:', error)
             setUserRole('client')
         } finally {
             setRoleLoading(false)
+        }
+    }, [])
+
+    // Refresh avatar from D1 (call after upload)
+    const refreshAvatar = useCallback(async () => {
+        try {
+            const response = await fetch('/api/users/me')
+            if (response.ok) {
+                const data = await response.json()
+                setPersistentAvatarUrl(data.avatar_url || null)
+            }
+        } catch (error) {
+            console.error('Failed to refresh avatar:', error)
         }
     }, [])
 
@@ -253,13 +270,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             roleLoading,
             userRole,
             isAdmin,
+            persistentAvatarUrl,
             signIn,
             signUp,
             signOut,
             resetPassword,
             signInWithGoogle,
             signInWithPhone,
-            verifyPhoneOtp
+            verifyPhoneOtp,
+            refreshAvatar
         }}>
             {children}
         </AuthContext.Provider>

@@ -58,7 +58,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const { user, signOut, isAdmin, roleLoading } = useAuth();
+    const { user, signOut, isAdmin, roleLoading, persistentAvatarUrl } = useAuth();
 
     // Select navigation items based on role
     const navItems = isAdmin ? adminNavItems : clientNavItems;
@@ -193,10 +193,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 {/* User Profile with Logout */}
                 <div className="p-4 border-t border-[var(--glass-border)]">
                     <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[var(--glass-bg)]">
-                        {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+                        {persistentAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
                             <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10">
                                 <img
-                                    src={user.user_metadata.avatar_url || user.user_metadata.picture}
+                                    src={persistentAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
                                     alt={getUserName()}
                                     className="w-full h-full object-cover"
                                 />

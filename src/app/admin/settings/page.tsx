@@ -68,7 +68,7 @@ const plans = [
 ];
 
 export default function AdminSettingsPage() {
-    const { user, isAdmin } = useAuth();
+    const { user, isAdmin, persistentAvatarUrl, refreshAvatar } = useAuth();
     const supabase = createClient();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<PlatformStats>({ totalUsers: 0, totalEvents: 0, totalInvoices: 0 });
@@ -101,8 +101,10 @@ export default function AdminSettingsPage() {
                     throw updateError;
                 }
 
+                // Refresh avatar from D1 to update UI immediately
+                await refreshAvatar();
+
                 alert("Avatar updated successfully!");
-                // No reload needed, AuthContext will pick up the change
             } else {
                 alert(`Upload failed: ${data.error}`);
             }
@@ -272,10 +274,10 @@ export default function AdminSettingsPage() {
                         <div className="flex flex-col sm:flex-row items-center gap-8">
                             <div className="relative group">
                                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-[var(--glass-border)] bg-background-tertiary">
-                                    {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+                                    {persistentAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
                                         <img
-                                            src={user.user_metadata.avatar_url || user.user_metadata.picture}
-                                            alt={user.email || "Admin"}
+                                            src={persistentAvatarUrl || user?.user_metadata?.avatar_url || user?.user_metadata?.picture}
+                                            alt={user?.email || "Admin"}
                                             className="w-full h-full object-cover"
                                         />
                                     ) : (

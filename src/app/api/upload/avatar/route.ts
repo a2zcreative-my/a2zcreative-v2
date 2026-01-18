@@ -14,6 +14,16 @@ function getR2() {
     }
 }
 
+function getDB() {
+    try {
+        const { env } = getRequestContext()
+        return env.DB
+    } catch {
+        // @ts-expect-error - Cloudflare bindings available at runtime
+        return globalThis.DB
+    }
+}
+
 async function getCurrentUser(request: NextRequest) {
     const cookieHeader = request.headers.get('cookie') || ''
     const cookies = cookieHeader.split(';').map(c => {
@@ -38,7 +48,7 @@ async function getCurrentUser(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const { user, supabase } = await getCurrentUser(request)
+        const { user } = await getCurrentUser(request)
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
@@ -77,6 +87,19 @@ export async function POST(request: NextRequest) {
 
         // Construct public URL (using our proxy route)
         const publicUrl = `/api/images/${key}`
+
+        // Save avatar URL to D1 database (persists across OAuth logins)
+        const db = getDB()
+        if (db) {
+            try {
+                await db.prepare(`
+                    UPDATE users SET avatar_url = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+                `).bind(publicUrl, user.id).run()
+            } catch (dbError) {
+                console.error('Failed to update avatar in D1:', dbError)
+                // Continue anyway - R2 upload succeeded
+            }
+        }
 
         return NextResponse.json({
             success: true,

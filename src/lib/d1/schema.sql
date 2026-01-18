@@ -4,6 +4,8 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE NOT NULL,
   name TEXT,
   phone TEXT,
+  avatar_url TEXT,
+  role TEXT DEFAULT 'client',
   plan TEXT DEFAULT 'starter',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
