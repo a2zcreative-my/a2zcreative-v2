@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import {
     LayoutDashboard,
@@ -58,7 +58,6 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const router = useRouter();
     const { user, signOut, isAdmin, roleLoading } = useAuth();
 
     // Select navigation items based on role
@@ -74,7 +73,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     };
 
     const handleLogout = async () => {
-        await signOut();
+        try {
+            await signOut();
+        } finally {
+            window.location.href = '/auth/login';
+        }
     };
 
     // Get user initials
