@@ -67,3 +67,17 @@ CREATE TABLE IF NOT EXISTS invoices (
 );
 
 CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);
+
+-- Notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  user_id TEXT NOT NULL,
+  type TEXT DEFAULT 'info', -- 'rsvp', 'payment', 'reminder', 'info'
+  title TEXT NOT NULL,
+  message TEXT,
+  read INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);

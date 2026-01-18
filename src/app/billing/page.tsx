@@ -245,20 +245,25 @@ export default function BillingPage() {
                                 </div>
                             </div>
 
-                            {/* Recent Payment Methods Used */}
-                            <h3 className="text-sm font-medium text-foreground-muted mt-6 mb-3">Recently Used</h3>
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-background-tertiary">
-                                    <CreditCard className="w-4 h-4 text-primary" />
-                                    <span className="text-sm text-white">Card •••• 4242</span>
-                                    <span className="text-xs text-foreground-muted ml-auto">Last used 3 days ago</span>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 rounded-lg bg-background-tertiary">
-                                    <Building2 className="w-4 h-4 text-secondary" />
-                                    <span className="text-sm text-white">FPX Maybank</span>
-                                    <span className="text-xs text-foreground-muted ml-auto">Last used 8 days ago</span>
-                                </div>
-                            </div>
+                            {/* Recent Payment Methods Used - only show if there are payments */}
+                            {payments.length > 0 && (
+                                <>
+                                    <h3 className="text-sm font-medium text-foreground-muted mt-6 mb-3">Recently Used</h3>
+                                    <div className="space-y-2">
+                                        {payments.slice(0, 2).map((payment) => (
+                                            <div key={payment.id} className="flex items-center gap-3 p-3 rounded-lg bg-background-tertiary">
+                                                {payment.method?.includes('Card') ? (
+                                                    <CreditCard className="w-4 h-4 text-primary" />
+                                                ) : (
+                                                    <Building2 className="w-4 h-4 text-secondary" />
+                                                )}
+                                                <span className="text-sm text-white">{payment.method || 'Unknown'}</span>
+                                                <span className="text-xs text-foreground-muted ml-auto">{payment.date}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 )}
