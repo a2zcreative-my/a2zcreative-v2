@@ -355,7 +355,7 @@ export default function AdminUsersPage() {
                                             </span>
                                         </td>
                                         <td className="p-4 text-foreground-muted text-sm">
-                                            {user.last_login ? new Date(user.last_login).toLocaleString() : "Never"}
+                                            {user.last_login ? new Date(user.last_login).toLocaleString('en-MY', { timeZone: 'Asia/Kuala_Lumpur' }) : "Never"}
                                         </td>
                                         <td className="p-4 text-foreground-muted text-sm">
                                             {new Date(user.created_at).toLocaleDateString()}
