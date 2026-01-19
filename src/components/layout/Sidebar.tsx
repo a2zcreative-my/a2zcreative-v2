@@ -20,12 +20,14 @@ import {
     X,
     Ticket,
     Bell,
+    Package,
 } from "lucide-react";
 
 const adminNavItems = [
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/events", label: "All Events", icon: Calendar },
     { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/plans", label: "Plans", icon: Package },
     { href: "/admin/tickets", label: "Tickets", icon: Ticket },
     { href: "/admin/revenue", label: "Revenue", icon: BarChart3 },
 ];

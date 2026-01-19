@@ -83,3 +83,23 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+
+-- Plans table (pricing packages)
+CREATE TABLE IF NOT EXISTS plans (
+  id TEXT PRIMARY KEY,           -- 'starter', 'basic', 'premium', 'exclusive'
+  name TEXT NOT NULL,            -- 'Starter Pack'
+  price REAL NOT NULL,           -- 20.00
+  price_note TEXT,               -- 'one-time'
+  tagline TEXT,                  -- 'I just need something fast & nice'
+  color TEXT,                    -- 'starter'
+  gradient TEXT,                 -- 'from-starter to-green-600'
+  icon TEXT,                     -- 'Cake'
+  events TEXT,                   -- JSON array: ["Birthday Party", "Aqiqah"]
+  features TEXT,                 -- JSON array: ["1 page invitation", "Basic theme"]
+  not_included TEXT,             -- JSON array: ["RSVP with guest count", "Analytics"]
+  popular INTEGER DEFAULT 0,     -- 1 = true, 0 = false
+  sort_order INTEGER DEFAULT 0,  -- Display order
+  active INTEGER DEFAULT 1,      -- 1 = visible, 0 = hidden
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);

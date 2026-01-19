@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     Cake,
     Heart,
@@ -11,6 +11,8 @@ import {
     X,
     ArrowLeft,
     ArrowRight,
+    Loader2,
+    Star,
 } from "lucide-react";
 import { type LucideIcon } from "lucide-react";
 
@@ -19,13 +21,35 @@ const planIcons: Record<string, LucideIcon> = {
     basic: Heart,
     premium: Gem,
     exclusive: Crown,
+    Cake: Cake,
+    Heart: Heart,
+    Gem: Gem,
+    Crown: Crown,
+    Star: Star,
 };
 
-const plans = [
+interface Plan {
+    id: string;
+    name: string;
+    price: number | string;
+    priceNote?: string;
+    price_note?: string;
+    tagline: string;
+    color: string;
+    gradient: string;
+    icon?: string;
+    events: string[];
+    features: string[];
+    notIncluded: string[];
+    popular?: boolean;
+}
+
+// Default plans (fallback if database is empty)
+const defaultPlans: Plan[] = [
     {
         id: "starter",
         name: "Starter Pack",
-        price: "RM20",
+        price: 20,
         priceNote: "one-time",
         tagline: "I just need something fast & nice",
         color: "starter",
@@ -43,7 +67,7 @@ const plans = [
     {
         id: "basic",
         name: "Basic Pack",
-        price: "RM49",
+        price: 49,
         priceNote: "one-time",
         tagline: "I want it to look proper & organized",
         color: "basic",
@@ -62,7 +86,7 @@ const plans = [
     {
         id: "premium",
         name: "Premium Pack",
-        price: "RM99",
+        price: 99,
         priceNote: "one-time",
         tagline: "This event represents me / us",
         color: "premium",
@@ -81,7 +105,7 @@ const plans = [
     {
         id: "exclusive",
         name: "Exclusive Plan",
-        price: "RM199.99",
+        price: 199.99,
         priceNote: "one-time",
         tagline: "This event must look elite & controlled",
         color: "exclusive",
@@ -102,6 +126,37 @@ const plans = [
 
 export default function PlansPage() {
     const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+    const [plans, setPlans] = useState<Plan[]>(defaultPlans);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            try {
+                const response = await fetch('/api/plans');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.plans && data.plans.length > 0) {
+                        setPlans(data.plans);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch plans:', error);
+                // Keep default plans on error
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPlans();
+    }, []);
+
+    const formatPrice = (plan: Plan): string => {
+        if (typeof plan.price === 'string') return plan.price;
+        return `RM${plan.price}`;
+    };
+
+    const getPriceNote = (plan: Plan): string => {
+        return plan.priceNote || plan.price_note || 'one-time';
+    };
 
     return (
         <div className="min-h-screen bg-background py-12 px-4">
@@ -119,101 +174,110 @@ export default function PlansPage() {
                 </p>
             </div>
 
+            {/* Loading State */}
+            {loading && (
+                <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                </div>
+            )}
+
             {/* Plans Grid */}
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {plans.map((plan, index) => {
-                    const PlanIcon = planIcons[plan.id] || Cake;
-                    return (
-                        <div
-                            key={plan.id}
-                            onClick={() => setSelectedPlan(plan.id)}
-                            className={`relative glass-card p-6 cursor-pointer transition-all duration-300 animate-fade-in flex flex-col h-full ${selectedPlan === plan.id
-                                ? `ring-2 ring-${plan.color} shadow-lg shadow-${plan.color}/20`
-                                : "hover:border-white/20"
-                                }`}
-                            style={{ animationDelay: `${index * 100}ms` }}
-                        >
-                            {/* Popular Badge */}
-                            {plan.popular && (
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                                    <span className="bg-basic text-white text-xs font-bold px-3 py-1 rounded-full">
-                                        POPULAR
-                                    </span>
-                                </div>
-                            )}
-
-                            {/* Plan Header */}
-                            <div className="text-center mb-6">
-                                <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center mb-4`}>
-                                    <PlanIcon className="w-8 h-8 text-white" />
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
-                                <p className="text-sm text-foreground-muted italic">&quot;{plan.tagline}&quot;</p>
-                            </div>
-
-                            {/* Price */}
-                            <div className="text-center mb-6">
-                                <span className={`text-4xl font-bold bg-gradient-to-r ${plan.gradient} bg-clip-text text-transparent`}>
-                                    {plan.price}
-                                </span>
-                                <span className="text-sm text-foreground-muted ml-1">{plan.priceNote}</span>
-                            </div>
-
-                            {/* Suitable Events */}
-                            <div className="mb-6">
-                                <p className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2">
-                                    Perfect for:
-                                </p>
-                                <div className="flex flex-wrap gap-1">
-                                    {plan.events.slice(0, 3).map((event) => (
-                                        <span key={event} className="text-xs bg-background-tertiary text-foreground-muted px-2 py-1 rounded-lg">
-                                            {event}
-                                        </span>
-                                    ))}
-                                    {plan.events.length > 3 && (
-                                        <span className="text-xs text-foreground-muted px-2 py-1">
-                                            +{plan.events.length - 3} more
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Features */}
-                            <div className="space-y-2 mb-6 flex-1">
-                                {plan.features.map((feature) => (
-                                    <div key={feature} className="flex items-start gap-2 text-sm">
-                                        <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
-                                        <span className="text-foreground">{feature}</span>
-                                    </div>
-                                ))}
-                                {plan.notIncluded.slice(0, 2).map((feature) => (
-                                    <div key={feature} className="flex items-start gap-2 text-sm">
-                                        <X className="w-4 h-4 text-foreground-muted mt-0.5 shrink-0" />
-                                        <span className="text-foreground-muted">{feature}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Select Button */}
-                            <button
-                                className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${selectedPlan === plan.id
-                                    ? `bg-gradient-to-r ${plan.gradient} text-white`
-                                    : "bg-background-tertiary text-foreground-muted hover:text-white"
+            {!loading && (
+                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {plans.map((plan, index) => {
+                        const PlanIcon = planIcons[plan.icon || plan.id] || Cake;
+                        return (
+                            <div
+                                key={plan.id}
+                                onClick={() => setSelectedPlan(plan.id)}
+                                className={`relative glass-card p-6 cursor-pointer transition-all duration-300 animate-fade-in flex flex-col h-full ${selectedPlan === plan.id
+                                    ? `ring-2 ring-${plan.color} shadow-lg shadow-${plan.color}/20`
+                                    : "hover:border-white/20"
                                     }`}
+                                style={{ animationDelay: `${index * 100}ms` }}
                             >
-                                {selectedPlan === plan.id ? (
-                                    <>
-                                        <Check className="w-4 h-4" />
-                                        Selected
-                                    </>
-                                ) : (
-                                    "Select Plan"
+                                {/* Popular Badge */}
+                                {plan.popular && (
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                                        <span className="bg-basic text-white text-xs font-bold px-3 py-1 rounded-full">
+                                            POPULAR
+                                        </span>
+                                    </div>
                                 )}
-                            </button>
-                        </div>
-                    );
-                })}
-            </div>
+
+                                {/* Plan Header */}
+                                <div className="text-center mb-6">
+                                    <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${plan.gradient} flex items-center justify-center mb-4`}>
+                                        <PlanIcon className="w-8 h-8 text-white" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-1">{plan.name}</h3>
+                                    <p className="text-sm text-foreground-muted italic">&quot;{plan.tagline}&quot;</p>
+                                </div>
+
+                                {/* Price */}
+                                <div className="text-center mb-6">
+                                    <span className={`text-4xl font-bold bg-gradient-to-r ${plan.gradient} bg-clip-text text-transparent`}>
+                                        {formatPrice(plan)}
+                                    </span>
+                                    <span className="text-sm text-foreground-muted ml-1">{getPriceNote(plan)}</span>
+                                </div>
+
+                                {/* Suitable Events */}
+                                <div className="mb-6">
+                                    <p className="text-xs font-medium text-foreground-muted uppercase tracking-wide mb-2">
+                                        Perfect for:
+                                    </p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {plan.events.slice(0, 3).map((event) => (
+                                            <span key={event} className="text-xs bg-background-tertiary text-foreground-muted px-2 py-1 rounded-lg">
+                                                {event}
+                                            </span>
+                                        ))}
+                                        {plan.events.length > 3 && (
+                                            <span className="text-xs text-foreground-muted px-2 py-1">
+                                                +{plan.events.length - 3} more
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Features */}
+                                <div className="space-y-2 mb-6 flex-1">
+                                    {plan.features.map((feature) => (
+                                        <div key={feature} className="flex items-start gap-2 text-sm">
+                                            <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
+                                            <span className="text-foreground">{feature}</span>
+                                        </div>
+                                    ))}
+                                    {plan.notIncluded.slice(0, 2).map((feature) => (
+                                        <div key={feature} className="flex items-start gap-2 text-sm">
+                                            <X className="w-4 h-4 text-foreground-muted mt-0.5 shrink-0" />
+                                            <span className="text-foreground-muted">{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Select Button */}
+                                <button
+                                    className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${selectedPlan === plan.id
+                                        ? `bg-gradient-to-r ${plan.gradient} text-white`
+                                        : "bg-background-tertiary text-foreground-muted hover:text-white"
+                                        }`}
+                                >
+                                    {selectedPlan === plan.id ? (
+                                        <>
+                                            <Check className="w-4 h-4" />
+                                            Selected
+                                        </>
+                                    ) : (
+                                        "Select Plan"
+                                    )}
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Continue Button */}
             {selectedPlan && (
@@ -224,7 +288,7 @@ export default function PlansPage() {
                                 {plans.find(p => p.id === selectedPlan)?.name} selected
                             </p>
                             <p className="text-foreground-muted text-sm">
-                                {plans.find(p => p.id === selectedPlan)?.price}
+                                {formatPrice(plans.find(p => p.id === selectedPlan)!)}
                             </p>
                         </div>
                         <Link
