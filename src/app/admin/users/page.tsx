@@ -21,6 +21,7 @@ interface User {
     email: string;
     name: string | null;
     phone: string | null;
+    avatar_url: string | null;
     plan: string;
     role: string;
     last_login: string | null;
@@ -302,9 +303,17 @@ export default function AdminUsersPage() {
                                     <tr key={user.id} className="border-b border-[var(--glass-border)] hover:bg-white/5">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold">
-                                                    {(user.name || user.email).charAt(0).toUpperCase()}
-                                                </div>
+                                                {user.avatar_url ? (
+                                                    <img
+                                                        src={user.avatar_url}
+                                                        alt={user.name || user.email}
+                                                        className="w-10 h-10 rounded-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold">
+                                                        {(user.name || user.email).charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
                                                 <div>
                                                     <p className="font-medium text-white">{user.name || "No name"}</p>
                                                     <p className="text-sm text-foreground-muted">{user.email}</p>
