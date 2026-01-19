@@ -34,8 +34,7 @@ const adminNavItems = [
 
 const clientNavItems = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/events", label: "Event Client", icon: Calendar },
-    { href: "/plans", label: "Create Event", icon: PlusCircle },
+    { href: "/events", label: "My Events", icon: Calendar },
     { href: "/guests", label: "Guests", icon: Users },
     { href: "/rsvp", label: "RSVP", icon: Mail },
     { href: "/checkin", label: "Check-In", icon: QrCode },
