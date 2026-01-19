@@ -9,11 +9,6 @@ import {
     Loader2,
     CheckCircle2,
     AlertTriangle,
-    CreditCard,
-    Star,
-    Sparkles,
-    Crown,
-    Gem,
     ExternalLink,
     User,
     Upload,
@@ -28,51 +23,13 @@ interface PlatformStats {
     totalInvoices: number;
 }
 
-const plans = [
-    {
-        id: "starter",
-        name: "Starter Pack",
-        price: "RM20",
-        icon: Star,
-        color: "text-blue-400",
-        bgColor: "bg-blue-400/20",
-        features: ["1 Event", "Up to 50 Guests", "Basic Invitation Design", "RSVP Tracking"],
-    },
-    {
-        id: "basic",
-        name: "Basic Pack",
-        price: "RM49",
-        icon: Sparkles,
-        color: "text-green-400",
-        bgColor: "bg-green-400/20",
-        features: ["1 Event", "Up to 150 Guests", "5 Design Templates", "RSVP + Check-in", "QR Code Invites"],
-    },
-    {
-        id: "premium",
-        name: "Premium Pack",
-        price: "RM99",
-        icon: Crown,
-        color: "text-primary",
-        bgColor: "bg-primary/20",
-        features: ["1 Event", "Up to 500 Guests", "All Design Templates", "Priority Support", "Custom Branding", "Analytics Dashboard"],
-    },
-    {
-        id: "exclusive",
-        name: "Exclusive Plan",
-        price: "RM199.99",
-        icon: Gem,
-        color: "text-purple-400",
-        bgColor: "bg-purple-400/20",
-        features: ["Unlimited Events", "Unlimited Guests", "All Premium Features", "Dedicated Support", "White-label Option", "API Access"],
-    },
-];
 
 export default function AdminSettingsPage() {
     const { user, isAdmin, persistentAvatarUrl, refreshAvatar } = useAuth();
     const supabase = createClient();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<PlatformStats>({ totalUsers: 0, totalEvents: 0, totalInvoices: 0 });
-    const [activeTab, setActiveTab] = useState<"overview" | "plans" | "integrations" | "profile">("overview");
+    const [activeTab, setActiveTab] = useState<"overview" | "integrations" | "profile">("overview");
     const [uploading, setUploading] = useState(false);
 
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,7 +127,7 @@ export default function AdminSettingsPage() {
 
             {/* Tabs */}
             <div className="flex flex-wrap gap-2">
-                {(["overview", "profile", "plans", "integrations"] as const).map((tab) => (
+                {(["overview", "profile", "integrations"] as const).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -322,50 +279,6 @@ export default function AdminSettingsPage() {
                                     />
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Plans Tab */}
-            {activeTab === "plans" && (
-                <div className="space-y-6">
-                    <div className="glass-card p-6">
-                        <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <CreditCard className="w-5 h-5 text-primary" />
-                            Available Plans
-                        </h2>
-                        <p className="text-sm text-foreground-muted mb-4">
-                            Current pricing structure for event packages
-                        </p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {plans.map((plan) => {
-                                const Icon = plan.icon;
-                                return (
-                                    <div
-                                        key={plan.id}
-                                        className="p-4 rounded-xl border border-[var(--glass-border)] bg-background-tertiary"
-                                    >
-                                        <div className="flex items-center gap-3 mb-3">
-                                            <div className={`w-10 h-10 rounded-xl ${plan.bgColor} flex items-center justify-center`}>
-                                                <Icon className={`w-5 h-5 ${plan.color}`} />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-white">{plan.name}</h3>
-                                                <p className={`text-lg font-bold ${plan.color}`}>{plan.price}</p>
-                                            </div>
-                                        </div>
-                                        <ul className="space-y-1">
-                                            {plan.features.map((feature, idx) => (
-                                                <li key={idx} className="text-xs text-foreground-muted flex items-center gap-2">
-                                                    <CheckCircle2 className={`w-3 h-3 ${plan.color}`} />
-                                                    {feature}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                );
-                            })}
                         </div>
                     </div>
                 </div>
