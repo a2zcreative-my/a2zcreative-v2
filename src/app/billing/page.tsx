@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout";
-import { CreditCard, Building2, FileText, Check, Sparkles, Crown, Star, Gem, ArrowRight, Info, Eye, Loader2 } from "lucide-react";
+import { CreditCard, Building2, FileText, Check, Sparkles, Crown, Star, Gem, ArrowRight, Info, Eye, Loader2, Cake, Heart } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 
 interface PaymentRecord {
     id: string;
@@ -21,77 +22,120 @@ interface BillingSummary {
     lastPlan: string;
 }
 
-const plans = [
+interface Plan {
+    id: string;
+    name: string;
+    price: number | string;
+    price_note?: string;
+    tagline?: string;
+    color: string;
+    icon?: string;
+    features: string[];
+    popular?: boolean;
+}
+
+// Icon mapping
+const planIconMap: Record<string, LucideIcon> = {
+    starter: Cake,
+    basic: Heart,
+    premium: Gem,
+    exclusive: Crown,
+    Cake: Cake,
+    Heart: Heart,
+    Gem: Gem,
+    Crown: Crown,
+    Star: Star,
+    Sparkles: Sparkles,
+};
+
+// Color mapping  
+const planColorMap: Record<string, { color: string; bgColor: string; borderColor: string }> = {
+    starter: { color: "text-starter", bgColor: "bg-starter/20", borderColor: "hover:border-starter/50" },
+    basic: { color: "text-basic", bgColor: "bg-basic/20", borderColor: "hover:border-basic/50" },
+    premium: { color: "text-premium", bgColor: "bg-premium/20", borderColor: "hover:border-premium" },
+    exclusive: { color: "text-exclusive", bgColor: "bg-exclusive/20", borderColor: "hover:border-exclusive/50" },
+};
+
+// Default plans (fallback)
+const defaultPlans: Plan[] = [
     {
         id: "starter",
         name: "Starter Pack",
-        price: "RM20",
-        icon: Star,
-        color: "text-blue-400",
-        bgColor: "bg-blue-400/20",
-        borderColor: "hover:border-blue-400/50",
-        features: ["1 Event", "Up to 50 Guests", "Basic Invitation Design", "RSVP Tracking"],
-        description: "Perfect for small gatherings"
+        price: 20,
+        color: "starter",
+        features: ["1 page invitation", "Basic theme selection", "Event details display", "WhatsApp share link"],
     },
     {
         id: "basic",
         name: "Basic Pack",
-        price: "RM49",
-        icon: Sparkles,
-        color: "text-green-400",
-        bgColor: "bg-green-400/20",
-        borderColor: "hover:border-green-400/50",
-        features: ["1 Event", "Up to 150 Guests", "5 Design Templates", "RSVP + Check-in", "QR Code Invites"],
-        description: "Great for medium events"
+        price: 49,
+        color: "basic",
+        popular: true,
+        features: ["RSVP with guest count", "Google Maps integration", "Date countdown timer", "Theme customization"],
     },
     {
         id: "premium",
         name: "Premium Pack",
-        price: "RM99",
-        icon: Crown,
-        color: "text-primary",
-        bgColor: "bg-primary/20",
-        borderColor: "hover:border-primary",
-        features: ["1 Event", "Up to 500 Guests", "All Design Templates", "Priority Support", "Custom Branding", "Analytics Dashboard"],
-        description: "Best for large celebrations",
-        popular: true
+        price: 99,
+        color: "premium",
+        features: ["Custom domain/subdomain", "Photo & video gallery", "Advanced RSVP", "Analytics"],
     },
     {
         id: "exclusive",
         name: "Exclusive Plan",
-        price: "RM199.99",
-        icon: Gem,
-        color: "text-purple-400",
-        bgColor: "bg-purple-400/20",
-        borderColor: "hover:border-purple-400/50",
-        features: ["Unlimited Events", "Unlimited Guests", "All Premium Features", "Dedicated Support", "White-label Option", "API Access"],
-        description: "For event professionals"
+        price: 199.99,
+        color: "exclusive",
+        features: ["Organizer dashboard", "QR check-in system", "Guest approval system", "Priority support"],
     },
 ];
 
 export default function BillingPage() {
     const [payments, setPayments] = useState<PaymentRecord[]>([]);
     const [summary, setSummary] = useState<BillingSummary>({ totalEvents: 0, totalSpent: 0, lastPlan: 'None' });
+    const [plans, setPlans] = useState<Plan[]>(defaultPlans);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
 
     useEffect(() => {
-        async function fetchBillingData() {
+        async function fetchData() {
             try {
-                const response = await fetch('/api/client/billing');
-                if (response.ok) {
-                    const data = await response.json();
+                // Fetch billing data
+                const billingResponse = await fetch('/api/client/billing');
+                if (billingResponse.ok) {
+                    const data = await billingResponse.json();
                     setPayments(data.payments || []);
                     setSummary(data.summary || { totalEvents: 0, totalSpent: 0, lastPlan: 'None' });
                 }
+
+                // Fetch plans from database
+                const plansResponse = await fetch('/api/plans');
+                if (plansResponse.ok) {
+                    const plansData = await plansResponse.json();
+                    if (plansData.plans && plansData.plans.length > 0) {
+                        setPlans(plansData.plans);
+                    }
+                }
             } catch (error) {
-                console.error('Failed to fetch billing data:', error);
+                console.error('Failed to fetch data:', error);
             } finally {
                 setLoading(false);
             }
         }
-        fetchBillingData();
+        fetchData();
     }, []);
+
+    const formatPrice = (plan: Plan): string => {
+        if (typeof plan.price === 'string') return plan.price;
+        return `RM${plan.price}`;
+    };
+
+    const getColorClasses = (plan: Plan) => {
+        return planColorMap[plan.color] || planColorMap[plan.id] || planColorMap.starter;
+    };
+
+    const getPlanIcon = (plan: Plan): LucideIcon => {
+        return planIconMap[plan.icon || plan.id] || Cake;
+    };
 
     if (loading) {
         return (
@@ -157,7 +201,7 @@ export default function BillingPage() {
                             </div>
                         </div>
 
-                        {/* Available Plans - Now Clickable */}
+                        {/* Available Plans - Now Dynamic & Links to Create Event */}
                         <div className="glass-card p-6">
                             <div className="flex items-center justify-between mb-2">
                                 <h2 className="text-lg font-semibold text-white">Available Plans</h2>
@@ -169,14 +213,15 @@ export default function BillingPage() {
                             <p className="text-sm text-foreground-muted mb-4">Select a plan to create your next event</p>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {plans.map((plan) => {
-                                    const Icon = plan.icon;
+                                    const Icon = getPlanIcon(plan);
+                                    const colors = getColorClasses(plan);
                                     return (
                                         <Link
                                             key={plan.id}
-                                            href={`/plans?selected=${plan.id}`}
+                                            href={`/events/create?plan=${plan.id}`}
                                             className={`p-4 rounded-xl border-2 transition-all relative group cursor-pointer ${plan.popular
                                                 ? "border-primary bg-primary/10"
-                                                : `border-[var(--glass-border)] bg-background-tertiary ${plan.borderColor}`
+                                                : `border-[var(--glass-border)] bg-background-tertiary ${colors.borderColor}`
                                                 }`}
                                         >
                                             {plan.popular && (
@@ -185,23 +230,23 @@ export default function BillingPage() {
                                                 </span>
                                             )}
                                             <div className="flex items-center gap-3 mb-3">
-                                                <div className={`w-10 h-10 rounded-xl ${plan.bgColor} flex items-center justify-center`}>
-                                                    <Icon className={`w-5 h-5 ${plan.color}`} />
+                                                <div className={`w-10 h-10 rounded-xl ${colors.bgColor} flex items-center justify-center`}>
+                                                    <Icon className={`w-5 h-5 ${colors.color}`} />
                                                 </div>
                                                 <div className="flex-1">
                                                     <h3 className="font-semibold text-white">{plan.name}</h3>
-                                                    <p className="text-xs text-foreground-muted">{plan.description}</p>
+                                                    <p className="text-xs text-foreground-muted">{plan.tagline || 'Create your event'}</p>
                                                 </div>
                                                 <ArrowRight className="w-4 h-4 text-foreground-muted group-hover:text-primary group-hover:translate-x-1 transition-all" />
                                             </div>
-                                            <p className={`text-2xl font-bold ${plan.color} mb-3`}>
-                                                {plan.price}
+                                            <p className={`text-2xl font-bold ${colors.color} mb-3`}>
+                                                {formatPrice(plan)}
                                                 <span className="text-xs text-foreground-muted font-normal"> /event</span>
                                             </p>
                                             <ul className="space-y-1">
                                                 {plan.features.slice(0, 4).map((feature, idx) => (
                                                     <li key={idx} className="text-xs text-foreground-muted flex items-center gap-2">
-                                                        <Check className={`w-3 h-3 ${plan.color}`} />
+                                                        <Check className={`w-3 h-3 ${colors.color}`} />
                                                         {feature}
                                                     </li>
                                                 ))}
