@@ -136,75 +136,77 @@ export default function GuestsPage() {
 
             {/* Guest Table */}
             <div className="max-w-6xl mx-auto glass-card overflow-hidden">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-[var(--glass-border)]">
-                            <th className="p-4 text-left">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4 rounded"
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setSelectedGuests(guests.map(g => g.id));
-                                        } else {
-                                            setSelectedGuests([]);
-                                        }
-                                    }}
-                                />
-                            </th>
-                            <th className="p-4 text-left text-sm font-medium text-foreground-muted">Name</th>
-                            <th className="p-4 text-left text-sm font-medium text-foreground-muted">Email</th>
-                            <th className="p-4 text-left text-sm font-medium text-foreground-muted">Phone</th>
-                            <th className="p-4 text-left text-sm font-medium text-foreground-muted">Status</th>
-                            <th className="p-4 text-left text-sm font-medium text-foreground-muted">Pax</th>
-                            <th className="p-4 text-left text-sm font-medium text-foreground-muted">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredGuests.map((guest) => (
-                            <tr key={guest.id} className="border-b border-[var(--glass-border)] hover:bg-[var(--glass-bg)]">
-                                <td className="p-4">
+                <div className="overflow-x-auto">
+                    <table className="w-full min-w-[800px]">
+                        <thead>
+                            <tr className="border-b border-[var(--glass-border)]">
+                                <th className="p-4 text-left">
                                     <input
                                         type="checkbox"
                                         className="w-4 h-4 rounded"
-                                        checked={selectedGuests.includes(guest.id)}
-                                        onChange={() => toggleSelect(guest.id)}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                setSelectedGuests(guests.map(g => g.id));
+                                            } else {
+                                                setSelectedGuests([]);
+                                            }
+                                        }}
                                     />
-                                </td>
-                                <td className="p-4">
-                                    <span className="text-white font-medium">{guest.name}</span>
-                                </td>
-                                <td className="p-4">
-                                    <span className="text-foreground-muted text-sm">{guest.email}</span>
-                                </td>
-                                <td className="p-4">
-                                    <span className="text-foreground-muted text-sm">{guest.phone}</span>
-                                </td>
-                                <td className="p-4">
-                                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${guest.status === "confirmed" ? "bg-success/20 text-success" :
-                                        guest.status === "pending" ? "bg-warning/20 text-warning" :
-                                            "bg-error/20 text-error"
-                                        }`}>
-                                        {guest.status.toUpperCase()}
-                                    </span>
-                                </td>
-                                <td className="p-4">
-                                    <span className="text-white">{guest.pax}</span>
-                                </td>
-                                <td className="p-4">
-                                    <div className="flex gap-2">
-                                        <button className="text-foreground-muted hover:text-white">
-                                            <Pencil className="w-4 h-4" />
-                                        </button>
-                                        <button className="text-foreground-muted hover:text-error">
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </td>
+                                </th>
+                                <th className="p-4 text-left text-sm font-medium text-foreground-muted">Name</th>
+                                <th className="p-4 text-left text-sm font-medium text-foreground-muted">Email</th>
+                                <th className="p-4 text-left text-sm font-medium text-foreground-muted">Phone</th>
+                                <th className="p-4 text-left text-sm font-medium text-foreground-muted">Status</th>
+                                <th className="p-4 text-left text-sm font-medium text-foreground-muted">Pax</th>
+                                <th className="p-4 text-left text-sm font-medium text-foreground-muted">Actions</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {filteredGuests.map((guest) => (
+                                <tr key={guest.id} className="border-b border-[var(--glass-border)] hover:bg-[var(--glass-bg)]">
+                                    <td className="p-4">
+                                        <input
+                                            type="checkbox"
+                                            className="w-4 h-4 rounded"
+                                            checked={selectedGuests.includes(guest.id)}
+                                            onChange={() => toggleSelect(guest.id)}
+                                        />
+                                    </td>
+                                    <td className="p-4">
+                                        <span className="text-white font-medium">{guest.name}</span>
+                                    </td>
+                                    <td className="p-4">
+                                        <span className="text-foreground-muted text-sm">{guest.email}</span>
+                                    </td>
+                                    <td className="p-4">
+                                        <span className="text-foreground-muted text-sm">{guest.phone}</span>
+                                    </td>
+                                    <td className="p-4">
+                                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${guest.status === "confirmed" ? "bg-success/20 text-success" :
+                                            guest.status === "pending" ? "bg-warning/20 text-warning" :
+                                                "bg-error/20 text-error"
+                                            }`}>
+                                            {guest.status.toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">
+                                        <span className="text-white">{guest.pax}</span>
+                                    </td>
+                                    <td className="p-4">
+                                        <div className="flex gap-2">
+                                            <button className="text-foreground-muted hover:text-white">
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                            <button className="text-foreground-muted hover:text-error">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {/* Batch Actions */}

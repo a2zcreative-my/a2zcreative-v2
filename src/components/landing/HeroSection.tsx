@@ -115,7 +115,7 @@ export default function HeroSection() {
                                 alt={`${currentEvent.name} Invitation Preview`}
                                 width={280}
                                 height={560}
-                                className="phone-mockup hidden lg:block transition-opacity duration-300"
+                                className="phone-mockup block transition-opacity duration-300"
                                 priority
                             />
                             {/* Decorative Elements */}

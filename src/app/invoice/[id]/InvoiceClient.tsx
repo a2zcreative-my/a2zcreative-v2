@@ -275,8 +275,8 @@ export default function InvoiceClient({ invoiceId }: InvoiceClientProps) {
                         </div>
 
                         {/* Items Table */}
-                        <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', marginBottom: '32px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <div style={{ border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', overflowX: 'auto', marginBottom: '32px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
                                 <thead>
                                     <tr style={{ backgroundColor: '#f9fafb' }}>
                                         <th style={{ padding: '16px 24px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151' }}>Description</th>
