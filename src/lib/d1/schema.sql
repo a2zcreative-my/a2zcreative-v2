@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   avatar_url TEXT,
   role TEXT DEFAULT 'client',
   plan TEXT DEFAULT 'starter',
+  last_login DATETIME,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );

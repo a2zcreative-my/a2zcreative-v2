@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
 
         // Fetch all users
         const { results } = await db.prepare(`
-            SELECT id, email, name, phone, plan, role, created_at, updated_at
+            SELECT id, email, name, phone, plan, role, last_login, created_at, updated_at
             FROM users
             ORDER BY created_at DESC
         `).all()

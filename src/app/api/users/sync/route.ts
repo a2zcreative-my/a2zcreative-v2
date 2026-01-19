@@ -56,16 +56,17 @@ export async function POST(request: NextRequest) {
         const existingUser = await db.prepare('SELECT id, role FROM users WHERE id = ?').bind(id).first() as { id: string; role?: string } | null
         const isNewUser = !existingUser
 
-        // Upsert user to D1 (preserve existing role if not provided)
+        // Upsert user to D1 (preserve existing role if not provided, update last_login)
         await db.prepare(`
-            INSERT INTO users (id, email, name, phone, plan, role, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+            INSERT INTO users (id, email, name, phone, plan, role, last_login, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
             ON CONFLICT(id) DO UPDATE SET
                 email = excluded.email,
                 name = COALESCE(excluded.name, users.name),
                 phone = COALESCE(excluded.phone, users.phone),
                 plan = COALESCE(excluded.plan, users.plan),
                 role = COALESCE(excluded.role, users.role),
+                last_login = datetime('now'),
                 updated_at = datetime('now')
         `).bind(id, email, name || null, phone || null, plan || 'starter', role || (isNewUser ? 'client' : existingUser?.role || 'client')).run()
 

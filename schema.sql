@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
   phone TEXT,
   plan TEXT DEFAULT 'starter',
   role TEXT DEFAULT 'client', -- 'admin' or 'client'
+  last_login TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );

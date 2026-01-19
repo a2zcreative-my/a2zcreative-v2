@@ -23,6 +23,7 @@ interface User {
     phone: string | null;
     plan: string;
     role: string;
+    last_login: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -291,6 +292,7 @@ export default function AdminUsersPage() {
                                     <th className="text-left p-4 text-sm font-medium text-foreground-muted">User</th>
                                     <th className="text-left p-4 text-sm font-medium text-foreground-muted">Role</th>
                                     <th className="text-left p-4 text-sm font-medium text-foreground-muted">Plan</th>
+                                    <th className="text-left p-4 text-sm font-medium text-foreground-muted">Last Login</th>
                                     <th className="text-left p-4 text-sm font-medium text-foreground-muted">Joined</th>
                                     <th className="text-left p-4 text-sm font-medium text-foreground-muted">Actions</th>
                                 </tr>
@@ -325,6 +327,9 @@ export default function AdminUsersPage() {
                                                 }`}>
                                                 {user.plan?.toUpperCase() || "STARTER"}
                                             </span>
+                                        </td>
+                                        <td className="p-4 text-foreground-muted text-sm">
+                                            {user.last_login ? new Date(user.last_login).toLocaleString() : "Never"}
                                         </td>
                                         <td className="p-4 text-foreground-muted text-sm">
                                             {new Date(user.created_at).toLocaleDateString()}
