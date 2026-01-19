@@ -22,6 +22,7 @@ function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const plan = searchParams.get("plan");
+    const reason = searchParams.get("reason");
 
     // Redirect if already logged in
     useEffect(() => {
@@ -29,6 +30,13 @@ function LoginForm() {
             router.push("/events");
         }
     }, [user, loading, router]);
+
+    // Show session expired message if redirected due to inactivity
+    useEffect(() => {
+        if (reason === "session_expired") {
+            setError("Your session has expired due to inactivity. Please sign in again.");
+        }
+    }, [reason]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

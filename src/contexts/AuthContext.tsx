@@ -1,9 +1,12 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { User, Session } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
+
+// Session timeout duration (15 minutes in milliseconds)
+const SESSION_TIMEOUT_MS = 15 * 60 * 1000
 
 export type UserRole = 'admin' | 'client'
 
@@ -37,6 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [hasRedirected, setHasRedirected] = useState(false) // Prevent multiple redirects
     const router = useRouter()
     const supabase = createClient()
+
+    // Refs for inactivity timeout tracking
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const lastActivityRef = useRef<number>(Date.now())
 
     // Fetch user role and avatar from API
     const fetchUserRole = useCallback(async () => {
@@ -207,8 +214,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [supabase.auth])
 
     const signOut = useCallback(async () => {
+        // Clear inactivity timeout on manual sign out
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current)
+            timeoutRef.current = null
+        }
         await supabase.auth.signOut()
     }, [supabase.auth])
+
+    // Inactivity timeout - auto sign out after 15 minutes of no activity
+    useEffect(() => {
+        // Only track activity if user is logged in
+        if (!user) return
+
+        const resetTimeout = () => {
+            // Clear existing timeout
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current)
+            }
+
+            // Set new timeout
+            timeoutRef.current = setTimeout(async () => {
+                console.log('Session expired due to inactivity')
+                await supabase.auth.signOut()
+                router.push('/auth/login?reason=session_expired')
+            }, SESSION_TIMEOUT_MS)
+        }
+
+        // Throttled activity handler to avoid too many resets
+        const handleActivity = () => {
+            const now = Date.now()
+            // Only reset if at least 1 second has passed since last activity
+            if (now - lastActivityRef.current > 1000) {
+                lastActivityRef.current = now
+                resetTimeout()
+            }
+        }
+
+        // Activity events to monitor
+        const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click']
+
+        // Add event listeners
+        events.forEach(event => {
+            window.addEventListener(event, handleActivity, { passive: true })
+        })
+
+        // Initialize the timeout
+        resetTimeout()
+
+        // Cleanup
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current)
+            }
+            events.forEach(event => {
+                window.removeEventListener(event, handleActivity)
+            })
+        }
+    }, [user, supabase.auth, router])
 
     const resetPassword = useCallback(async (email: string) => {
         try {
