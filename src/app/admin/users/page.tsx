@@ -159,6 +159,15 @@ export default function AdminUsersPage() {
         return matchesSearch && matchesRole;
     });
 
+    // Check if user is online (last login within 15 minutes)
+    const isOnline = (lastLogin: string | null): boolean => {
+        if (!lastLogin) return false;
+        const lastLoginTime = new Date(lastLogin).getTime();
+        const now = Date.now();
+        const fifteenMinutes = 15 * 60 * 1000;
+        return (now - lastLoginTime) < fifteenMinutes;
+    };
+
     const stats = [
         { label: "Total Users", value: syncStatus?.totalUsers || users.length, icon: Users, color: "primary", bgColor: "bg-primary/20" },
         { label: "Active Users", value: users.length, icon: UserPlus, color: "success", bgColor: "bg-success/20" },
@@ -303,17 +312,25 @@ export default function AdminUsersPage() {
                                     <tr key={user.id} className="border-b border-[var(--glass-border)] hover:bg-white/5">
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                {user.avatar_url ? (
-                                                    <img
-                                                        src={user.avatar_url}
-                                                        alt={user.name || user.email}
-                                                        className="w-10 h-10 rounded-full object-cover"
+                                                <div className="relative">
+                                                    {user.avatar_url ? (
+                                                        <img
+                                                            src={user.avatar_url}
+                                                            alt={user.name || user.email}
+                                                            className="w-10 h-10 rounded-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold">
+                                                            {(user.name || user.email).charAt(0).toUpperCase()}
+                                                        </div>
+                                                    )}
+                                                    {/* Online status indicator */}
+                                                    <span
+                                                        className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background-secondary ${isOnline(user.last_login) ? "bg-success" : "bg-foreground-muted/50"
+                                                            }`}
+                                                        title={isOnline(user.last_login) ? "Online" : "Offline"}
                                                     />
-                                                ) : (
-                                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-semibold">
-                                                        {(user.name || user.email).charAt(0).toUpperCase()}
-                                                    </div>
-                                                )}
+                                                </div>
                                                 <div>
                                                     <p className="font-medium text-white">{user.name || "No name"}</p>
                                                     <p className="text-sm text-foreground-muted">{user.email}</p>

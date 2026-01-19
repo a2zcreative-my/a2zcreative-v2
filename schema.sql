@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE NOT NULL,
   name TEXT,
   phone TEXT,
+  avatar_url TEXT,
   plan TEXT DEFAULT 'starter',
   role TEXT DEFAULT 'client', -- 'admin' or 'client'
   last_login TEXT,
