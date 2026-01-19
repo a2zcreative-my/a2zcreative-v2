@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Star
 } from "lucide-react";
+import HeroSection from "@/components/landing/HeroSection";
 
 const features = [
   {
@@ -157,59 +158,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center justify-center pt-20 px-6 relative overflow-hidden">
-        {/* Background Decorations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl" />
-          <Heart className="absolute top-40 right-20 w-16 h-16 text-primary/10" />
-          <Sparkles className="absolute bottom-40 left-20 w-12 h-12 text-secondary/10" />
-        </div>
-
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary text-sm mb-6">
-            <Sparkles className="w-4 h-4" />
-            <span>Beautiful Digital Invitations</span>
-          </div>
-
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-            Create Stunning
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> Digital Invitations</span>
-          </h1>
-
-          <p className="text-lg md:text-xl text-foreground-muted mb-8 max-w-2xl mx-auto">
-            Design beautiful wedding, engagement, and event invitations that your guests will love.
-            Share instantly via WhatsApp, track RSVPs, and make your celebration unforgettable.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Link href="/auth/register" className="btn-primary text-lg px-8 py-4 flex items-center gap-2">
-              <span>Start Creating</span>
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link href="/ahmad-alia" className="btn-secondary text-lg px-8 py-4 flex items-center gap-2">
-              <span>View Demo</span>
-              <Heart className="w-5 h-5" />
-            </Link>
-          </div>
-
-          {/* Trust Badges */}
-          <div className="flex items-center justify-center gap-8 text-foreground-muted text-sm">
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-success" />
-              <span>No App Required</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-success" />
-              <span>Instant Sharing</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-success" />
-              <span>Malaysian Made</span>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Features Section */}
       <section id="features" className="py-24 px-6">

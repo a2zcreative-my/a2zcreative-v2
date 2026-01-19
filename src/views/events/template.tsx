@@ -103,22 +103,34 @@ export default function TemplatePage() {
             {/* Templates Grid */}
             <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {filteredTemplates.map((template, index) => {
-                    const TemplateIcon = templateIcons[template.id] || Sparkles;
                     return (
                         <div
                             key={template.id}
                             onClick={() => setSelectedTemplate(template.id)}
-                            className={`glass-card overflow-hidden cursor-pointer transition-all duration-300 animate-fade-in ${selectedTemplate === template.id
-                                ? "ring-2 ring-primary shadow-lg shadow-primary/20"
-                                : "hover:border-white/20"
+                            className={`glass-card overflow-hidden cursor-pointer transition-all duration-300 animate-fade-in group ${selectedTemplate === template.id
+                                ? "ring-2 ring-primary shadow-lg shadow-primary/20 scale-[1.02]"
+                                : "hover:border-white/20 hover:scale-[1.02]"
                                 }`}
                             style={{ animationDelay: `${index * 50}ms` }}
                         >
-                            {/* Preview */}
-                            <div className="aspect-[3/4] bg-gradient-to-br from-background-secondary to-background-tertiary flex items-center justify-center">
-                                <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center">
-                                    <TemplateIcon className="w-10 h-10 text-primary" />
-                                </div>
+                            {/* Preview Image */}
+                            <div className="aspect-[3/4] relative overflow-hidden">
+                                <img
+                                    src={`/templates/${template.id}.png`}
+                                    alt={template.name}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                                {/* Overlay on hover */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                                {/* Selected checkmark */}
+                                {selectedTemplate === template.id && (
+                                    <div className="absolute top-2 right-2 w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Info */}
