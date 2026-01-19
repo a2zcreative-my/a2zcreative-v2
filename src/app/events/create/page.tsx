@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import {
     Cake,
     PartyPopper,
@@ -31,6 +31,8 @@ import {
     Trophy,
     ArrowLeft,
     ArrowRight,
+    Loader2,
+    Star,
     type LucideIcon,
 } from "lucide-react";
 
@@ -38,27 +40,44 @@ import {
 const iconMap: Record<string, LucideIcon> = {
     "Birthday Party (Kids)": Cake,
     "Birthday Party (Adults)": PartyPopper,
+    "Birthday Party": Cake,
     "Aqiqah / Doa Selamat": Moon,
     "Housewarming": Home,
     "Small Family Gathering": Users,
+    "Small family gathering": Users,
     "Simple Surprise Party": Gift,
+    "Simple surprise party": Gift,
     "Engagement / Nikah": Heart,
     "Graduation Celebration": GraduationCap,
+    "Graduation celebration": GraduationCap,
     "Family Reunion": Handshake,
+    "Family reunion": Handshake,
     "Kenduri Kecil": UtensilsCrossed,
+    "Kenduri kecil": UtensilsCrossed,
     "Religious Talks / Ceramah": BookOpen,
+    "Religious talks": BookOpen,
     "Baby Shower": Baby,
     "Wedding Reception": Church,
+    "Wedding reception": Church,
     "Corporate Event": Building2,
+    "Corporate event": Building2,
     "Product Launch": Rocket,
+    "Product launch": Rocket,
     "Annual Dinner": Wine,
+    "Annual dinner": Wine,
     "Seminar / Workshop": BookMarked,
+    "Seminar / workshop": BookMarked,
     "Charity Gala": HeartHandshake,
     "VIP / Royal-style Wedding": Crown,
+    "VIP / Royal-style wedding": Crown,
     "Private Gala Dinner": Sparkles,
+    "Private gala dinner": Sparkles,
     "Conference / Summit": Mic,
+    "Conference / summit": Mic,
     "Government / NGO Event": Landmark,
+    "Government / NGO events": Landmark,
     "Invite-Only Exclusive Event": Lock,
+    "Invite-only exclusive events": Lock,
     "Award Ceremony": Trophy,
 };
 
@@ -67,9 +86,22 @@ const planIcons: Record<string, LucideIcon> = {
     basic: Heart,
     premium: Gem,
     exclusive: Crown,
+    Cake: Cake,
+    Heart: Heart,
+    Gem: Gem,
+    Crown: Crown,
+    Star: Star,
 };
 
-const eventTypes: Record<string, { title: string; events: string[] }> = {
+interface Plan {
+    id: string;
+    name: string;
+    events: string[];
+    icon?: string;
+}
+
+// Default event types (fallback if API fails)
+const defaultEventTypes: Record<string, { title: string; events: string[] }> = {
     starter: {
         title: "Starter Pack Events",
         events: [
@@ -118,11 +150,62 @@ const eventTypes: Record<string, { title: string; events: string[] }> = {
 
 function CreateEventContent() {
     const searchParams = useSearchParams();
-    const plan = searchParams.get("plan") || "starter";
+    const planId = searchParams.get("plan") || "starter";
     const [selectedType, setSelectedType] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [planData, setPlanData] = useState<{ title: string; events: string[]; icon?: string } | null>(null);
 
-    const planData = eventTypes[plan] || eventTypes.starter;
-    const PlanIcon = planIcons[plan] || Cake;
+    useEffect(() => {
+        const fetchPlan = async () => {
+            try {
+                const response = await fetch('/api/plans');
+                if (response.ok) {
+                    const data = await response.json();
+                    const plan = (data.plans || []).find((p: Plan) => p.id === planId);
+                    if (plan && plan.events && plan.events.length > 0) {
+                        setPlanData({
+                            title: `${plan.name} Events`,
+                            events: plan.events,
+                            icon: plan.icon,
+                        });
+                    } else {
+                        // Use default if plan not found or has no events
+                        const defaultData = defaultEventTypes[planId] || defaultEventTypes.starter;
+                        setPlanData(defaultData);
+                    }
+                } else {
+                    // Fallback to defaults
+                    const defaultData = defaultEventTypes[planId] || defaultEventTypes.starter;
+                    setPlanData(defaultData);
+                }
+            } catch (error) {
+                console.error('Failed to fetch plan:', error);
+                const defaultData = defaultEventTypes[planId] || defaultEventTypes.starter;
+                setPlanData(defaultData);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPlan();
+    }, [planId]);
+
+    const PlanIcon = planIcons[planData?.icon || planId] || Cake;
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        );
+    }
+
+    if (!planData) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="text-white">Plan not found</div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-background py-12 px-4">
@@ -195,10 +278,10 @@ function CreateEventContent() {
                     <div className="max-w-4xl mx-auto flex items-center justify-between">
                         <div>
                             <p className="text-white font-medium">{selectedType}</p>
-                            <p className="text-foreground-muted text-sm capitalize">{plan} Pack</p>
+                            <p className="text-foreground-muted text-sm capitalize">{planId} Pack</p>
                         </div>
                         <Link
-                            href={`/events/create/details?plan=${plan}&type=${encodeURIComponent(selectedType)}`}
+                            href={`/events/create/details?plan=${planId}&type=${encodeURIComponent(selectedType)}`}
                             className="btn-primary flex items-center gap-2"
                         >
                             Continue to Details
@@ -215,7 +298,7 @@ export default function CreateEventPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="text-white">Loading...</div>
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
             </div>
         }>
             <CreateEventContent />
