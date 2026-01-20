@@ -7,6 +7,26 @@ import { useRouter } from 'next/navigation'
 
 // Session timeout duration (15 minutes in milliseconds)
 const SESSION_TIMEOUT_MS = 15 * 60 * 1000
+const LAST_ACTIVITY_KEY = 'a2z_last_activity'
+
+// Helper functions for localStorage-based activity tracking
+const getLastActivity = (): number => {
+    if (typeof window === 'undefined') return Date.now()
+    const stored = localStorage.getItem(LAST_ACTIVITY_KEY)
+    return stored ? parseInt(stored, 10) : Date.now()
+}
+
+const updateLastActivity = () => {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString())
+    }
+}
+
+const clearLastActivity = () => {
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem(LAST_ACTIVITY_KEY)
+    }
+}
 
 export type UserRole = 'admin' | 'client'
 
@@ -219,13 +239,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             clearTimeout(timeoutRef.current)
             timeoutRef.current = null
         }
+        // Clear localStorage activity tracking
+        clearLastActivity()
         await supabase.auth.signOut()
     }, [supabase.auth])
 
     // Inactivity timeout - auto sign out after 15 minutes of no activity
+    // Uses localStorage timestamps to work correctly in Safari (which suspends timers)
     useEffect(() => {
         // Only track activity if user is logged in
         if (!user) return
+
+        // Function to check if session should have expired
+        const checkSessionExpiry = async (): Promise<boolean> => {
+            const lastActivity = getLastActivity()
+            const timeSinceLastActivity = Date.now() - lastActivity
+
+            if (timeSinceLastActivity >= SESSION_TIMEOUT_MS) {
+                console.log('Session expired due to inactivity')
+                clearLastActivity()
+                await supabase.auth.signOut()
+                router.push('/auth/login?reason=session_expired')
+                return true
+            }
+            return false
+        }
 
         const resetTimeout = () => {
             // Clear existing timeout
@@ -233,11 +271,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 clearTimeout(timeoutRef.current)
             }
 
-            // Set new timeout
+            // Set new timeout as backup (for when tab stays active)
             timeoutRef.current = setTimeout(async () => {
-                console.log('Session expired due to inactivity')
-                await supabase.auth.signOut()
-                router.push('/auth/login?reason=session_expired')
+                await checkSessionExpiry()
             }, SESSION_TIMEOUT_MS)
         }
 
@@ -247,30 +283,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Only reset if at least 1 second has passed since last activity
             if (now - lastActivityRef.current > 1000) {
                 lastActivityRef.current = now
+                updateLastActivity() // Store in localStorage
                 resetTimeout()
             }
         }
 
         // Handle visibility change (for mobile app switching/backgrounding)
-        const handleVisibilityChange = () => {
+        const handleVisibilityChange = async () => {
             if (document.visibilityState === 'visible') {
-                // Page became visible again - check if session should have expired
-                const timeSinceLastActivity = Date.now() - lastActivityRef.current
-                if (timeSinceLastActivity >= SESSION_TIMEOUT_MS) {
-                    // Session should have expired while app was backgrounded
-                    console.log('Session expired while app was in background')
-                    supabase.auth.signOut()
-                    router.push('/auth/login?reason=session_expired')
-                } else {
+                // Page became visible again - check localStorage timestamp
+                const expired = await checkSessionExpiry()
+                if (!expired) {
                     // Resume tracking with remaining time
                     resetTimeout()
                 }
             } else {
-                // Page is hidden - clear the timeout (will check on visibility restore)
+                // Page is hidden - clear the timeout (will check localStorage on restore)
                 if (timeoutRef.current) {
                     clearTimeout(timeoutRef.current)
                     timeoutRef.current = null
                 }
+            }
+        }
+
+        // Handle pageshow event (Safari fires this when restoring from bfcache)
+        const handlePageShow = async (event: PageTransitionEvent) => {
+            if (event.persisted) {
+                // Page was restored from bfcache - check if session should have expired
+                await checkSessionExpiry()
             }
         }
 
@@ -280,6 +320,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             'touchstart', 'touchmove', 'touchend'                    // Mobile touch events
         ]
 
+        // Check session expiry on initial mount (handles page refresh/reload in Safari)
+        checkSessionExpiry().then(expired => {
+            if (!expired) {
+                // Initialize localStorage timestamp if not expired
+                updateLastActivity()
+                resetTimeout()
+            }
+        })
+
         // Add event listeners
         events.forEach(event => {
             window.addEventListener(event, handleActivity, { passive: true })
@@ -288,8 +337,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Listen for visibility changes (mobile app switching, tab switching)
         document.addEventListener('visibilitychange', handleVisibilityChange)
 
-        // Initialize the timeout
-        resetTimeout()
+        // Listen for pageshow (Safari bfcache restoration)
+        window.addEventListener('pageshow', handlePageShow)
 
         // Cleanup
         return () => {
@@ -300,6 +349,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 window.removeEventListener(event, handleActivity)
             })
             document.removeEventListener('visibilitychange', handleVisibilityChange)
+            window.removeEventListener('pageshow', handlePageShow)
         }
     }, [user, supabase.auth, router])
 
