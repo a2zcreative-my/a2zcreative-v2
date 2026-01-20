@@ -3,14 +3,42 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout";
 import { useAuth } from "@/contexts/AuthContext";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield, Loader2, X, Mail, UserMinus, Crown } from "lucide-react";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
+interface TeamMember {
+    id: string;
+    role: string;
+    created_at: string;
+    user_id: string;
+    email: string;
+    name: string | null;
+    avatar_url: string | null;
+}
+
+interface TeamInvite {
+    id: string;
+    invitee_email: string;
+    role: string;
+    status: string;
+    expires_at: string;
+    created_at: string;
+}
+
 export default function SettingsPage() {
-    const { user, userRole, isAdmin, loading, persistentAvatarUrl, refreshAvatar } = useAuth();
+    const { user, userRole, isAdmin, loading, persistentAvatarUrl, refreshAvatar, userPlan } = useAuth();
     const supabase = createClient();
     const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications" | "team">("profile");
+
+    // Team state
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+    const [pendingInvites, setPendingInvites] = useState<TeamInvite[]>([]);
+    const [teamLoading, setTeamLoading] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState("");
+    const [inviteRole, setInviteRole] = useState<"editor" | "viewer">("editor");
+    const [inviting, setInviting] = useState(false);
+    const [teamMessage, setTeamMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
     // Form state for profile
     const [firstName, setFirstName] = useState("");
@@ -94,6 +122,99 @@ export default function SettingsPage() {
             setSaveMessage("Failed to update profile. Please try again.");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    // Fetch team data when Team tab is active
+    useEffect(() => {
+        if (activeTab === "team" && userPlan === "exclusive") {
+            fetchTeamData();
+        }
+    }, [activeTab, userPlan]);
+
+    const fetchTeamData = async () => {
+        setTeamLoading(true);
+        try {
+            const response = await fetch("/api/team/members");
+            const data = await response.json();
+            if (response.ok) {
+                setTeamMembers(data.members || []);
+                setPendingInvites(data.pendingInvites || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch team data:", error);
+        } finally {
+            setTeamLoading(false);
+        }
+    };
+
+    const handleInviteMember = async () => {
+        if (!inviteEmail.trim()) return;
+        setInviting(true);
+        setTeamMessage(null);
+
+        try {
+            const response = await fetch("/api/team/invite", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setTeamMessage({ type: "success", text: data.message });
+                setInviteEmail("");
+                fetchTeamData(); // Refresh list
+            } else {
+                setTeamMessage({ type: "error", text: data.error });
+            }
+        } catch (error) {
+            setTeamMessage({ type: "error", text: "Failed to send invitation" });
+        } finally {
+            setInviting(false);
+        }
+    };
+
+    const handleRemoveMember = async (memberId: string) => {
+        if (!confirm("Are you sure you want to remove this team member?")) return;
+
+        try {
+            const response = await fetch("/api/team/members", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ memberId }),
+            });
+
+            if (response.ok) {
+                setTeamMessage({ type: "success", text: "Team member removed" });
+                fetchTeamData();
+            } else {
+                const data = await response.json();
+                setTeamMessage({ type: "error", text: data.error });
+            }
+        } catch (error) {
+            setTeamMessage({ type: "error", text: "Failed to remove team member" });
+        }
+    };
+
+    const handleCancelInvite = async (inviteId: string) => {
+        try {
+            const response = await fetch("/api/team/invite", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ inviteId }),
+            });
+
+            if (response.ok) {
+                setTeamMessage({ type: "success", text: "Invitation cancelled" });
+                fetchTeamData();
+            } else {
+                const data = await response.json();
+                setTeamMessage({ type: "error", text: data.error });
+            }
+        } catch (error) {
+            setTeamMessage({ type: "error", text: "Failed to cancel invitation" });
         }
     };
 
@@ -207,9 +328,9 @@ export default function SettingsPage() {
                                 <input
                                     type="email"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="input-field"
+                                    className="input-field bg-background-tertiary/50 text-foreground-muted cursor-not-allowed opacity-60"
                                     disabled
+                                    readOnly
                                 />
                                 <p className="text-xs text-foreground-muted mt-1">Email cannot be changed</p>
                             </div>
@@ -319,34 +440,229 @@ export default function SettingsPage() {
 
                 {/* Team Tab */}
                 {activeTab === "team" && (
-                    <div className="glass-card p-6 max-w-2xl">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-semibold text-white">Team Members</h2>
-                            <button className="btn-primary text-sm">+ Invite Member</button>
-                        </div>
-                        <div className="space-y-3">
-                            {/* Current User as Owner */}
-                            <div className="flex items-center justify-between p-4 rounded-xl bg-background-tertiary">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
-                                        {getUserInitial()}
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-white">
-                                            {firstName} {lastName || "(You)"}
-                                        </p>
-                                        <p className="text-sm text-foreground-muted">{email}</p>
-                                    </div>
-                                </div>
-                                <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">Owner</span>
-                            </div>
-                        </div>
-                        <p className="text-xs text-foreground-muted mt-6 text-center">
-                            Team management is available on Exclusive Plan
-                        </p>
-                    </div>
+                    <TeamTabContent
+                        userPlan={userPlan}
+                        teamLoading={teamLoading}
+                        teamMembers={teamMembers}
+                        pendingInvites={pendingInvites}
+                        inviteEmail={inviteEmail}
+                        setInviteEmail={setInviteEmail}
+                        inviteRole={inviteRole}
+                        setInviteRole={setInviteRole}
+                        inviting={inviting}
+                        teamMessage={teamMessage}
+                        getUserInitial={getUserInitial}
+                        firstName={firstName}
+                        lastName={lastName}
+                        email={email}
+                        onInvite={handleInviteMember}
+                        onRemoveMember={handleRemoveMember}
+                        onCancelInvite={handleCancelInvite}
+                    />
                 )}
             </div>
         </DashboardLayout>
+    );
+}
+
+// Team Tab Content Component
+interface TeamTabContentProps {
+    userPlan: string;
+    teamLoading: boolean;
+    teamMembers: TeamMember[];
+    pendingInvites: TeamInvite[];
+    inviteEmail: string;
+    setInviteEmail: (email: string) => void;
+    inviteRole: "editor" | "viewer";
+    setInviteRole: (role: "editor" | "viewer") => void;
+    inviting: boolean;
+    teamMessage: { type: "success" | "error"; text: string } | null;
+    getUserInitial: () => string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    onInvite: () => void;
+    onRemoveMember: (memberId: string) => void;
+    onCancelInvite: (inviteId: string) => void;
+}
+
+function TeamTabContent({
+    userPlan,
+    teamLoading,
+    teamMembers,
+    pendingInvites,
+    inviteEmail,
+    setInviteEmail,
+    inviteRole,
+    setInviteRole,
+    inviting,
+    teamMessage,
+    getUserInitial,
+    firstName,
+    lastName,
+    email,
+    onInvite,
+    onRemoveMember,
+    onCancelInvite,
+}: TeamTabContentProps) {
+    // Non-exclusive users see upgrade prompt
+    if (userPlan !== "exclusive") {
+        return (
+            <div className="glass-card p-6 max-w-2xl">
+                <div className="text-center py-8">
+                    <div className="w-16 h-16 rounded-full bg-warning/20 flex items-center justify-center mx-auto mb-4">
+                        <Crown className="w-8 h-8 text-warning" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-white mb-2">Upgrade to Exclusive Plan</h2>
+                    <p className="text-foreground-muted mb-6 max-w-md mx-auto">
+                        Team management is available on the Exclusive Plan. Invite team members to collaborate on your events.
+                    </p>
+                    <a href="/plans" className="btn-primary">
+                        View Plans
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="glass-card p-6 max-w-2xl">
+            <h2 className="text-lg font-semibold text-white mb-6">Team Members</h2>
+
+            {/* Invite Form */}
+            <div className="p-4 rounded-xl bg-background-tertiary mb-6">
+                <h3 className="text-sm font-medium text-white mb-3 flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Invite Team Member
+                </h3>
+                <div className="flex flex-col sm:flex-row gap-3">
+                    <input
+                        type="email"
+                        placeholder="Email address"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        className="input-field flex-1"
+                    />
+                    <select
+                        value={inviteRole}
+                        onChange={(e) => setInviteRole(e.target.value as "editor" | "viewer")}
+                        className="input-field w-full sm:w-32"
+                    >
+                        <option value="editor">Editor</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                    <button
+                        onClick={onInvite}
+                        disabled={inviting || !inviteEmail.trim()}
+                        className="btn-primary flex items-center justify-center gap-2"
+                    >
+                        {inviting && <Loader2 className="w-4 h-4 animate-spin" />}
+                        Invite
+                    </button>
+                </div>
+                {teamMessage && (
+                    <p className={`text-sm mt-2 ${teamMessage.type === "success" ? "text-success" : "text-error"}`}>
+                        {teamMessage.text}
+                    </p>
+                )}
+            </div>
+
+            {/* Loading State */}
+            {teamLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+            )}
+
+            {!teamLoading && (
+                <div className="space-y-4">
+                    {/* Current User */}
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-background-tertiary">
+                        <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold">
+                                {getUserInitial()}
+                            </div>
+                            <div>
+                                <p className="font-medium text-white">
+                                    {firstName} {lastName} (You)
+                                </p>
+                                <p className="text-sm text-foreground-muted">{email}</p>
+                            </div>
+                        </div>
+                        <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full">Owner</span>
+                    </div>
+
+                    {/* Team Members */}
+                    {teamMembers.map((member) => (
+                        <div key={member.id} className="flex items-center justify-between p-4 rounded-xl bg-background-tertiary">
+                            <div className="flex items-center gap-4">
+                                {member.avatar_url ? (
+                                    <img src={member.avatar_url} alt={member.name || ""} className="w-10 h-10 rounded-full object-cover" />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-accent/30 flex items-center justify-center text-white font-bold">
+                                        {(member.name || member.email).charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                                <div>
+                                    <p className="font-medium text-white">{member.name || member.email}</p>
+                                    <p className="text-sm text-foreground-muted">{member.email}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs bg-secondary/20 text-secondary px-2 py-1 rounded-full capitalize">
+                                    {member.role}
+                                </span>
+                                <button
+                                    onClick={() => onRemoveMember(member.id)}
+                                    className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors"
+                                    title="Remove member"
+                                >
+                                    <UserMinus className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+
+                    {/* Pending Invites */}
+                    {pendingInvites.length > 0 && (
+                        <>
+                            <h3 className="text-sm font-medium text-foreground-muted mt-6 mb-3">Pending Invites</h3>
+                            {pendingInvites.map((invite) => (
+                                <div key={invite.id} className="flex items-center justify-between p-4 rounded-xl bg-background-tertiary/50 border border-dashed border-foreground-muted/20">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-full bg-foreground-muted/20 flex items-center justify-center text-foreground-muted">
+                                            <Mail className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-white">{invite.invitee_email}</p>
+                                            <p className="text-xs text-foreground-muted">
+                                                Expires {new Date(invite.expires_at).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs bg-warning/20 text-warning px-2 py-1 rounded-full">Pending</span>
+                                        <button
+                                            onClick={() => onCancelInvite(invite.id)}
+                                            className="p-2 rounded-lg hover:bg-error/20 text-foreground-muted hover:text-error transition-colors"
+                                            title="Cancel invite"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </>
+                    )}
+
+                    {/* Empty State */}
+                    {teamMembers.length === 0 && pendingInvites.length === 0 && (
+                        <p className="text-center text-foreground-muted py-4">
+                            No team members yet. Invite someone to get started!
+                        </p>
+                    )}
+                </div>
+            )}
+        </div>
     );
 }

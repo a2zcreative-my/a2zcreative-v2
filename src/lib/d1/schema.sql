@@ -80,3 +80,34 @@ CREATE INDEX IF NOT EXISTS idx_gifts_event ON gift_contributions(event_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_user ON support_tickets(user_id);
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON support_tickets(status);
 
+-- Team members table (for team collaboration feature)
+CREATE TABLE IF NOT EXISTS team_members (
+  id TEXT PRIMARY KEY,
+  team_owner_id TEXT NOT NULL,
+  member_user_id TEXT NOT NULL,
+  role TEXT DEFAULT 'editor',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (team_owner_id) REFERENCES users(id),
+  FOREIGN KEY (member_user_id) REFERENCES users(id),
+  UNIQUE(team_owner_id, member_user_id)
+);
+
+-- Team invites table
+CREATE TABLE IF NOT EXISTS team_invites (
+  id TEXT PRIMARY KEY,
+  team_owner_id TEXT NOT NULL,
+  invitee_email TEXT NOT NULL,
+  role TEXT DEFAULT 'editor',
+  token TEXT UNIQUE NOT NULL,
+  status TEXT DEFAULT 'pending',
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (team_owner_id) REFERENCES users(id)
+);
+
+-- Team indexes
+CREATE INDEX IF NOT EXISTS idx_team_members_owner ON team_members(team_owner_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_member ON team_members(member_user_id);
+CREATE INDEX IF NOT EXISTS idx_team_invites_owner ON team_invites(team_owner_id);
+CREATE INDEX IF NOT EXISTS idx_team_invites_token ON team_invites(token);
+CREATE INDEX IF NOT EXISTS idx_team_invites_email ON team_invites(invitee_email);
