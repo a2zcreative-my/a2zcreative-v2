@@ -59,7 +59,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const { user, signOut, isAdmin, roleLoading, persistentAvatarUrl } = useAuth();
+    const { user, signOut, isAdmin, roleLoading, persistentAvatarUrl, userPlan } = useAuth();
 
     // Select navigation items based on role
     const navItems = isAdmin ? adminNavItems : clientNavItems;
@@ -209,7 +209,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         )}
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-white truncate">{getUserName()}</p>
-                            <p className="text-xs text-foreground-muted truncate">Pro Plan</p>
+                            <p className="text-xs text-foreground-muted truncate">
+                                {isAdmin ? 'Admin' : `${userPlan.charAt(0).toUpperCase() + userPlan.slice(1)} Plan`}
+                            </p>
                         </div>
                         <button
                             onClick={handleLogout}

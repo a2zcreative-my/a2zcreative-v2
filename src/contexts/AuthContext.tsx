@@ -36,6 +36,7 @@ interface AuthContextType {
     loading: boolean
     roleLoading: boolean
     userRole: UserRole
+    userPlan: string
     isAdmin: boolean
     persistentAvatarUrl: string | null
     signIn: (email: string, password: string) => Promise<{ error?: string }>
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true)
     const [roleLoading, setRoleLoading] = useState(true)
     const [userRole, setUserRole] = useState<UserRole>('client')
+    const [userPlan, setUserPlan] = useState<string>('starter')
     const [persistentAvatarUrl, setPersistentAvatarUrl] = useState<string | null>(null)
     const [hasRedirected, setHasRedirected] = useState(false) // Prevent multiple redirects
     const router = useRouter()
@@ -73,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (response.ok) {
                 const data = await response.json()
                 setUserRole(data.role || 'client')
+                setUserPlan(data.plan || 'starter')
                 setPersistentAvatarUrl(data.avatar_url || null)
             }
         } catch (error) {
@@ -412,6 +415,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             loading,
             roleLoading,
             userRole,
+            userPlan,
             isAdmin,
             persistentAvatarUrl,
             signIn,

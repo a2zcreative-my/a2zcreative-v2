@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
             })
         }
 
-        // Fetch user with role and avatar from D1
+        // Fetch user with role, avatar, and plan from D1
         const dbUser = await db.prepare(
-            'SELECT id, email, name, role, avatar_url FROM users WHERE id = ?'
+            'SELECT id, email, name, role, avatar_url, plan FROM users WHERE id = ?'
         ).bind(user.id).first()
 
         return NextResponse.json({
@@ -46,7 +46,8 @@ export async function GET(request: NextRequest) {
             email: user.email,
             name: dbUser?.name || user.user_metadata?.name,
             role: dbUser?.role || 'client', // Default to client
-            avatar_url: dbUser?.avatar_url || null // Avatar from D1 (persists across OAuth)
+            avatar_url: dbUser?.avatar_url || null, // Avatar from D1 (persists across OAuth)
+            plan: dbUser?.plan || 'starter' // User's subscription plan
         })
     } catch (error) {
         console.error('[Get User Error]:', error)
