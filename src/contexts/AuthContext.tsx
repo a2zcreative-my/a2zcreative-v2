@@ -251,13 +251,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
         }
 
-        // Activity events to monitor
-        const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click']
+        // Handle visibility change (for mobile app switching/backgrounding)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                // Page became visible again - check if session should have expired
+                const timeSinceLastActivity = Date.now() - lastActivityRef.current
+                if (timeSinceLastActivity >= SESSION_TIMEOUT_MS) {
+                    // Session should have expired while app was backgrounded
+                    console.log('Session expired while app was in background')
+                    supabase.auth.signOut()
+                    router.push('/auth/login?reason=session_expired')
+                } else {
+                    // Resume tracking with remaining time
+                    resetTimeout()
+                }
+            } else {
+                // Page is hidden - clear the timeout (will check on visibility restore)
+                if (timeoutRef.current) {
+                    clearTimeout(timeoutRef.current)
+                    timeoutRef.current = null
+                }
+            }
+        }
+
+        // Activity events to monitor - including mobile touch events
+        const events = [
+            'mousedown', 'mousemove', 'keydown', 'scroll', 'click',  // Desktop events
+            'touchstart', 'touchmove', 'touchend'                    // Mobile touch events
+        ]
 
         // Add event listeners
         events.forEach(event => {
             window.addEventListener(event, handleActivity, { passive: true })
         })
+
+        // Listen for visibility changes (mobile app switching, tab switching)
+        document.addEventListener('visibilitychange', handleVisibilityChange)
 
         // Initialize the timeout
         resetTimeout()
@@ -270,6 +299,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             events.forEach(event => {
                 window.removeEventListener(event, handleActivity)
             })
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
         }
     }, [user, supabase.auth, router])
 
