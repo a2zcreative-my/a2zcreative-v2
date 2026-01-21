@@ -24,6 +24,7 @@ interface User {
     avatar_url: string | null;
     plan: string;
     role: string;
+    status: string;
     last_login: string | null;
     created_at: string;
     updated_at: string;
@@ -37,6 +38,8 @@ interface SyncStatus {
 export default function AdminUsersPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [roleFilter, setRoleFilter] = useState("all");
+    const [planFilter, setPlanFilter] = useState("all");
+    const [statusFilter, setStatusFilter] = useState("all");
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -114,9 +117,30 @@ export default function AdminUsersPage() {
         window.location.href = `mailto:${email}`;
     };
 
-    const handleSuspend = (user: User) => {
-        // Placeholder for future implementation
-        alert(`Suspend feature coming soon for ${user.name || user.email}`);
+    const handleSuspend = async (user: User) => {
+        const newStatus = user.status === 'suspended' ? 'active' : 'suspended';
+        const action = newStatus === 'suspended' ? 'suspend' : 'activate';
+        if (!confirm(`Are you sure you want to ${action} ${user.name || user.email}?`)) return;
+
+        setActionLoading(user.id);
+        try {
+            const response = await fetch("/api/admin/users", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id, status: newStatus }),
+            });
+
+            if (response.ok) {
+                setUsers(users.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
+            } else {
+                alert(`Failed to ${action} user`);
+            }
+        } catch (err) {
+            console.error(err);
+            alert(`Failed to ${action} user`);
+        } finally {
+            setActionLoading(null);
+        }
     };
 
     const handleToggleRole = async (user: User) => {
@@ -156,7 +180,9 @@ export default function AdminUsersPage() {
         const matchesSearch = (user.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
             user.email.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesRole = roleFilter === "all" || user.role === roleFilter;
-        return matchesSearch && matchesRole;
+        const matchesPlan = planFilter === "all" || user.plan === planFilter;
+        const matchesStatus = statusFilter === "all" || (user.status || 'active') === statusFilter;
+        return matchesSearch && matchesRole && matchesPlan && matchesStatus;
     });
 
     // Check if user is online (last login within 15 minutes)
@@ -237,7 +263,7 @@ export default function AdminUsersPage() {
                         className="w-full pl-10 pr-4 py-3 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl text-white placeholder:text-foreground-muted focus:outline-none focus:border-primary/50"
                     />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     <Filter className="w-5 h-5 text-foreground-muted" />
                     <select
                         value={roleFilter}
@@ -247,6 +273,26 @@ export default function AdminUsersPage() {
                         <option value="all">All Roles</option>
                         <option value="client">Clients</option>
                         <option value="admin">Admins</option>
+                    </select>
+                    <select
+                        value={planFilter}
+                        onChange={(e) => setPlanFilter(e.target.value)}
+                        className="px-4 py-3 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl text-white focus:outline-none focus:border-primary/50"
+                    >
+                        <option value="all">All Plans</option>
+                        <option value="starter">Starter</option>
+                        <option value="basic">Basic</option>
+                        <option value="premium">Premium</option>
+                        <option value="exclusive">Exclusive</option>
+                    </select>
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="px-4 py-3 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-xl text-white focus:outline-none focus:border-primary/50"
+                    >
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
                     </select>
                 </div>
             </div>

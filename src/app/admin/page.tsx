@@ -13,6 +13,9 @@ import {
     Activity,
     Loader2,
     AlertTriangle,
+    BarChart3,
+    PieChart,
+    Percent,
 } from "lucide-react";
 
 interface PlatformStats {
@@ -39,6 +42,16 @@ interface TopUser {
     revenue: number;
 }
 
+interface AnalyticsData {
+    revenueTrend: { date: string; revenue: number }[];
+    userGrowth: { date: string; users: number }[];
+    eventTypes: { type: string; count: number }[];
+    metrics: {
+        conversionRate: number;
+        avgRevenuePerUser: number;
+    };
+}
+
 export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -53,6 +66,7 @@ export default function AdminDashboard() {
     });
     const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
     const [topUsers, setTopUsers] = useState<TopUser[]>([]);
+    const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
 
     useEffect(() => {
         async function fetchStats() {
@@ -77,6 +91,20 @@ export default function AdminDashboard() {
         }
 
         fetchStats();
+
+        // Fetch analytics data
+        async function fetchAnalytics() {
+            try {
+                const response = await fetch('/api/admin/analytics');
+                if (response.ok) {
+                    const data = await response.json();
+                    setAnalytics(data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch analytics:', err);
+            }
+        }
+        fetchAnalytics();
     }, []);
 
     // Format date for display
@@ -192,6 +220,117 @@ export default function AdminDashboard() {
                     <p className="text-sm text-foreground-muted">Total Invoices</p>
                 </div>
             </div>
+
+            {/* Analytics Charts Section */}
+            {analytics && (
+                <div className="space-y-6">
+                    {/* Additional Metrics */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="glass-card p-5">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                                    <Percent className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-white">{analytics.metrics.conversionRate}%</p>
+                                    <p className="text-sm text-foreground-muted">Conversion Rate</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-foreground-muted">Users with at least one paid invoice</p>
+                        </div>
+                        <div className="glass-card p-5">
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
+                                    <DollarSign className="w-5 h-5 text-success" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-white">RM {analytics.metrics.avgRevenuePerUser}</p>
+                                    <p className="text-sm text-foreground-muted">Avg Revenue Per User</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-foreground-muted">Average across paying customers</p>
+                        </div>
+                    </div>
+
+                    {/* Charts Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Revenue Trend Chart */}
+                        <div className="glass-card p-6">
+                            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                <BarChart3 className="w-5 h-5 text-success" />
+                                Revenue Trend (Last 30 Days)
+                            </h2>
+                            <div className="h-40 flex items-end gap-1">
+                                {analytics.revenueTrend.length > 0 ? (
+                                    analytics.revenueTrend.map((day, idx) => {
+                                        const maxRevenue = Math.max(...analytics.revenueTrend.map(d => d.revenue));
+                                        const height = maxRevenue > 0 ? (day.revenue / maxRevenue) * 100 : 0;
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className="flex-1 bg-gradient-to-t from-success/50 to-success rounded-t-sm hover:from-success/70 hover:to-success transition-all cursor-pointer group relative"
+                                                style={{ height: `${Math.max(height, 4)}%` }}
+                                                title={`${day.date}: RM ${day.revenue}`}
+                                            >
+                                                <div className="hidden group-hover:block absolute -top-8 left-1/2 -translate-x-1/2 bg-background-secondary text-white text-xs px-2 py-1 rounded whitespace-nowrap z-10">
+                                                    RM {day.revenue}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="flex-1 flex items-center justify-center text-foreground-muted text-sm">
+                                        No revenue data yet
+                                    </div>
+                                )}
+                            </div>
+                            {analytics.revenueTrend.length > 0 && (
+                                <p className="text-xs text-foreground-muted mt-2 text-center">
+                                    Hover over bars to see daily revenue
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Event Type Distribution */}
+                        <div className="glass-card p-6">
+                            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                <PieChart className="w-5 h-5 text-secondary" />
+                                Event Type Distribution
+                            </h2>
+                            <div className="space-y-3">
+                                {analytics.eventTypes.length > 0 ? (
+                                    analytics.eventTypes.map((type, idx) => {
+                                        const colors = ['bg-primary', 'bg-secondary', 'bg-success', 'bg-warning', 'bg-error', 'bg-purple-500'];
+                                        const totalEvents = analytics.eventTypes.reduce((sum, t) => sum + t.count, 0);
+                                        const percentage = totalEvents > 0 ? (type.count / totalEvents * 100).toFixed(1) : 0;
+                                        return (
+                                            <div key={type.type} className="flex items-center gap-3">
+                                                <div className={`w-3 h-3 rounded-full ${colors[idx % colors.length]}`}></div>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between mb-1">
+                                                        <span className="text-sm text-white">{type.type}</span>
+                                                        <span className="text-xs text-foreground-muted">{type.count} ({percentage}%)</span>
+                                                    </div>
+                                                    <div className="h-2 bg-background-tertiary rounded-full overflow-hidden">
+                                                        <div
+                                                            className={`h-full ${colors[idx % colors.length]} rounded-full transition-all`}
+                                                            style={{ width: `${percentage}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="text-center py-8 text-foreground-muted text-sm">
+                                        No event data yet
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

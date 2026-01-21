@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   avatar_url TEXT,
   plan TEXT DEFAULT 'starter',
   role TEXT DEFAULT 'client', -- 'admin' or 'client'
+  status TEXT DEFAULT 'active', -- 'active' or 'suspended'
   last_login TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
@@ -120,3 +121,34 @@ INSERT OR IGNORE INTO email_templates (id, name, subject, body, variables) VALUE
   ('rsvp_confirmation', 'RSVP Confirmation', 'Your RSVP is Confirmed', '<h1>Thanks for your RSVP, {{name}}!</h1><p>You have been confirmed for {{event_name}}.</p>', '["{{name}}","{{event_name}}"]'),
   ('invoice', 'Invoice Email', 'Invoice #{{invoice_id}}', '<h1>Invoice for {{customer_name}}</h1><p>Amount: RM{{amount}}</p>', '["{{invoice_id}}","{{customer_name}}","{{amount}}"]'),
   ('reminder', 'Event Reminder', 'Reminder: {{event_name}} is Coming Up!', '<h1>{{event_name}}</h1><p>Your event is happening soon on {{event_date}}.</p>', '["{{event_name}}","{{event_date}}"]');
+
+-- Coupons table for promo codes
+CREATE TABLE IF NOT EXISTS coupons (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+  code TEXT UNIQUE NOT NULL,
+  discount_type TEXT NOT NULL,    -- 'percentage' or 'fixed'
+  discount_value REAL NOT NULL,   -- 10 = 10% or RM10
+  applicable_plans TEXT,          -- JSON: ["premium","exclusive"] or null for all
+  max_uses INTEGER,               -- null = unlimited
+  used_count INTEGER DEFAULT 0,
+  valid_from TEXT,
+  valid_until TEXT,
+  active INTEGER DEFAULT 1,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Audit Logs table for tracking admin actions
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  admin_id TEXT NOT NULL,
+  admin_email TEXT,
+  action TEXT NOT NULL,           -- 'user.plan_changed', 'coupon.created', etc
+  target_type TEXT,               -- 'user', 'coupon', 'event'
+  target_id TEXT,
+  details TEXT,                   -- JSON with before/after values
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (admin_id) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_admin ON audit_logs(admin_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC);
