@@ -21,6 +21,7 @@ import {
     Ticket,
     Bell,
     Package,
+    History,
 } from "lucide-react";
 
 const adminNavItems = [
@@ -28,8 +29,10 @@ const adminNavItems = [
     { href: "/admin/events", label: "All Events", icon: Calendar },
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/plans", label: "Plans", icon: Package },
-    { href: "/admin/tickets", label: "Tickets", icon: Ticket },
+    { href: "/admin/coupons", label: "Coupons", icon: Ticket },
+    { href: "/admin/tickets", label: "Support Tickets", icon: Mail },
     { href: "/admin/revenue", label: "Revenue", icon: BarChart3 },
+    { href: "/admin/audit-logs", label: "Audit Logs", icon: History },
 ];
 
 const clientNavItems = [
