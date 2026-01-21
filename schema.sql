@@ -103,3 +103,20 @@ CREATE TABLE IF NOT EXISTS plans (
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
+
+-- Email Templates table
+CREATE TABLE IF NOT EXISTS email_templates (
+  id TEXT PRIMARY KEY,               -- 'welcome', 'rsvp_confirmation', 'invoice', 'reminder'
+  name TEXT NOT NULL,                -- 'Welcome Email'
+  subject TEXT NOT NULL,             -- 'Welcome to A2ZCreative!'
+  body TEXT NOT NULL,                -- HTML email body
+  variables TEXT,                    -- JSON: ["{{name}}", "{{email}}"]
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Seed default email templates
+INSERT OR IGNORE INTO email_templates (id, name, subject, body, variables) VALUES
+  ('welcome', 'Welcome Email', 'Welcome to A2ZCreative!', '<h1>Welcome, {{name}}!</h1><p>Thanks for signing up.</p>', '["{{name}}","{{email}}"]'),
+  ('rsvp_confirmation', 'RSVP Confirmation', 'Your RSVP is Confirmed', '<h1>Thanks for your RSVP, {{name}}!</h1><p>You have been confirmed for {{event_name}}.</p>', '["{{name}}","{{event_name}}"]'),
+  ('invoice', 'Invoice Email', 'Invoice #{{invoice_id}}', '<h1>Invoice for {{customer_name}}</h1><p>Amount: RM{{amount}}</p>', '["{{invoice_id}}","{{customer_name}}","{{amount}}"]'),
+  ('reminder', 'Event Reminder', 'Reminder: {{event_name}} is Coming Up!', '<h1>{{event_name}}</h1><p>Your event is happening soon on {{event_date}}.</p>', '["{{event_name}}","{{event_date}}"]');
