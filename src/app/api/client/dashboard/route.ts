@@ -103,6 +103,32 @@ export async function GET(request: NextRequest) {
                 progress: 30 // Default progress for draft
             }))
 
+        // Find next upcoming published event
+        const upcomingEvents = eventsList
+            .filter((e: { status?: string; event_date?: string }) =>
+                e.status === 'published' && e.event_date && new Date(e.event_date) > new Date()
+            )
+            .sort((a: { event_date?: string }, b: { event_date?: string }) =>
+                new Date(a.event_date || '').getTime() - new Date(b.event_date || '').getTime()
+            );
+
+        const nextEvent = upcomingEvents.length > 0 ? {
+            id: (upcomingEvents[0] as { id: string }).id,
+            title: (upcomingEvents[0] as { title: string }).title,
+            date: (upcomingEvents[0] as { event_date: string }).event_date
+        } : null;
+
+        // Get user's plan from users table
+        const { results: userResult } = await db.prepare(`
+            SELECT plan FROM users WHERE id = ?
+        `).bind(user.id).all();
+
+        const userPlan = userResult?.[0] ? {
+            id: (userResult[0] as { plan: string }).plan || 'starter',
+            name: ((userResult[0] as { plan: string }).plan || 'starter').charAt(0).toUpperCase() +
+                ((userResult[0] as { plan: string }).plan || 'starter').slice(1) + ' Pack'
+        } : { id: 'starter', name: 'Starter Pack' };
+
         return NextResponse.json({
             stats: {
                 totalEvents,
@@ -111,7 +137,9 @@ export async function GET(request: NextRequest) {
                 totalRsvps
             },
             publishedInvitations,
-            draftEvents
+            draftEvents,
+            nextEvent,
+            userPlan
         })
     } catch (error) {
         console.error('[Dashboard API Error]:', error)

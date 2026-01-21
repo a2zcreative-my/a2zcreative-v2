@@ -2,7 +2,7 @@
 
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { useState, useRef, useEffect } from "react";
-import { Search, Plus, Upload, MoreVertical, Mail, Phone, Check, X, Filter, FileSpreadsheet, UserPlus, Loader2, Users } from "lucide-react";
+import { Search, Plus, Upload, MoreVertical, Mail, Phone, Check, X, Filter, FileSpreadsheet, UserPlus, Loader2, Users, Download, Send, Bell, Heart } from "lucide-react";
 
 interface Guest {
     id: string | number;
@@ -33,6 +33,12 @@ export default function GuestsPage() {
     const [filterEvent, setFilterEvent] = useState("all");
     const [showAddModal, setShowAddModal] = useState(false);
     const [showImportModal, setShowImportModal] = useState(false);
+    const [showMessageModal, setShowMessageModal] = useState(false);
+    const [messageType, setMessageType] = useState<'reminder' | 'thankyou' | 'custom'>('reminder');
+    const [customSubject, setCustomSubject] = useState("");
+    const [customMessage, setCustomMessage] = useState("");
+    const [isSending, setIsSending] = useState(false);
+    const [sendResult, setSendResult] = useState<{ success: boolean; message: string } | null>(null);
     const [newGuest, setNewGuest] = useState({ name: "", email: "", phone: "", eventId: "", pax: 1 });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -115,6 +121,57 @@ export default function GuestsPage() {
         e.target.value = ''; // Reset file input
     };
 
+    const handleSendMessage = async () => {
+        // Get guests to message based on filter
+        const guestsToMessage = filteredGuests.filter(g => g.email && g.email.includes('@'));
+
+        if (guestsToMessage.length === 0) {
+            setSendResult({ success: false, message: 'No guests with valid email addresses found' });
+            return;
+        }
+
+        setIsSending(true);
+        setSendResult(null);
+
+        try {
+            const response = await fetch('/api/client/guests/message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    guests: guestsToMessage.map(g => ({
+                        id: g.id.toString(),
+                        name: g.name,
+                        email: g.email,
+                        event: g.event
+                    })),
+                    messageType,
+                    subject: customSubject,
+                    customMessage,
+                    eventName: filterEvent !== 'all' ? filterEvent : undefined
+                })
+            });
+
+            const data = await response.json();
+            setSendResult({
+                success: data.success,
+                message: data.message || (data.success ? 'Messages sent!' : 'Failed to send messages')
+            });
+
+            if (data.success) {
+                setTimeout(() => {
+                    setShowMessageModal(false);
+                    setSendResult(null);
+                    setCustomSubject("");
+                    setCustomMessage("");
+                }, 2000);
+            }
+        } catch (error) {
+            setSendResult({ success: false, message: 'Failed to send messages' });
+        } finally {
+            setIsSending(false);
+        }
+    };
+
     if (loading) {
         return (
             <DashboardLayout>
@@ -142,7 +199,23 @@ export default function GuestsPage() {
                         <h1 className="text-2xl font-bold text-white">Guest Management</h1>
                         <p className="text-foreground-muted">Manage guests across all your events</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => setShowMessageModal(true)}
+                            className="btn-secondary flex items-center gap-2"
+                            disabled={filteredGuests.filter(g => g.email).length === 0}
+                        >
+                            <Send className="w-4 h-4" />
+                            Send Message
+                        </button>
+                        <a
+                            href="/api/client/guests/export"
+                            download
+                            className="btn-secondary flex items-center gap-2"
+                        >
+                            <Download className="w-4 h-4" />
+                            Export CSV
+                        </a>
                         <button onClick={() => setShowImportModal(true)} className="btn-secondary flex items-center gap-2">
                             <Upload className="w-4 h-4" />
                             Import CSV
@@ -383,6 +456,134 @@ export default function GuestsPage() {
                         <div className="flex gap-2 mt-6">
                             <button onClick={() => setShowImportModal(false)} className="btn-secondary flex-1">
                                 Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Send Message Modal */}
+            {showMessageModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="glass-card p-6 w-full max-w-md animate-fade-in">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                                <Send className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-white">Send Message</h2>
+                                <p className="text-sm text-foreground-muted">
+                                    To {filteredGuests.filter(g => g.email).length} guest(s) with email
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Message Type Selection */}
+                            <div>
+                                <label className="text-sm text-foreground-muted block mb-2">Message Type</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    <button
+                                        onClick={() => setMessageType('reminder')}
+                                        className={`p-3 rounded-xl border text-center transition-all ${messageType === 'reminder'
+                                                ? 'border-primary bg-primary/20 text-white'
+                                                : 'border-[var(--glass-border)] text-foreground-muted hover:bg-[var(--glass-bg)]'
+                                            }`}
+                                    >
+                                        <Bell className="w-5 h-5 mx-auto mb-1" />
+                                        <span className="text-xs">Reminder</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setMessageType('thankyou')}
+                                        className={`p-3 rounded-xl border text-center transition-all ${messageType === 'thankyou'
+                                                ? 'border-success bg-success/20 text-white'
+                                                : 'border-[var(--glass-border)] text-foreground-muted hover:bg-[var(--glass-bg)]'
+                                            }`}
+                                    >
+                                        <Heart className="w-5 h-5 mx-auto mb-1" />
+                                        <span className="text-xs">Thank You</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setMessageType('custom')}
+                                        className={`p-3 rounded-xl border text-center transition-all ${messageType === 'custom'
+                                                ? 'border-secondary bg-secondary/20 text-white'
+                                                : 'border-[var(--glass-border)] text-foreground-muted hover:bg-[var(--glass-bg)]'
+                                            }`}
+                                    >
+                                        <Mail className="w-5 h-5 mx-auto mb-1" />
+                                        <span className="text-xs">Custom</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Custom message fields */}
+                            {messageType === 'custom' && (
+                                <>
+                                    <div>
+                                        <label className="text-sm text-foreground-muted block mb-1">Subject</label>
+                                        <input
+                                            type="text"
+                                            className="input-field w-full"
+                                            placeholder="Email subject"
+                                            value={customSubject}
+                                            onChange={(e) => setCustomSubject(e.target.value)}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-sm text-foreground-muted block mb-1">Message</label>
+                                        <textarea
+                                            className="input-field w-full h-24 resize-none"
+                                            placeholder="Your message..."
+                                            value={customMessage}
+                                            onChange={(e) => setCustomMessage(e.target.value)}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {/* Template preview */}
+                            {messageType !== 'custom' && (
+                                <div className="glass-card p-4 bg-background-tertiary/50">
+                                    <p className="text-sm text-foreground-muted mb-1">Preview:</p>
+                                    <p className="text-xs text-foreground">
+                                        {messageType === 'reminder'
+                                            ? "📩 Reminder email asking guests to RSVP"
+                                            : "🎉 Thank you email for attending the event"
+                                        }
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Result message */}
+                            {sendResult && (
+                                <div className={`p-3 rounded-xl text-sm ${sendResult.success ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
+                                    }`}>
+                                    {sendResult.message}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-2 mt-6">
+                            <button
+                                onClick={() => {
+                                    setShowMessageModal(false);
+                                    setSendResult(null);
+                                }}
+                                className="btn-secondary flex-1"
+                                disabled={isSending}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSendMessage}
+                                className="btn-primary flex-1 flex items-center justify-center gap-2"
+                                disabled={isSending || (messageType === 'custom' && (!customSubject || !customMessage))}
+                            >
+                                {isSending ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
+                                ) : (
+                                    <><Send className="w-4 h-4" /> Send</>
+                                )}
                             </button>
                         </div>
                     </div>

@@ -152,3 +152,17 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 CREATE INDEX IF NOT EXISTS idx_audit_logs_admin ON audit_logs(admin_id);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC);
+
+-- Event Analytics table for detailed view tracking
+CREATE TABLE IF NOT EXISTS event_analytics (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  event_id TEXT NOT NULL,
+  view_date TEXT NOT NULL,
+  views INTEGER DEFAULT 0,
+  device_type TEXT DEFAULT 'desktop',  -- 'mobile', 'desktop', 'tablet'
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_event_analytics_event ON event_analytics(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_analytics_date ON event_analytics(view_date DESC);

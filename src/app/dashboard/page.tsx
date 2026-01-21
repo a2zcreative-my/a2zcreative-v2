@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/layout";
+import QRCode from "qrcode";
 import {
     Calendar,
     Sparkles,
@@ -14,6 +15,11 @@ import {
     Share2,
     Building2,
     Loader2,
+    Timer,
+    Download,
+    Crown,
+    ArrowUpRight,
+    Activity,
 } from "lucide-react";
 
 interface PublishedInvitation {
@@ -44,10 +50,70 @@ interface DashboardData {
     };
     publishedInvitations: PublishedInvitation[];
     draftEvents: DraftEvent[];
+    userPlan?: {
+        name: string;
+        id: string;
+    };
+    nextEvent?: {
+        id: string;
+        title: string;
+        date: string;
+    };
+}
+
+interface CountdownTime {
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+}
+
+interface Activity {
+    id: string;
+    type: 'rsvp' | 'view' | 'notification' | 'guest';
+    title: string;
+    description: string;
+    timestamp: string;
+    icon: string;
+}
+
+function calculateCountdown(targetDate: string): CountdownTime {
+    const target = new Date(targetDate).getTime();
+    const now = new Date().getTime();
+    const diff = target - now;
+
+    if (diff <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+    }
+
+    return {
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+    };
+}
+
+function formatTimeAgo(timestamp: string): string {
+    const now = new Date().getTime();
+    const time = new Date(timestamp).getTime();
+    const diff = now - time;
+
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return new Date(timestamp).toLocaleDateString();
 }
 
 export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
+    const [countdown, setCountdown] = useState<CountdownTime | null>(null);
+    const [activities, setActivities] = useState<Activity[]>([]);
     const [data, setData] = useState<DashboardData>({
         stats: { totalEvents: 0, totalViews: 0, activeEvents: 0, totalRsvps: 0 },
         publishedInvitations: [],
@@ -57,10 +123,19 @@ export default function DashboardPage() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch('/api/client/dashboard');
-                if (response.ok) {
-                    const result = await response.json();
+                const [dashResponse, activityResponse] = await Promise.all([
+                    fetch('/api/client/dashboard'),
+                    fetch('/api/client/activity')
+                ]);
+
+                if (dashResponse.ok) {
+                    const result = await dashResponse.json();
                     setData(result);
+                }
+
+                if (activityResponse.ok) {
+                    const activityData = await activityResponse.json();
+                    setActivities(activityData.activities || []);
                 }
             } catch (error) {
                 console.error('Failed to fetch dashboard data:', error);
@@ -70,6 +145,38 @@ export default function DashboardPage() {
         }
         fetchData();
     }, []);
+
+    // Countdown timer effect
+    useEffect(() => {
+        if (!data.nextEvent?.date) return;
+
+        const updateCountdown = () => {
+            setCountdown(calculateCountdown(data.nextEvent!.date));
+        };
+
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+        return () => clearInterval(interval);
+    }, [data.nextEvent]);
+
+    // QR Code download function
+    const downloadQR = async (eventId: string, eventTitle: string) => {
+        try {
+            const url = `${window.location.origin}/${eventId}`;
+            const qrDataUrl = await QRCode.toDataURL(url, {
+                width: 512,
+                margin: 2,
+                color: { dark: '#000000', light: '#ffffff' }
+            });
+
+            const link = document.createElement('a');
+            link.download = `${eventTitle.replace(/\s+/g, '-')}-QR.png`;
+            link.href = qrDataUrl;
+            link.click();
+        } catch (error) {
+            console.error('Failed to generate QR code:', error);
+        }
+    };
 
     const stats = [
         { label: "My Events", value: data.stats.totalEvents.toString(), icon: Calendar, color: "primary", bgColor: "bg-primary/20" },
@@ -126,6 +233,133 @@ export default function DashboardPage() {
                             </div>
                         );
                     })}
+                </div>
+
+                {/* Countdown Widget + Plan CTA Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Event Countdown Widget */}
+                    {data.nextEvent && countdown && (
+                        <div className="glass-card p-6 bg-gradient-to-br from-primary/10 to-secondary/10">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                                    <Timer className="w-6 h-6 text-primary" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white">
+                                        {data.nextEvent.title}
+                                    </h3>
+                                    <p className="text-sm text-foreground-muted">
+                                        {new Date(data.nextEvent.date).toLocaleDateString('en-MY', {
+                                            weekday: 'long',
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-4 gap-3 text-center">
+                                <div className="bg-background/50 rounded-xl p-3">
+                                    <p className="text-3xl font-bold text-white">{countdown.days}</p>
+                                    <p className="text-xs text-foreground-muted uppercase">Days</p>
+                                </div>
+                                <div className="bg-background/50 rounded-xl p-3">
+                                    <p className="text-3xl font-bold text-white">{countdown.hours}</p>
+                                    <p className="text-xs text-foreground-muted uppercase">Hours</p>
+                                </div>
+                                <div className="bg-background/50 rounded-xl p-3">
+                                    <p className="text-3xl font-bold text-white">{countdown.minutes}</p>
+                                    <p className="text-xs text-foreground-muted uppercase">Mins</p>
+                                </div>
+                                <div className="bg-background/50 rounded-xl p-3">
+                                    <p className="text-3xl font-bold text-primary animate-pulse">{countdown.seconds}</p>
+                                    <p className="text-xs text-foreground-muted uppercase">Secs</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Plan Upgrade CTA */}
+                    <div className="glass-card p-6 flex flex-col justify-between">
+                        <div>
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-12 h-12 rounded-xl bg-warning/20 flex items-center justify-center">
+                                    <Crown className="w-6 h-6 text-warning" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white">Your Plan</h3>
+                                    <p className="text-sm text-foreground-muted capitalize">
+                                        {data.userPlan?.name || 'Starter Pack'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="space-y-2 mb-4">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-foreground-muted">Events Created</span>
+                                    <span className="text-white font-medium">{data.stats.totalEvents}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-foreground-muted">Total Views</span>
+                                    <span className="text-white font-medium">{data.stats.totalViews}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-foreground-muted">Total RSVPs</span>
+                                    <span className="text-white font-medium">{data.stats.totalRsvps}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <Link
+                            href="/plans"
+                            className="btn-primary w-full text-center flex items-center justify-center gap-2"
+                        >
+                            Upgrade Plan
+                            <ArrowUpRight className="w-4 h-4" />
+                        </Link>
+                    </div>
+
+                    {/* Activity Feed - beside Plan Card */}
+                    <div className="glass-card p-6 flex flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <Activity className="w-5 h-5 text-primary" />
+                                Recent Activity
+                            </h3>
+                            <Link href="/notifications" className="text-xs text-primary hover:text-primary-hover">
+                                View All
+                            </Link>
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                            {activities.length > 0 ? (
+                                <div className="space-y-2 max-h-40 overflow-y-auto">
+                                    {activities.slice(0, 5).map((activity) => (
+                                        <div
+                                            key={activity.id}
+                                            className="flex items-start gap-2 p-2 rounded-lg bg-background-tertiary/50"
+                                        >
+                                            <div className={`w-6 h-6 rounded flex items-center justify-center text-xs flex-shrink-0 ${activity.type === 'rsvp' ? 'bg-success/20 text-success' :
+                                                activity.type === 'notification' ? 'bg-primary/20 text-primary' :
+                                                    'bg-secondary/20 text-secondary'
+                                                }`}>
+                                                {activity.icon}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs font-medium text-white truncate">{activity.title}</p>
+                                                <p className="text-xs text-foreground-muted truncate">{activity.description}</p>
+                                            </div>
+                                            <span className="text-xs text-foreground-muted whitespace-nowrap">
+                                                {formatTimeAgo(activity.timestamp)}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-4 text-foreground-muted">
+                                    <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                                    <p className="text-xs">No recent activity</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Published Invitations - PROMINENT */}
@@ -197,7 +431,14 @@ export default function DashboardPage() {
                                             <BarChart3 className="w-4 h-4" />
                                             RSVP
                                         </Link>
-                                        <button className="btn-secondary text-sm py-2 px-3">
+                                        <button
+                                            onClick={() => downloadQR(invitation.id, invitation.title)}
+                                            className="btn-secondary text-sm py-2 px-3"
+                                            title="Download QR Code"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                        </button>
+                                        <button className="btn-secondary text-sm py-2 px-3" title="Share">
                                             <Share2 className="w-4 h-4" />
                                         </button>
                                     </div>
