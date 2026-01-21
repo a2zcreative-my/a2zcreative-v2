@@ -166,3 +166,35 @@ CREATE TABLE IF NOT EXISTS event_analytics (
 
 CREATE INDEX IF NOT EXISTS idx_event_analytics_event ON event_analytics(event_id);
 CREATE INDEX IF NOT EXISTS idx_event_analytics_date ON event_analytics(view_date DESC);
+
+-- Broadcasts table for admin announcements
+CREATE TABLE IF NOT EXISTS broadcasts (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  admin_id TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  body TEXT NOT NULL,
+  segment TEXT DEFAULT 'all',        -- 'all', 'plan:premium', 'active', 'inactive', etc
+  recipient_count INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'sent',
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (admin_id) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_broadcasts_admin ON broadcasts(admin_id);
+CREATE INDEX IF NOT EXISTS idx_broadcasts_created ON broadcasts(created_at DESC);
+
+-- Refunds table for payment refunds
+CREATE TABLE IF NOT EXISTS refunds (
+  id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+  invoice_id TEXT NOT NULL,
+  admin_id TEXT NOT NULL,
+  amount REAL NOT NULL,
+  reason TEXT,
+  status TEXT DEFAULT 'processed',
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (invoice_id) REFERENCES invoices(id),
+  FOREIGN KEY (admin_id) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_refunds_invoice ON refunds(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_refunds_created ON refunds(created_at DESC);

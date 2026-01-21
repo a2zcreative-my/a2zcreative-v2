@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -22,6 +22,9 @@ import {
     Bell,
     Package,
     History,
+    Eye,
+    XCircle,
+    Megaphone,
 } from "lucide-react";
 
 const adminNavItems = [
@@ -30,6 +33,7 @@ const adminNavItems = [
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/plans", label: "Plans", icon: Package },
     { href: "/admin/coupons", label: "Coupons", icon: Ticket },
+    { href: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
     { href: "/admin/tickets", label: "Support Tickets", icon: Mail },
     { href: "/admin/revenue", label: "Revenue", icon: BarChart3 },
     { href: "/admin/audit-logs", label: "Audit Logs", icon: History },
@@ -67,6 +71,46 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     // Select navigation items based on role
     const navItems = isAdmin ? adminNavItems : clientNavItems;
     const bottomNavItems = isAdmin ? adminBottomNavItems : clientBottomNavItems;
+
+    // Impersonation state
+    const [impersonation, setImpersonation] = useState<{
+        isImpersonating: boolean;
+        impersonatedUser: { name: string; email: string } | null;
+    }>({ isImpersonating: false, impersonatedUser: null });
+
+    // Check impersonation status on mount
+    useEffect(() => {
+        if (isAdmin) {
+            checkImpersonationStatus();
+        }
+    }, [isAdmin]);
+
+    const checkImpersonationStatus = async () => {
+        try {
+            const response = await fetch('/api/admin/impersonate');
+            if (response.ok) {
+                const data = await response.json();
+                setImpersonation({
+                    isImpersonating: data.isImpersonating,
+                    impersonatedUser: data.impersonatedUser || null
+                });
+            }
+        } catch (error) {
+            console.error('Failed to check impersonation status:', error);
+        }
+    };
+
+    const handleExitImpersonation = async () => {
+        try {
+            const response = await fetch('/api/admin/impersonate', { method: 'DELETE' });
+            if (response.ok) {
+                setImpersonation({ isImpersonating: false, impersonatedUser: null });
+                window.location.href = '/admin/users';
+            }
+        } catch (error) {
+            console.error('Failed to exit impersonation:', error);
+        }
+    };
 
     const isActive = (href: string) => {
         // For dashboard links, use exact match only
@@ -139,6 +183,26 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                         <X className="w-5 h-5" />
                     </button>
                 </div>
+
+                {/* Impersonation Banner */}
+                {impersonation.isImpersonating && impersonation.impersonatedUser && (
+                    <div className="mx-4 mt-4 p-3 bg-warning/20 border border-warning/50 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Eye className="w-4 h-4 text-warning" />
+                            <span className="text-xs font-semibold text-warning">VIEWING AS</span>
+                        </div>
+                        <p className="text-sm font-medium text-white truncate">
+                            {impersonation.impersonatedUser.name || impersonation.impersonatedUser.email}
+                        </p>
+                        <button
+                            onClick={handleExitImpersonation}
+                            className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 bg-warning/30 hover:bg-warning/40 text-warning text-xs font-medium rounded-lg transition-colors"
+                        >
+                            <XCircle className="w-3 h-3" />
+                            Exit Impersonation
+                        </button>
+                    </div>
+                )}
 
                 {/* Main Navigation */}
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
