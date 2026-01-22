@@ -15,6 +15,7 @@ import {
     X,
     Calendar,
 } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 
 interface Coupon {
     id: string;
@@ -287,8 +288,8 @@ export default function AdminCouponsPage() {
                                         </td>
                                         <td className="p-4">
                                             <span className={`text-xs px-2 py-1 rounded-full ${coupon.active
-                                                    ? "bg-success/20 text-success"
-                                                    : "bg-foreground-muted/20 text-foreground-muted"
+                                                ? "bg-success/20 text-success"
+                                                : "bg-foreground-muted/20 text-foreground-muted"
                                                 }`}>
                                                 {coupon.active ? "Active" : "Inactive"}
                                             </span>
@@ -386,20 +387,18 @@ export default function AdminCouponsPage() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-sm text-foreground-muted block mb-1">Valid From</label>
-                                    <input
-                                        type="date"
+                                    <DatePicker
                                         value={newCoupon.valid_from}
-                                        onChange={(e) => setNewCoupon({ ...newCoupon, valid_from: e.target.value })}
-                                        className="input-field w-full"
+                                        onChange={(value) => setNewCoupon({ ...newCoupon, valid_from: value })}
+                                        placeholder="Start date"
                                     />
                                 </div>
                                 <div>
                                     <label className="text-sm text-foreground-muted block mb-1">Valid Until</label>
-                                    <input
-                                        type="date"
+                                    <DatePicker
                                         value={newCoupon.valid_until}
-                                        onChange={(e) => setNewCoupon({ ...newCoupon, valid_until: e.target.value })}
-                                        className="input-field w-full"
+                                        onChange={(value) => setNewCoupon({ ...newCoupon, valid_until: value })}
+                                        placeholder="End date"
                                     />
                                 </div>
                             </div>

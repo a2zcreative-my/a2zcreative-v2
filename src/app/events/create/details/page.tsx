@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { Check, UserRound, Loader2, X, Heart } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
+import TimePicker from "@/components/ui/TimePicker";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -450,24 +452,18 @@ function EventDetailsContent() {
                             <label className="block text-sm font-medium text-foreground-muted mb-2">
                                 Date *
                             </label>
-                            <input
-                                type="date"
-                                name="date"
+                            <DatePicker
                                 value={formData.date}
-                                onChange={handleChange}
-                                className="input-field"
+                                onChange={(value) => setFormData({ ...formData, date: value })}
                             />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-foreground-muted mb-2">
                                 Time *
                             </label>
-                            <input
-                                type="time"
-                                name="time"
+                            <TimePicker
                                 value={formData.time}
-                                onChange={handleChange}
-                                className="input-field"
+                                onChange={(value) => setFormData({ ...formData, time: value })}
                             />
                         </div>
                     </div>

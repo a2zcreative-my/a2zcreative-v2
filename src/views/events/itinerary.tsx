@@ -12,6 +12,7 @@ import {
     ArrowLeft,
     ArrowRight,
 } from "lucide-react";
+import TimePicker from "@/components/ui/TimePicker";
 
 interface ItineraryItem {
     id: string;
@@ -114,11 +115,9 @@ export default function ItineraryPage() {
                             <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
                                 <div>
                                     <label className="text-xs text-foreground-muted block mb-1">Time *</label>
-                                    <input
-                                        type="time"
+                                    <TimePicker
                                         value={item.time}
-                                        onChange={(e) => updateItem(item.id, "time", e.target.value)}
-                                        className="input-field text-sm"
+                                        onChange={(val) => updateItem(item.id, "time", val)}
                                     />
                                 </div>
                                 <div className="md:col-span-2">
