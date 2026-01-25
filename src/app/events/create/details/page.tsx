@@ -538,11 +538,11 @@ function EventDetailsContent() {
                         ← Back
                     </Link>
                     <Link
-                        href={isFormValid ? `/events/new/template?plan=${plan}&type=${encodeURIComponent(eventType)}` : "#"}
+                        href={isFormValid ? `/events/new/builder?plan=${plan}&type=${encodeURIComponent(eventType)}` : "#"}
                         className={`btn-primary flex-1 text-center ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""}`}
                         onClick={(e) => !isFormValid && e.preventDefault()}
                     >
-                        Continue to Templates →
+                        Continue to Builder →
                     </Link>
                 </div>
             </div>

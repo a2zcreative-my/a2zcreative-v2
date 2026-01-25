@@ -22,10 +22,9 @@ const defaultSteps: Step[] = [
     { number: 5, name: "Contact", path: "contact" },
     { number: 6, name: "Itinerary", path: "itinerary" },
     { number: 7, name: "Gift", path: "gift" },
-    { number: 8, name: "Guests", path: "guests" },
-    { number: 9, name: "Preview", path: "preview" },
-    { number: 10, name: "Payment", path: "payment" },
-    { number: 11, name: "Send", path: "send" },
+    { number: 8, name: "Preview", path: "preview" },
+    { number: 9, name: "Payment", path: "payment" },
+    { number: 10, name: "Send", path: "send" },
 ];
 
 export default function StepIndicator({ currentStep, eventId = "new", steps = defaultSteps }: StepIndicatorProps) {
@@ -60,10 +59,10 @@ export default function StepIndicator({ currentStep, eventId = "new", steps = de
                                     {/* Step Circle */}
                                     <div
                                         className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all hover:scale-110 ${isCompleted
-                                                ? "bg-success text-white group-hover:ring-4 group-hover:ring-success/30"
-                                                : isCurrent
-                                                    ? "bg-primary text-white ring-4 ring-primary/30 group-hover:ring-primary/50"
-                                                    : "bg-background-tertiary text-foreground-muted group-hover:bg-primary/20 group-hover:text-primary group-hover:ring-4 group-hover:ring-primary/20"
+                                            ? "bg-success text-white group-hover:ring-4 group-hover:ring-success/30"
+                                            : isCurrent
+                                                ? "bg-primary text-white ring-4 ring-primary/30 group-hover:ring-primary/50"
+                                                : "bg-background-tertiary text-foreground-muted group-hover:bg-primary/20 group-hover:text-primary group-hover:ring-4 group-hover:ring-primary/20"
                                             }`}
                                     >
                                         {isCompleted ? "✓" : step.number}
@@ -72,10 +71,10 @@ export default function StepIndicator({ currentStep, eventId = "new", steps = de
                                     {/* Step Label */}
                                     <span
                                         className={`mt-2 text-xs font-medium text-center max-w-[60px] transition-colors ${isCompleted
-                                                ? "text-success group-hover:text-success/80"
-                                                : isCurrent
-                                                    ? "text-white"
-                                                    : "text-foreground-muted group-hover:text-primary"
+                                            ? "text-success group-hover:text-success/80"
+                                            : isCurrent
+                                                ? "text-white"
+                                                : "text-foreground-muted group-hover:text-primary"
                                             } ${Math.abs(step.number - currentStep) > 1 ? "hidden md:block" : ""}`}
                                     >
                                         {step.name}
