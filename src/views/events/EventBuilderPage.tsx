@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -92,6 +92,27 @@ interface EventData {
     bankDetails: BankDetails;
     ewalletDetails: EwalletDetails;
     physicalGift: PhysicalGift;
+    // Event Details (from /events/create/details)
+    eventName: string;
+    eventDate: string;
+    eventTime: string;
+    venue: string;
+    address: string;
+    hostName: string;
+    coupleName1: string;
+    coupleName2: string;
+    celebrantName: string;
+    companyName: string;
+    parentsBride: string;
+    parentsGroom: string;
+    description: string;
+    eventType: string;
+    bridePhoto: string | null;
+    groomPhoto: string | null;
+    celebrantPhoto: string | null;
+    babyPhoto: string | null;
+    logoPhoto: string | null;
+    hostPhoto: string | null;
 }
 
 interface Contact {
@@ -390,6 +411,27 @@ const initialEventData: EventData = {
     bankDetails: { bankName: "", accountNumber: "", accountHolder: "" },
     ewalletDetails: { provider: "", phoneNumber: "", accountName: "" },
     physicalGift: { address: "", notes: "" },
+    // Event Details
+    eventName: "",
+    eventDate: "",
+    eventTime: "",
+    venue: "",
+    address: "",
+    hostName: "",
+    coupleName1: "",
+    coupleName2: "",
+    celebrantName: "",
+    companyName: "",
+    parentsBride: "",
+    parentsGroom: "",
+    description: "",
+    eventType: "",
+    bridePhoto: null,
+    groomPhoto: null,
+    celebrantPhoto: null,
+    babyPhoto: null,
+    logoPhoto: null,
+    hostPhoto: null,
 };
 
 // ============= SECTION COMPONENTS =============
@@ -998,6 +1040,27 @@ function PreviewSection({ data }: { data: EventData }) {
     const bgColor = selectedPalette?.colors[1] || "#1a1a24";
     const accentColor = selectedPalette?.colors[2] || primaryColor;
 
+    // Event type detection
+    const eventType = data.eventType?.toLowerCase() || "";
+    const isWedding = eventType.includes("wedding") || eventType.includes("nikah") || eventType.includes("engagement");
+    const isBirthday = eventType.includes("birthday") || eventType.includes("surprise");
+    const isBabyEvent = eventType.includes("baby") || eventType.includes("aqiqah");
+    const isFamilyEvent = eventType.includes("family") || eventType.includes("reunion") || eventType.includes("housewarming") || eventType.includes("kenduri") || eventType.includes("religious");
+
+    // Date formatter
+    const formatEventDate = (dateStr: string) => {
+        try {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-MY', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        } catch {
+            return dateStr;
+        }
+    };
+
     // Floating dock items
     const dockItems = [
         { id: "music", icon: Music, label: "Music", show: data.musicEnabled },
@@ -1274,19 +1337,124 @@ function PreviewSection({ data }: { data: EventData }) {
 
                     {/* Main Content (visible when door opens) */}
                     <div className={`h-full overflow-y-auto pb-20 transition-opacity duration-500 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-                        {/* Hero Section */}
+                        {/* Section 1: Hero - Names & Date */}
                         <div className="p-6 flex flex-col items-center justify-center text-center min-h-[280px]" style={{ fontFamily: selectedFont?.family }}>
                             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ backgroundColor: `${primaryColor}20` }}>
                                 <Sparkles className="w-7 h-7" style={{ color: primaryColor }} />
                             </div>
                             <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">You are cordially invited</p>
-                            <h1 className="text-xl font-bold text-white mb-1">{selectedTemplate?.name || "Your Event"}</h1>
-                            <p className="text-gray-400 text-sm mb-4">{selectedTemplate?.category || "Event"}</p>
+
+                            {/* Event Name / Couple Names */}
+                            {isWedding && (data.coupleName1 || data.coupleName2) ? (
+                                <>
+                                    <h1 className="text-xl font-bold text-white mb-1">
+                                        {data.coupleName1 || "Bride"} <span style={{ color: primaryColor }}>&</span> {data.coupleName2 || "Groom"}
+                                    </h1>
+                                    <p className="text-gray-400 text-sm mb-2">{data.eventName || "Wedding Ceremony"}</p>
+                                </>
+                            ) : isBirthday && data.celebrantName ? (
+                                <>
+                                    <h1 className="text-xl font-bold text-white mb-1">{data.celebrantName}</h1>
+                                    <p className="text-gray-400 text-sm mb-2">{data.eventName || "Birthday Celebration"}</p>
+                                </>
+                            ) : (
+                                <>
+                                    <h1 className="text-xl font-bold text-white mb-1">{data.eventName || selectedTemplate?.name || "Your Event"}</h1>
+                                    <p className="text-gray-400 text-sm mb-2">{data.eventType || selectedTemplate?.category || "Event"}</p>
+                                </>
+                            )}
+
+                            {/* Date Display */}
                             <div className="bg-white/5 border border-white/10 rounded-xl p-3 w-full mb-3">
                                 <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Save the Date</p>
-                                <p className="text-lg font-bold" style={{ color: primaryColor }}>Coming Soon</p>
+                                <p className="text-lg font-bold" style={{ color: primaryColor }}>
+                                    {data.eventDate ? formatEventDate(data.eventDate) : "Coming Soon"}
+                                </p>
+                                {data.eventTime && (
+                                    <p className="text-sm text-gray-300 mt-1">{data.eventTime}</p>
+                                )}
                             </div>
+
+                            {/* Couple/Celebrant Photos */}
+                            {isWedding && (data.bridePhoto || data.groomPhoto) && (
+                                <div className="flex items-center justify-center gap-4 mt-2">
+                                    {data.bridePhoto && (
+                                        <img src={data.bridePhoto} alt="Bride" className="w-16 h-16 rounded-full object-cover border-2 border-pink-400" />
+                                    )}
+                                    {data.bridePhoto && data.groomPhoto && (
+                                        <div className="text-pink-400 text-2xl">&hearts;</div>
+                                    )}
+                                    {data.groomPhoto && (
+                                        <img src={data.groomPhoto} alt="Groom" className="w-16 h-16 rounded-full object-cover border-2 border-blue-400" />
+                                    )}
+                                </div>
+                            )}
+                            {isBirthday && data.celebrantPhoto && (
+                                <img src={data.celebrantPhoto} alt="Celebrant" className="w-20 h-20 rounded-full object-cover border-2 mt-2" style={{ borderColor: primaryColor }} />
+                            )}
                         </div>
+
+                        {/* Section 2: Family / Parents */}
+                        {(isWedding && (data.parentsBride || data.parentsGroom)) && (
+                            <div className="px-4 pb-4">
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                    <p className="text-xs text-gray-400 uppercase tracking-wide text-center mb-3">With the blessings of</p>
+                                    <div className="grid grid-cols-2 gap-4 text-center">
+                                        {data.parentsBride && (
+                                            <div>
+                                                <p className="text-white font-medium text-sm">{data.parentsBride}</p>
+                                                <p className="text-xs text-gray-500">Parents of the Bride</p>
+                                            </div>
+                                        )}
+                                        {data.parentsGroom && (
+                                            <div>
+                                                <p className="text-white font-medium text-sm">{data.parentsGroom}</p>
+                                                <p className="text-xs text-gray-500">Parents of the Groom</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {(isBirthday || isFamilyEvent) && data.hostName && (
+                            <div className="px-4 pb-4">
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">Hosted by</p>
+                                    <p className="text-white font-medium">{data.hostName}</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Section 3: Location & Schedule */}
+                        {data.enabledSections.location && (data.venue || data.address) && (
+                            <div className="px-4 pb-4">
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <MapPin className="w-4 h-4" style={{ color: primaryColor }} />
+                                        <p className="text-white font-medium text-sm">Location</p>
+                                    </div>
+                                    {data.venue && (
+                                        <p className="text-white font-semibold mb-1">{data.venue}</p>
+                                    )}
+                                    {data.address && (
+                                        <p className="text-gray-400 text-xs mb-3">{data.address}</p>
+                                    )}
+                                    {/* Map Placeholder */}
+                                    <div className="bg-gray-800 rounded-lg h-32 flex items-center justify-center text-gray-500 text-xs mb-3">
+                                        <MapPin className="w-6 h-6 mr-2" /> Google Maps Preview
+                                    </div>
+                                    {/* Navigation Buttons */}
+                                    <div className="flex gap-2">
+                                        <button className="flex-1 py-2 rounded-lg bg-white/10 text-white text-xs flex items-center justify-center gap-1">
+                                            <Navigation className="w-3 h-3" /> Google Maps
+                                        </button>
+                                        <button className="flex-1 py-2 rounded-lg bg-white/10 text-white text-xs flex items-center justify-center gap-1">
+                                            <Navigation className="w-3 h-3" /> Waze
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Countdown */}
                         {data.enabledSections.countdown && (
@@ -1306,6 +1474,94 @@ function PreviewSection({ data }: { data: EventData }) {
                             </div>
                         )}
 
+                        {/* Section 4: Itinerary */}
+                        {data.enabledSections.itinerary && data.itinerary.length > 0 && data.itinerary.some(i => i.activity) && (
+                            <div className="px-4 pb-4">
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Calendar className="w-4 h-4" style={{ color: primaryColor }} />
+                                        <p className="text-white font-medium text-sm">Itinerary</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {data.itinerary.filter(i => i.activity).map((item, idx) => (
+                                            <div key={idx} className="flex gap-3 text-xs">
+                                                <span className="text-gray-400 w-12 shrink-0">{item.time}</span>
+                                                <span className="text-white">{item.activity}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* RSVP Preview */}
+                        <div className="px-4 pb-4">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Check className="w-4 h-4" style={{ color: primaryColor }} />
+                                    <p className="text-white font-medium text-sm">RSVP</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <input
+                                        placeholder="Guest Name"
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-xs"
+                                    />
+                                    <input
+                                        placeholder="Phone Number"
+                                        className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 text-xs"
+                                    />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label className="text-[10px] text-gray-500 mb-1 block">Time to Attend</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Select Time"
+                                                defaultValue="12:00 PM"
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-xs"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] text-gray-500 mb-1 block">Total Pax</label>
+                                            <input
+                                                type="number"
+                                                placeholder="1"
+                                                defaultValue="2"
+                                                min="1"
+                                                max="20"
+                                                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-xs"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 mt-3">
+                                    <button className="flex-1 py-2 rounded-lg text-white text-xs font-medium" style={{ backgroundColor: primaryColor }}>
+                                        Attending
+                                    </button>
+                                    <button className="flex-1 py-2 rounded-lg bg-white/10 text-white text-xs font-medium">
+                                        Unable
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Prayers / Blessings Section */}
+                        <div className="px-4 pb-4">
+                            <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-center">
+                                <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">
+                                    {isWedding ? "Doa Pengantin" : isBirthday ? "Ucapan & Harapan" : isBabyEvent ? "Doa untuk Bayi" : "Prayers & Blessings"}
+                                </p>
+                                <p className="text-white/80 text-xs italic leading-relaxed">
+                                    {isWedding
+                                        ? "\"Ya Allah, berkahilah pasangan ini dengan cinta yang abadi, keharmonian dalam rumah tangga, dan zuriat yang soleh.\""
+                                        : isBirthday
+                                            ? "\"Semoga dipanjangkan umur, dimurahkan rezeki, dan sentiasa dalam lindungan rahmat Allah.\""
+                                            : isBabyEvent
+                                                ? "\"Ya Allah, jadikanlah anak ini soleh/solehah, sihat, dan berguna kepada agama, bangsa dan negara.\""
+                                                : "\"May this celebration bring joy, blessings, and cherished memories for all.\""}
+                                </p>
+                            </div>
+                        </div>
+
                         {/* Wishes */}
                         {data.enabledSections.wishes && (
                             <div className="px-4 pb-4">
@@ -1314,7 +1570,7 @@ function PreviewSection({ data }: { data: EventData }) {
                                         <MessageSquare className="w-4 h-4" style={{ color: primaryColor }} />
                                         <p className="text-white font-medium text-sm">Wishes</p>
                                     </div>
-                                    <p className="text-xs text-gray-400">Leave your wishes for the couple...</p>
+                                    <p className="text-xs text-gray-400">Leave your wishes...</p>
                                 </div>
                             </div>
                         )}
@@ -1567,9 +1823,48 @@ function EventBuilderContent() {
 
     // Read initial step from URL
     const initialStep = parseInt(searchParams.get("step") || "1", 10);
+    const eventTypeFromUrl = searchParams.get("type") || "";
     const [currentStep, setCurrentStep] = useState(Math.min(Math.max(1, initialStep), STEPS.length));
     const [expandedStep, setExpandedStep] = useState(currentStep);
-    const [eventData, setEventData] = useState<EventData>(initialEventData);
+    const [eventData, setEventData] = useState<EventData>(() => ({
+        ...initialEventData,
+        eventType: eventTypeFromUrl,
+    }));
+
+    // Load event details from localStorage (saved from /events/create/details)
+    useEffect(() => {
+        const savedDetails = localStorage.getItem('eventDetails');
+        if (savedDetails) {
+            try {
+                const details = JSON.parse(savedDetails);
+                setEventData(prev => ({
+                    ...prev,
+                    eventName: details.eventName || "",
+                    eventDate: details.date || "",
+                    eventTime: details.time || "",
+                    venue: details.venue || "",
+                    address: details.address || "",
+                    hostName: details.hostName || "",
+                    coupleName1: details.coupleName1 || "",
+                    coupleName2: details.coupleName2 || "",
+                    celebrantName: details.celebrantName || "",
+                    companyName: details.companyName || "",
+                    parentsBride: details.parentsBride || "",
+                    parentsGroom: details.parentsGroom || "",
+                    description: details.description || "",
+                    eventType: details.eventType || eventTypeFromUrl || "",
+                    bridePhoto: details.bridePhoto || null,
+                    groomPhoto: details.groomPhoto || null,
+                    celebrantPhoto: details.celebrantPhoto || null,
+                    babyPhoto: details.babyPhoto || null,
+                    logoPhoto: details.logoPhoto || null,
+                    hostPhoto: details.hostPhoto || null,
+                }));
+            } catch (e) {
+                console.error('Error loading event details:', e);
+            }
+        }
+    }, [eventTypeFromUrl]);
 
     const updateData = (updates: Partial<EventData>) => {
         setEventData(prev => ({ ...prev, ...updates }));

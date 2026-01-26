@@ -27,6 +27,8 @@ function EventDetailsContent() {
         celebrantName: "",
         companyName: "",
         description: "",
+        parentsBride: "",
+        parentsGroom: "",
     });
 
     // Photo upload states
@@ -182,6 +184,36 @@ function EventDetailsContent() {
                                         value={formData.coupleName2}
                                         onChange={handleChange}
                                         placeholder="Ahmad bin Ali"
+                                        className="input-field"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Parents Names */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                        Bride's Parents
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="parentsBride"
+                                        value={formData.parentsBride}
+                                        onChange={handleChange}
+                                        placeholder="Encik Ahmad & Puan Fatimah"
+                                        className="input-field"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                        Groom's Parents
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="parentsGroom"
+                                        value={formData.parentsGroom}
+                                        onChange={handleChange}
+                                        placeholder="Encik Ali & Puan Aminah"
                                         className="input-field"
                                     />
                                 </div>
@@ -540,7 +572,24 @@ function EventDetailsContent() {
                     <Link
                         href={isFormValid ? `/events/new/builder?plan=${plan}&type=${encodeURIComponent(eventType)}` : "#"}
                         className={`btn-primary flex-1 text-center ${!isFormValid ? "opacity-50 cursor-not-allowed" : ""}`}
-                        onClick={(e) => !isFormValid && e.preventDefault()}
+                        onClick={(e) => {
+                            if (!isFormValid) {
+                                e.preventDefault();
+                                return;
+                            }
+                            // Save event details to localStorage for builder preview
+                            const eventDetails = {
+                                ...formData,
+                                eventType,
+                                bridePhoto,
+                                groomPhoto,
+                                celebrantPhoto,
+                                babyPhoto,
+                                logoPhoto,
+                                hostPhoto,
+                            };
+                            localStorage.setItem('eventDetails', JSON.stringify(eventDetails));
+                        }}
                     >
                         Continue to Builder →
                     </Link>
