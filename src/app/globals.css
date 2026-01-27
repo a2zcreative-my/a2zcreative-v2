@@ -201,6 +201,22 @@ select option:checked {
   animation: fadeIn 0.5s ease forwards;
 }
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
@@ -450,33 +466,69 @@ select option:checked {
 
 /* Door animation keyframes */
 @keyframes doorOpenLeft {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 @keyframes doorOpenRight {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes slideUp {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-100%); }
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-100%);
+  }
 }
 
 @keyframes scaleDown {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
 }
 
 @keyframes envelopeOpen {
-  0% { transform: scale(1) translateY(0); opacity: 1; }
-  100% { transform: scale(0.9) translateY(-50px); opacity: 0; }
+  0% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.9) translateY(-50px);
+    opacity: 0;
+  }
 }
 
 @keyframes scrollRoll {
-  0% { transform: scaleY(1) translateY(0); opacity: 1; }
-  100% { transform: scaleY(0) translateY(-100%); opacity: 0; }
+  0% {
+    transform: scaleY(1) translateY(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scaleY(0) translateY(-100%);
+    opacity: 0;
+  }
 }
 
 /* Animation classes */
@@ -502,4 +554,84 @@ select option:checked {
 
 .animate-scroll-roll {
   animation: scrollRoll 1s ease-out forwards;
+}
+
+/* ===== Royal Elegance Template ===== */
+.royal-elegance-bg {
+  background: linear-gradient(135deg, #1a2744 0%, #0f1a2e 50%, #1a2744 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.royal-gold-text {
+  background: linear-gradient(135deg, #d4af37, #c9a55c, #f4d03f, #c9a55c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.elegant-serif {
+  font-family: 'Playfair Display', 'Times New Roman', Georgia, serif;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+
+/* Gold ornamental corner decorations */
+.ornament-corner {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.ornament-corner.top-left {
+  top: 0;
+  left: 0;
+}
+
+.ornament-corner.top-right {
+  top: 0;
+  right: 0;
+  transform: scaleX(-1);
+}
+
+.ornament-corner.bottom-left {
+  bottom: 0;
+  left: 0;
+  transform: scaleY(-1);
+}
+
+.ornament-corner.bottom-right {
+  bottom: 0;
+  right: 0;
+  transform: scale(-1, -1);
+}
+
+/* Sparkle dots animation */
+@keyframes twinkle {
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.sparkle-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #c9a55c;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+/* Royal dock bar */
+.royal-dock {
+  background: linear-gradient(135deg, #b8986a, #c9a55c, #d4af37);
+  border-top: 1px solid #f4d03f;
 }

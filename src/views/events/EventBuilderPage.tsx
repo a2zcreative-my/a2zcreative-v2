@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -221,10 +221,13 @@ const templateIcons: Record<string, LucideIcon> = {
     "night-gala": Moon,
     "luxury-black": Gem,
     "red-carpet": Crown,
+    // Royal Elegance
+    "royal-elegance": Crown,
 };
 
 const templates = [
     // ===== WEDDING (8 templates) =====
+    { id: "royal-elegance", name: "Royal Elegance", category: "Wedding", tier: "exclusive", description: "Majestic navy & gold Malay royal design with ornate decorations" },
     { id: "elegant-gold", name: "Elegant Gold", category: "Wedding", tier: "premium", description: "Luxurious gold accents with sophisticated design" },
     { id: "floral-blush", name: "Floral Blush", category: "Wedding", tier: "basic", description: "Soft pink florals with romantic vibes" },
     { id: "rustic-charm", name: "Rustic Charm", category: "Wedding", tier: "premium", description: "Warm wood textures with natural elements" },
@@ -1027,6 +1030,35 @@ function PreviewSection({ data }: { data: EventData }) {
     const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
     const [isOpen, setIsOpen] = useState(false);
     const [activeModal, setActiveModal] = useState<string | null>(null);
+    const [rsvpStatus, setRsvpStatus] = useState<"attending" | "unable" | null>(null);
+    const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const [footerVisible, setFooterVisible] = useState(false);
+    const rsvpRef = useRef<HTMLDivElement>(null);
+    const locationRef = useRef<HTMLDivElement>(null);
+    const footerRef = useRef<HTMLDivElement>(null);
+
+    // Intersection observer for footer animation
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setFooterVisible(entry.isIntersecting);
+            },
+            { threshold: 0.3 }
+        );
+        if (footerRef.current) {
+            observer.observe(footerRef.current);
+        }
+        return () => observer.disconnect();
+    }, [isOpen]);
+
+    const scrollToRsvp = () => {
+        rsvpRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    const scrollToLocation = () => {
+        locationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
 
     // Get selected template info
     const selectedTemplate = templates.find(t => t.id === data.selectedTemplate);
@@ -1039,6 +1071,11 @@ function PreviewSection({ data }: { data: EventData }) {
     const primaryColor = selectedPalette?.colors[0] || "#6366f1";
     const bgColor = selectedPalette?.colors[1] || "#1a1a24";
     const accentColor = selectedPalette?.colors[2] || primaryColor;
+
+    // Template detection
+    const isRoyalElegance = data.selectedTemplate === "royal-elegance";
+    const royalGold = "#c9a55c";
+    const royalNavy = "#1a2744";
 
     // Event type detection
     const eventType = data.eventType?.toLowerCase() || "";
@@ -1061,13 +1098,27 @@ function PreviewSection({ data }: { data: EventData }) {
         }
     };
 
-    // Floating dock items
+    // Royal date formatter (Malay day names)
+    const formatRoyalDate = (dateStr: string) => {
+        try {
+            const date = new Date(dateStr);
+            const dayNames = ['AHAD', 'ISNIN', 'SELASA', 'RABU', 'KHAMIS', 'JUMAAT', 'SABTU'];
+            const day = dayNames[date.getDay()];
+            const dayNum = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day} • ${dayNum}.${month}.${year}`;
+        } catch {
+            return dateStr;
+        }
+    };
+
+    // Floating dock items (with Malay labels for Royal Elegance)
     const dockItems = [
-        { id: "music", icon: Music, label: "Music", show: data.musicEnabled },
-        { id: "contact", icon: Phone, label: "Contact", show: data.enabledSections.contact },
-        { id: "gift", icon: Gift, label: "Gift", show: data.enabledSections.gift },
-        { id: "rsvp", icon: Calendar, label: "RSVP", show: true },
-        { id: "map", icon: MapPin, label: "Map", show: data.enabledSections.location },
+        { id: "contact", icon: Phone, label: isRoyalElegance ? "Hubungi" : "Contact", show: data.enabledSections.contact, action: () => setActiveModal("contact") },
+        { id: "gift", icon: Gift, label: isRoyalElegance ? "Hadiah" : "Gift", show: data.enabledSections.gift, action: () => setActiveModal("gift") },
+        { id: "rsvp", icon: Calendar, label: "RSVP", show: true, action: scrollToRsvp },
+        { id: "map", icon: MapPin, label: isRoyalElegance ? "Lokasi" : "Map", show: data.enabledSections.location, action: scrollToLocation },
     ].filter(item => item.show);
 
     // Door animation styles
@@ -1329,70 +1380,157 @@ function PreviewSection({ data }: { data: EventData }) {
             {/* Phone/Desktop Preview */}
             <div className="flex justify-center">
                 <div
-                    className={`rounded-[40px] shadow-2xl border-4 border-[var(--glass-border)] overflow-hidden transition-all duration-500 relative ${viewMode === "mobile" ? "w-[320px] h-[640px]" : "w-full max-w-4xl h-[600px]"}`}
-                    style={{ backgroundColor: bgColor }}
+                    className={`rounded-[40px] shadow-2xl border-4 border-[var(--glass-border)] overflow-hidden transition-all duration-500 relative ${viewMode === "mobile" ? "w-[320px] h-[640px]" : "w-full max-w-4xl h-[600px]"} ${isRoyalElegance ? "royal-elegance-bg" : ""}`}
+                    style={{ backgroundColor: isRoyalElegance ? royalNavy : bgColor }}
                 >
+                    {/* Gold Ornamental Corners for Royal Elegance */}
+                    {isRoyalElegance && (
+                        <>
+                            <svg className="ornament-corner top-left" viewBox="0 0 120 120" fill="none">
+                                <path d="M0 0 C40 0 80 20 100 60 C110 100 120 120 120 120 L0 120 L0 0 Z" fill="url(#goldGrad)" opacity="0.15" />
+                                <path d="M10 5 Q50 10 70 40 Q85 65 95 110" stroke="#c9a55c" strokeWidth="1" fill="none" opacity="0.6" />
+                                <path d="M5 15 Q30 20 45 50 Q55 75 60 115" stroke="#c9a55c" strokeWidth="0.5" fill="none" opacity="0.4" />
+                                <circle cx="25" cy="25" r="8" stroke="#c9a55c" strokeWidth="0.5" fill="none" opacity="0.5" />
+                                <circle cx="25" cy="25" r="4" fill="#c9a55c" opacity="0.3" />
+                                <path d="M15 40 Q25 35 35 45 Q30 55 20 50 Q15 45 15 40 Z" fill="#c9a55c" opacity="0.25" />
+                                <path d="M40 15 Q50 10 55 20 Q50 30 40 28 Q35 25 40 15 Z" fill="#c9a55c" opacity="0.25" />
+                                <defs><linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#d4af37" /><stop offset="100%" stopColor="#c9a55c" /></linearGradient></defs>
+                            </svg>
+                            <svg className="ornament-corner top-right" viewBox="0 0 120 120" fill="none">
+                                <path d="M0 0 C40 0 80 20 100 60 C110 100 120 120 120 120 L0 120 L0 0 Z" fill="url(#goldGrad2)" opacity="0.15" />
+                                <path d="M10 5 Q50 10 70 40 Q85 65 95 110" stroke="#c9a55c" strokeWidth="1" fill="none" opacity="0.6" />
+                                <path d="M5 15 Q30 20 45 50 Q55 75 60 115" stroke="#c9a55c" strokeWidth="0.5" fill="none" opacity="0.4" />
+                                <circle cx="25" cy="25" r="8" stroke="#c9a55c" strokeWidth="0.5" fill="none" opacity="0.5" />
+                                <circle cx="25" cy="25" r="4" fill="#c9a55c" opacity="0.3" />
+                                <defs><linearGradient id="goldGrad2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#d4af37" /><stop offset="100%" stopColor="#c9a55c" /></linearGradient></defs>
+                            </svg>
+                            <svg className="ornament-corner bottom-left" viewBox="0 0 120 120" fill="none">
+                                <path d="M0 0 C40 0 80 20 100 60 C110 100 120 120 120 120 L0 120 L0 0 Z" fill="url(#goldGrad3)" opacity="0.15" />
+                                <path d="M10 5 Q50 10 70 40 Q85 65 95 110" stroke="#c9a55c" strokeWidth="1" fill="none" opacity="0.6" />
+                                <defs><linearGradient id="goldGrad3" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#d4af37" /><stop offset="100%" stopColor="#c9a55c" /></linearGradient></defs>
+                            </svg>
+                            <svg className="ornament-corner bottom-right" viewBox="0 0 120 120" fill="none">
+                                <path d="M0 0 C40 0 80 20 100 60 C110 100 120 120 120 120 L0 120 L0 0 Z" fill="url(#goldGrad4)" opacity="0.15" />
+                                <path d="M10 5 Q50 10 70 40 Q85 65 95 110" stroke="#c9a55c" strokeWidth="1" fill="none" opacity="0.6" />
+                                <defs><linearGradient id="goldGrad4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#d4af37" /><stop offset="100%" stopColor="#c9a55c" /></linearGradient></defs>
+                            </svg>
+                            {/* Sparkle dots */}
+                            <div className="sparkle-dot" style={{ top: '20%', left: '30%', animationDelay: '0s' }}></div>
+                            <div className="sparkle-dot" style={{ top: '35%', right: '25%', animationDelay: '1s' }}></div>
+                            <div className="sparkle-dot" style={{ top: '60%', left: '20%', animationDelay: '2s' }}></div>
+                            <div className="sparkle-dot" style={{ top: '75%', right: '30%', animationDelay: '0.5s' }}></div>
+                        </>
+                    )}
+
                     {/* Door Animation Overlay */}
                     {renderDoorAnimation()}
 
                     {/* Main Content (visible when door opens) */}
                     <div className={`h-full overflow-y-auto pb-20 transition-opacity duration-500 ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
                         {/* Section 1: Hero - Names & Date */}
-                        <div className="p-6 flex flex-col items-center justify-center text-center min-h-[280px]" style={{ fontFamily: selectedFont?.family }}>
-                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ backgroundColor: `${primaryColor}20` }}>
-                                <Sparkles className="w-7 h-7" style={{ color: primaryColor }} />
-                            </div>
-                            <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">You are cordially invited</p>
-
-                            {/* Event Name / Couple Names */}
-                            {isWedding && (data.coupleName1 || data.coupleName2) ? (
-                                <>
-                                    <h1 className="text-xl font-bold text-white mb-1">
-                                        {data.coupleName1 || "Bride"} <span style={{ color: primaryColor }}>&</span> {data.coupleName2 || "Groom"}
-                                    </h1>
-                                    <p className="text-gray-400 text-sm mb-2">{data.eventName || "Wedding Ceremony"}</p>
-                                </>
-                            ) : isBirthday && data.celebrantName ? (
-                                <>
-                                    <h1 className="text-xl font-bold text-white mb-1">{data.celebrantName}</h1>
-                                    <p className="text-gray-400 text-sm mb-2">{data.eventName || "Birthday Celebration"}</p>
-                                </>
-                            ) : (
-                                <>
-                                    <h1 className="text-xl font-bold text-white mb-1">{data.eventName || selectedTemplate?.name || "Your Event"}</h1>
-                                    <p className="text-gray-400 text-sm mb-2">{data.eventType || selectedTemplate?.category || "Event"}</p>
-                                </>
-                            )}
-
-                            {/* Date Display */}
-                            <div className="bg-white/5 border border-white/10 rounded-xl p-3 w-full mb-3">
-                                <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Save the Date</p>
-                                <p className="text-lg font-bold" style={{ color: primaryColor }}>
-                                    {data.eventDate ? formatEventDate(data.eventDate) : "Coming Soon"}
+                        {isRoyalElegance ? (
+                            // Royal Elegance Hero Section
+                            <div className="p-6 flex flex-col items-center justify-center text-center min-h-[400px] relative z-10" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                                <p className="text-xs uppercase tracking-[0.3em] mb-8" style={{ color: royalGold }}>
+                                    {data.eventName || "PERUTUSAN RAJA SEHARI"}
                                 </p>
-                                {data.eventTime && (
-                                    <p className="text-sm text-gray-300 mt-1">{data.eventTime}</p>
-                                )}
-                            </div>
 
-                            {/* Couple/Celebrant Photos */}
-                            {isWedding && (data.bridePhoto || data.groomPhoto) && (
-                                <div className="flex items-center justify-center gap-4 mt-2">
-                                    {data.bridePhoto && (
-                                        <img src={data.bridePhoto} alt="Bride" className="w-16 h-16 rounded-full object-cover border-2 border-pink-400" />
-                                    )}
-                                    {data.bridePhoto && data.groomPhoto && (
-                                        <div className="text-pink-400 text-2xl">&hearts;</div>
-                                    )}
-                                    {data.groomPhoto && (
-                                        <img src={data.groomPhoto} alt="Groom" className="w-16 h-16 rounded-full object-cover border-2 border-blue-400" />
+                                {isWedding && (data.coupleName1 || data.coupleName2) ? (
+                                    <>
+                                        <h1 className="text-4xl font-light tracking-[0.15em] mb-2 elegant-serif royal-gold-text">
+                                            {(data.coupleName1 || "PENGANTIN").toUpperCase()}
+                                        </h1>
+                                        <p className="text-2xl italic my-3" style={{ color: royalGold }}>&</p>
+                                        <h1 className="text-4xl font-light tracking-[0.15em] mb-8 elegant-serif royal-gold-text">
+                                            {(data.coupleName2 || "PENGANTIN").toUpperCase()}
+                                        </h1>
+                                    </>
+                                ) : (
+                                    <h1 className="text-3xl font-light tracking-[0.15em] mb-8 elegant-serif royal-gold-text">
+                                        {(data.eventName || "YOUR EVENT").toUpperCase()}
+                                    </h1>
+                                )}
+
+                                <p className="text-lg tracking-[0.2em]" style={{ color: royalGold }}>
+                                    {data.eventDate ? formatRoyalDate(data.eventDate) : "SABTU • 00.00.0000"}
+                                </p>
+                            </div>
+                        ) : (
+                            // Default Hero Section
+                            <div className="p-6 flex flex-col items-center justify-center text-center min-h-[280px]" style={{ fontFamily: selectedFont?.family }}>
+                                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3" style={{ backgroundColor: `${primaryColor}20` }}>
+                                    <Sparkles className="w-7 h-7" style={{ color: primaryColor }} />
+                                </div>
+                                <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">You are cordially invited</p>
+
+                                {/* Event Name / Couple Names */}
+                                {isWedding && (data.coupleName1 || data.coupleName2) ? (
+                                    <>
+                                        <h1 className="text-xl font-bold text-white mb-1">
+                                            {data.coupleName1 || "Bride"} <span style={{ color: primaryColor }}>&</span> {data.coupleName2 || "Groom"}
+                                        </h1>
+                                        <p className="text-gray-400 text-sm mb-2">{data.eventName || "Wedding Ceremony"}</p>
+                                    </>
+                                ) : isBirthday && data.celebrantName ? (
+                                    <>
+                                        <h1 className="text-xl font-bold text-white mb-1">{data.eventName || `${data.celebrantName}'s Birthday`}</h1>
+                                        <p className="text-gray-400 text-sm mb-2">Celebrating {data.celebrantName}</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <h1 className="text-xl font-bold text-white mb-1">{data.eventName || selectedTemplate?.name || "Your Event"}</h1>
+                                        {data.hostName && (
+                                            <p className="text-gray-400 text-sm mb-2">Hosted by {data.hostName}</p>
+                                        )}
+                                        {!data.hostName && (
+                                            <p className="text-gray-400 text-sm mb-2">{data.eventType || selectedTemplate?.category || "Event"}</p>
+                                        )}
+                                    </>
+                                )}
+
+                                {/* Date Display */}
+                                <div className="bg-white/5 border border-white/10 rounded-xl p-3 w-full mb-3">
+                                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Save the Date</p>
+                                    <p className="text-lg font-bold" style={{ color: primaryColor }}>
+                                        {data.eventDate ? formatEventDate(data.eventDate) : "Coming Soon"}
+                                    </p>
+                                    {data.eventTime && (
+                                        <p className="text-sm text-gray-300 mt-1">{data.eventTime}</p>
                                     )}
                                 </div>
-                            )}
-                            {isBirthday && data.celebrantPhoto && (
-                                <img src={data.celebrantPhoto} alt="Celebrant" className="w-20 h-20 rounded-full object-cover border-2 mt-2" style={{ borderColor: primaryColor }} />
-                            )}
-                        </div>
+
+                                {/* Couple/Celebrant/Client Photos */}
+                                {isWedding && (data.bridePhoto || data.groomPhoto) ? (
+                                    <div className="flex items-center justify-center gap-4 mt-2">
+                                        {data.bridePhoto && (
+                                            <img src={data.bridePhoto} alt="Bride" className="w-16 h-16 rounded-full object-cover border-2 border-pink-400" />
+                                        )}
+                                        {data.bridePhoto && data.groomPhoto && (
+                                            <div className="text-pink-400 text-2xl">&hearts;</div>
+                                        )}
+                                        {data.groomPhoto && (
+                                            <img src={data.groomPhoto} alt="Groom" className="w-16 h-16 rounded-full object-cover border-2 border-blue-400" />
+                                        )}
+                                    </div>
+                                ) : isBirthday && data.celebrantPhoto ? (
+                                    <img src={data.celebrantPhoto} alt={data.celebrantName || "Celebrant"} className="w-20 h-20 rounded-full object-cover border-2 mt-2" style={{ borderColor: primaryColor }} />
+                                ) : isBabyEvent && data.babyPhoto ? (
+                                    <img src={data.babyPhoto} alt="Baby" className="w-20 h-20 rounded-full object-cover border-2 mt-2" style={{ borderColor: primaryColor }} />
+                                ) : eventType.includes("corporate") && data.logoPhoto ? (
+                                    <img src={data.logoPhoto} alt="Company Logo" className="w-24 h-24 rounded-xl object-contain bg-white/10 p-2 mt-2" />
+                                ) : data.hostPhoto ? (
+                                    <img src={data.hostPhoto} alt={data.hostName || "Host"} className="w-20 h-20 rounded-full object-cover border-2 mt-2" style={{ borderColor: primaryColor }} />
+                                ) : (data.celebrantPhoto || data.bridePhoto || data.groomPhoto || data.babyPhoto) ? (
+                                    // Fallback: show any available photo
+                                    <img
+                                        src={data.celebrantPhoto || data.bridePhoto || data.groomPhoto || data.babyPhoto || ""}
+                                        alt="Event Photo"
+                                        className="w-20 h-20 rounded-full object-cover border-2 mt-2"
+                                        style={{ borderColor: primaryColor }}
+                                    />
+                                ) : null}
+                            </div>
+                        )}
 
                         {/* Section 2: Family / Parents */}
                         {(isWedding && (data.parentsBride || data.parentsGroom)) && (
@@ -1427,7 +1565,7 @@ function PreviewSection({ data }: { data: EventData }) {
 
                         {/* Section 3: Location & Schedule */}
                         {data.enabledSections.location && (data.venue || data.address) && (
-                            <div className="px-4 pb-4">
+                            <div ref={locationRef} className="px-4 pb-4">
                                 <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                     <div className="flex items-center gap-2 mb-3">
                                         <MapPin className="w-4 h-4" style={{ color: primaryColor }} />
@@ -1495,7 +1633,7 @@ function PreviewSection({ data }: { data: EventData }) {
                         )}
 
                         {/* RSVP Preview */}
-                        <div className="px-4 pb-4">
+                        <div ref={rsvpRef} className="px-4 pb-4">
                             <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                                 <div className="flex items-center gap-2 mb-3">
                                     <Check className="w-4 h-4" style={{ color: primaryColor }} />
@@ -1534,13 +1672,41 @@ function PreviewSection({ data }: { data: EventData }) {
                                     </div>
                                 </div>
                                 <div className="flex gap-2 mt-3">
-                                    <button className="flex-1 py-2 rounded-lg text-white text-xs font-medium" style={{ backgroundColor: primaryColor }}>
-                                        Attending
+                                    <button
+                                        onClick={() => setRsvpStatus(rsvpStatus === "attending" ? null : "attending")}
+                                        className={`flex-1 py-2 rounded-lg text-white text-xs font-medium transition-all ${rsvpStatus === "attending" ? "ring-2 ring-white ring-offset-2 ring-offset-black" : ""}`}
+                                        style={{ backgroundColor: rsvpStatus === "attending" ? primaryColor : `${primaryColor}80` }}
+                                    >
+                                        {rsvpStatus === "attending" ? "✓ Attending" : "Attending"}
                                     </button>
-                                    <button className="flex-1 py-2 rounded-lg bg-white/10 text-white text-xs font-medium">
-                                        Unable
+                                    <button
+                                        onClick={() => setRsvpStatus(rsvpStatus === "unable" ? null : "unable")}
+                                        className={`flex-1 py-2 rounded-lg text-white text-xs font-medium transition-all ${rsvpStatus === "unable" ? "ring-2 ring-white ring-offset-2 ring-offset-black bg-red-500/80" : "bg-white/10"}`}
+                                    >
+                                        {rsvpStatus === "unable" ? "✓ Unable" : "Unable"}
                                     </button>
                                 </div>
+                                {rsvpStatus && !rsvpSubmitted && (
+                                    <button
+                                        onClick={() => setRsvpSubmitted(true)}
+                                        className="w-full mt-3 py-2.5 rounded-lg text-white text-xs font-semibold transition-all hover:opacity-90"
+                                        style={{ backgroundColor: primaryColor }}
+                                    >
+                                        Submit RSVP
+                                    </button>
+                                )}
+                                {rsvpSubmitted && (
+                                    <div className="mt-3 p-3 rounded-lg bg-green-500/20 border border-green-500/30 text-center">
+                                        <p className="text-green-400 text-xs font-medium">✓ RSVP Submitted Successfully!</p>
+                                        <p className="text-gray-400 text-[10px] mt-1">This is a preview - no data was saved</p>
+                                        <button
+                                            onClick={() => { setRsvpSubmitted(false); setRsvpStatus(null); }}
+                                            className="text-[10px] text-gray-500 underline mt-2 hover:text-white"
+                                        >
+                                            Reset Preview
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -1574,20 +1740,50 @@ function PreviewSection({ data }: { data: EventData }) {
                                 </div>
                             </div>
                         )}
+
+                        {/* Company Brand Footer - Animated on scroll */}
+                        <div ref={footerRef} className="px-4 pt-8 pb-24">
+                            <div
+                                className={`text-center transition-all duration-700 ${footerVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+                            >
+                                <p className="text-xs text-gray-500 mb-2">Powered by</p>
+                                <h3 className="text-lg font-bold bg-gradient-to-r from-primary via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                    A2Z Creative
+                                </h3>
+                                <p className="text-xs text-gray-600 mt-1">Digital Invitations Made Beautiful</p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Floating Dock */}
                     {isOpen && (
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
-                            <div className="bg-black/80 backdrop-blur-xl rounded-2xl px-2 py-2 flex gap-1 shadow-xl border border-white/10">
+                            <div className={`rounded-2xl px-2 py-2 flex gap-1 shadow-xl ${isRoyalElegance ? 'royal-dock' : 'bg-black/80 backdrop-blur-xl border border-white/10'}`}>
+                                {/* Music Toggle Button */}
+                                {data.musicEnabled && (
+                                    <button
+                                        onClick={() => setIsMuted(!isMuted)}
+                                        className={`flex flex-col items-center px-3 py-1 rounded-xl transition-colors ${isMuted ? 'bg-red-500/20' : 'hover:bg-white/10'}`}
+                                    >
+                                        {isMuted ? (
+                                            <VolumeX className={`w-5 h-5 mb-0.5 ${isRoyalElegance ? 'text-red-800' : 'text-red-400'}`} />
+                                        ) : (
+                                            <Music className="w-5 h-5 mb-0.5" style={{ color: isRoyalElegance ? '#1a2744' : primaryColor }} />
+                                        )}
+                                        <span className={`text-[10px] ${isMuted ? (isRoyalElegance ? 'text-red-800' : 'text-red-400') : (isRoyalElegance ? 'text-[#1a2744]' : 'text-gray-400')}`}>
+                                            {isMuted ? 'Muted' : (isRoyalElegance ? 'Lagu' : 'Music')}
+                                        </span>
+                                    </button>
+                                )}
+                                {/* Other Dock Items */}
                                 {dockItems.map((item) => (
                                     <button
                                         key={item.id}
-                                        onClick={() => setActiveModal(item.id)}
-                                        className="flex flex-col items-center px-3 py-1 rounded-xl hover:bg-white/10 transition-colors"
+                                        onClick={item.action}
+                                        className={`flex flex-col items-center px-3 py-1 rounded-xl transition-colors ${isRoyalElegance ? 'hover:bg-white/20' : 'hover:bg-white/10'}`}
                                     >
-                                        <item.icon className="w-5 h-5 mb-0.5" style={{ color: primaryColor }} />
-                                        <span className="text-[10px] text-gray-400">{item.label}</span>
+                                        <item.icon className="w-5 h-5 mb-0.5" style={{ color: isRoyalElegance ? '#1a2744' : primaryColor }} />
+                                        <span className={`text-[10px] ${isRoyalElegance ? 'text-[#1a2744]' : 'text-gray-400'}`}>{item.label}</span>
                                     </button>
                                 ))}
                             </div>
@@ -1600,34 +1796,44 @@ function PreviewSection({ data }: { data: EventData }) {
                             <div className="bg-[#1a1a24] rounded-t-3xl w-full max-h-[70%] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
                                 <div className="w-12 h-1 bg-gray-600 rounded-full mx-auto mb-4" />
 
-                                {activeModal === "music" && (
-                                    <div>
-                                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                            <Music className="w-5 h-5" style={{ color: primaryColor }} /> Background Music
-                                        </h3>
-                                        <p className="text-gray-400">{selectedMusic?.name || "No music selected"}</p>
-                                        <button className="mt-4 w-full py-3 rounded-xl bg-white/10 text-white flex items-center justify-center gap-2">
-                                            <Play className="w-4 h-4" /> Play Music
-                                        </button>
-                                    </div>
-                                )}
-
                                 {activeModal === "contact" && (
                                     <div>
                                         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                             <Phone className="w-5 h-5" style={{ color: primaryColor }} /> Contact
                                         </h3>
-                                        {data.contacts.map((c, i) => (
-                                            <div key={i} className="flex items-center justify-between py-3 border-b border-white/10">
-                                                <div>
-                                                    <p className="text-white font-medium">{c.name || "Contact"}</p>
-                                                    <p className="text-sm text-gray-400">{c.role}</p>
-                                                </div>
-                                                <a href={`tel:${c.countryCode}${c.phone}`} className="px-4 py-2 rounded-lg bg-white/10 text-white text-sm">
-                                                    {c.countryCode}{c.phone}
-                                                </a>
+                                        {data.contacts.length === 0 ? (
+                                            <p className="text-gray-400 text-center py-4">No contacts added</p>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {data.contacts.map((c, i) => (
+                                                    <div key={i} className="bg-white/5 rounded-xl p-4">
+                                                        <div className="mb-3">
+                                                            <p className="text-white font-medium">{c.name || "Contact"}</p>
+                                                            {c.role && <p className="text-sm text-gray-400">{c.role}</p>}
+                                                            <p className="text-sm text-gray-500">{c.countryCode}{c.phone}</p>
+                                                        </div>
+                                                        <div className="flex gap-2">
+                                                            <a
+                                                                href={`tel:${c.countryCode}${c.phone.replace(/\s|-/g, '')}`}
+                                                                className="flex-1 py-2.5 rounded-lg bg-blue-500/20 text-blue-400 text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-500/30 transition-colors"
+                                                            >
+                                                                <Phone className="w-4 h-4" /> Call
+                                                            </a>
+                                                            {c.showWhatsApp !== false && (
+                                                                <a
+                                                                    href={`https://wa.me/${c.countryCode.replace('+', '')}${c.phone.replace(/\s|-/g, '')}`}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="flex-1 py-2.5 rounded-lg bg-green-500/20 text-green-400 text-sm font-medium flex items-center justify-center gap-2 hover:bg-green-500/30 transition-colors"
+                                                                >
+                                                                    <MessageSquare className="w-4 h-4" /> WhatsApp
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
                                 )}
 
