@@ -281,7 +281,7 @@ function CreateEventContent() {
                             <p className="text-foreground-muted text-sm capitalize">{planId} Pack</p>
                         </div>
                         <Link
-                            href={`/events/create/details?plan=${planId}&type=${encodeURIComponent(selectedType)}`}
+                            href={`/events/new/builder?plan=${planId}&type=${encodeURIComponent(selectedType)}`}
                             className="btn-primary flex items-center gap-2"
                         >
                             Continue to Details
