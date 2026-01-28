@@ -21,7 +21,7 @@ import {
     Gem,
     Palette,
     PenTool,
-    Image,
+    Image as ImageIcon,
     Music,
     VolumeX,
     Play,
@@ -64,8 +64,12 @@ import {
     X,
     Navigation,
     type LucideIcon,
+    UserRound,
+    Settings,
 } from "lucide-react";
 import TimePicker from "@/components/ui/TimePicker";
+import DatePicker from "@/components/ui/DatePicker";
+import Image from "next/image";
 
 // ============= TYPES =============
 interface EventData {
@@ -150,16 +154,17 @@ interface PhysicalGift {
 
 // ============= CONSTANTS =============
 const STEPS = [
-    { id: 1, name: "Template", key: "template" },
-    { id: 2, name: "Theme", key: "theme" },
-    { id: 3, name: "Music", key: "music" },
-    { id: 4, name: "Sections", key: "sections" },
-    { id: 5, name: "Contact", key: "contact" },
-    { id: 6, name: "Itinerary", key: "itinerary" },
-    { id: 7, name: "Gift", key: "gift" },
-    { id: 8, name: "Preview", key: "preview" },
-    { id: 9, name: "Payment", key: "payment" },
-    { id: 10, name: "Send", key: "send" },
+    { id: 1, name: "Details", key: "details" },
+    { id: 2, name: "Template", key: "template" },
+    { id: 3, name: "Theme", key: "theme" },
+    { id: 4, name: "Music", key: "music" },
+    { id: 5, name: "Sections", key: "sections" },
+    { id: 6, name: "Contact", key: "contact" },
+    { id: 7, name: "Itinerary", key: "itinerary" },
+    { id: 8, name: "Gift", key: "gift" },
+    { id: 9, name: "Preview", key: "preview" },
+    { id: 10, name: "Payment", key: "payment" },
+    { id: 11, name: "Send", key: "send" },
 ];
 
 const templateIcons: Record<string, LucideIcon> = {
@@ -349,7 +354,7 @@ const sectionIcons: Record<string, LucideIcon> = {
     itinerary: Calendar,
     contact: User,
     gift: Gift,
-    gallery: Image,
+    gallery: ImageIcon,
     video: Video,
     countdown: Clock,
     wishes: MessageSquare,
@@ -438,6 +443,506 @@ const initialEventData: EventData = {
 };
 
 // ============= SECTION COMPONENTS =============
+function DetailsSection({ data, onChange }: { data: EventData; onChange: (d: Partial<EventData>) => void }) {
+    const [uploading, setUploading] = useState<string | null>(null);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+    const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+    // Event type detection
+    const eventType = data.eventType || "Event";
+    const isWedding = eventType.toLowerCase().includes("wedding") || eventType.toLowerCase().includes("nikah") || eventType.toLowerCase().includes("engagement");
+    const isBirthday = eventType.toLowerCase().includes("birthday") || eventType.toLowerCase().includes("surprise");
+    const isBabyEvent = eventType.toLowerCase().includes("baby") || eventType.toLowerCase().includes("aqiqah");
+    const isGraduation = eventType.toLowerCase().includes("graduation");
+    const isCorporate = eventType.toLowerCase().includes("corporate") || eventType.toLowerCase().includes("seminar") || eventType.toLowerCase().includes("conference") || eventType.toLowerCase().includes("summit") || eventType.toLowerCase().includes("product launch") || eventType.toLowerCase().includes("annual dinner") || eventType.toLowerCase().includes("award") || eventType.toLowerCase().includes("government");
+    const isFamilyEvent = eventType.toLowerCase().includes("family") || eventType.toLowerCase().includes("reunion") || eventType.toLowerCase().includes("housewarming") || eventType.toLowerCase().includes("kenduri") || eventType.toLowerCase().includes("religious") || eventType.toLowerCase().includes("ceramah") || eventType.toLowerCase().includes("gala") || eventType.toLowerCase().includes("invite-only");
+
+    const handlePhotoUpload = async (file: File, type: string) => {
+        if (file.size > MAX_FILE_SIZE) {
+            setUploadError("File must be under 2MB");
+            return;
+        }
+        if (!file.type.startsWith("image/")) {
+            setUploadError("Please upload an image file");
+            return;
+        }
+
+        setUploading(type);
+        setUploadError(null);
+
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("folder", `events/new/${type}`);
+
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || "Upload failed");
+
+            // Update data based on type
+            const updates: Partial<EventData> = {};
+            switch (type) {
+                case "bride": updates.bridePhoto = result.url; break;
+                case "groom": updates.groomPhoto = result.url; break;
+                case "celebrant": updates.celebrantPhoto = result.url; break;
+                case "baby": updates.babyPhoto = result.url; break;
+                case "logo": updates.logoPhoto = result.url; break;
+                case "host": updates.hostPhoto = result.url; break;
+            }
+            onChange(updates);
+        } catch (error) {
+            setUploadError(error instanceof Error ? error.message : "Upload failed");
+        } finally {
+            setUploading(null);
+        }
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: string) => {
+        const file = e.target.files?.[0];
+        if (file) handlePhotoUpload(file, type);
+        e.target.value = "";
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        onChange({ [e.target.name]: e.target.value } as Partial<EventData>);
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="glass-card p-8 space-y-6 animate-fade-in">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white">Event Details</h2>
+                    <span className="text-sm px-3 py-1 bg-primary/20 text-primary rounded-full border border-primary/30">
+                        {eventType}
+                    </span>
+                </div>
+
+                {/* Event Name */}
+                <div>
+                    <label className="block text-sm font-medium text-foreground-muted mb-2">
+                        Event Name *
+                    </label>
+                    <input
+                        type="text"
+                        name="eventName"
+                        value={data.eventName}
+                        onChange={handleChange}
+                        placeholder="e.g., Majlis Perkahwinan Alia & Ahmad"
+                        className="input-field"
+                    />
+                </div>
+
+                {/* Wedding Specific: Couple Names */}
+                {isWedding && (
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                    Bride Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="coupleName1"
+                                    value={data.coupleName1}
+                                    onChange={handleChange}
+                                    placeholder="Alia binti Ahmad"
+                                    className="input-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                    Groom Name
+                                </label>
+                                <input
+                                    type="text"
+                                    name="coupleName2"
+                                    value={data.coupleName2}
+                                    onChange={handleChange}
+                                    placeholder="Ahmad bin Ali"
+                                    className="input-field"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Parents Names */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                    Bride's Parents
+                                </label>
+                                <input
+                                    type="text"
+                                    name="parentsBride"
+                                    value={data.parentsBride}
+                                    onChange={handleChange}
+                                    placeholder="Encik Ahmad & Puan Fatimah"
+                                    className="input-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                    Groom's Parents
+                                </label>
+                                <input
+                                    type="text"
+                                    name="parentsGroom"
+                                    value={data.parentsGroom}
+                                    onChange={handleChange}
+                                    placeholder="Encik Ali & Puan Aminah"
+                                    className="input-field"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Couple Photos */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground-muted mb-3">
+                                Couple Photos <span className="text-foreground-muted/60">(Optional)</span>
+                            </label>
+
+                            {uploadError && (
+                                <div className="p-2 mb-3 bg-error/20 border border-error/30 rounded-lg text-error text-xs flex items-center gap-2">
+                                    <X className="w-4 h-4" />
+                                    {uploadError}
+                                </div>
+                            )}
+
+                            <div className="py-4">
+                                <div className="flex items-center justify-center gap-6">
+                                    {/* Bride Photo */}
+                                    <div className="text-center">
+                                        {data.bridePhoto ? (
+                                            <div className="relative inline-block">
+                                                <Image
+                                                    src={data.bridePhoto}
+                                                    alt="Bride"
+                                                    width={80}
+                                                    height={80}
+                                                    className="w-20 h-20 rounded-full object-cover border-2 border-pink-400"
+                                                />
+                                                <button
+                                                    onClick={() => onChange({ bridePhoto: null })}
+                                                    className="absolute -top-1 -right-1 p-1 bg-error rounded-full text-white hover:bg-error/80"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <label className="w-20 h-20 rounded-full border-2 border-dashed border-pink-400/50 flex items-center justify-center cursor-pointer hover:border-pink-400 hover:bg-pink-400/10 transition-colors">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => handleFileSelect(e, "bride")}
+                                                    disabled={uploading !== null}
+                                                />
+                                                {uploading === "bride" ? (
+                                                    <Loader2 className="w-6 h-6 text-pink-400 animate-spin" />
+                                                ) : (
+                                                    <UserRound className="w-6 h-6 text-pink-400" />
+                                                )}
+                                            </label>
+                                        )}
+                                        <p className="text-xs text-foreground-muted mt-1">Bride</p>
+                                    </div>
+
+                                    <div className="w-5 h-5 text-red-400">♥</div>
+
+                                    {/* Groom Photo */}
+                                    <div className="text-center">
+                                        {data.groomPhoto ? (
+                                            <div className="relative inline-block">
+                                                <Image
+                                                    src={data.groomPhoto}
+                                                    alt="Groom"
+                                                    width={80}
+                                                    height={80}
+                                                    className="w-20 h-20 rounded-full object-cover border-2 border-blue-400"
+                                                />
+                                                <button
+                                                    onClick={() => onChange({ groomPhoto: null })}
+                                                    className="absolute -top-1 -right-1 p-1 bg-error rounded-full text-white hover:bg-error/80"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <label className="w-20 h-20 rounded-full border-2 border-dashed border-blue-400/50 flex items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-400/10 transition-colors">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => handleFileSelect(e, "groom")}
+                                                    disabled={uploading !== null}
+                                                />
+                                                {uploading === "groom" ? (
+                                                    <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                                                ) : (
+                                                    <UserRound className="w-6 h-6 text-blue-400" />
+                                                )}
+                                            </label>
+                                        )}
+                                        <p className="text-xs text-foreground-muted mt-1">Groom</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-xs text-foreground-muted text-center mt-2">Max 2MB • JPG, PNG, WebP</p>
+                        </div>
+                    </>
+                )}
+
+                {/* Birthday Specific: Celebrant Name + Photo */}
+                {isBirthday && (
+                    <>
+                        <div>
+                            <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                Celebrant Name
+                            </label>
+                            <input
+                                type="text"
+                                name="celebrantName"
+                                value={data.celebrantName}
+                                onChange={handleChange}
+                                placeholder="Name of the birthday person"
+                                className="input-field"
+                            />
+                        </div>
+                        {/* Celebrant Photo */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground-muted mb-3">
+                                Celebrant Photo <span className="text-foreground-muted/60">(Optional)</span>
+                            </label>
+                            <div className="flex justify-center py-4">
+                                <div className="text-center">
+                                    {data.celebrantPhoto ? (
+                                        <div className="relative inline-block">
+                                            <Image src={data.celebrantPhoto} alt="Celebrant" width={96} height={96} className="w-24 h-24 rounded-full object-cover border-2 border-primary" />
+                                            <button onClick={() => onChange({ celebrantPhoto: null })} className="absolute -top-1 -right-1 p-1 bg-error rounded-full text-white hover:bg-error/80"><X className="w-3 h-3" /></button>
+                                        </div>
+                                    ) : (
+                                        <label className="w-24 h-24 rounded-full border-2 border-dashed border-primary/50 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/10 transition-colors">
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelect(e, "celebrant")} disabled={uploading !== null} />
+                                            {uploading === "celebrant" ? <Loader2 className="w-8 h-8 text-primary animate-spin" /> : <UserRound className="w-8 h-8 text-primary" />}
+                                        </label>
+                                    )}
+                                    <p className="text-xs text-foreground-muted mt-2">Birthday Person</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-foreground-muted text-center">Max 2MB • JPG, PNG, WebP</p>
+                        </div>
+                    </>
+                )}
+
+                {/* Corporate Specific */}
+                {isCorporate && (
+                    <>
+                        <div>
+                            <label className="block text-sm font-medium text-foreground-muted mb-2">
+                                Company / Organization
+                            </label>
+                            <input
+                                type="text"
+                                name="companyName"
+                                value={data.companyName}
+                                onChange={handleChange}
+                                placeholder="Company name"
+                                className="input-field"
+                            />
+                        </div>
+                        {/* Organization Logo */}
+                        <div>
+                            <label className="block text-sm font-medium text-foreground-muted mb-3">
+                                Organization Logo <span className="text-foreground-muted/60">(Optional)</span>
+                            </label>
+                            <div className="flex justify-center py-4">
+                                <div className="text-center">
+                                    {data.logoPhoto ? (
+                                        <div className="relative inline-block">
+                                            <Image src={data.logoPhoto} alt="Logo" width={96} height={96} className="w-24 h-24 rounded-xl object-contain border-2 border-secondary bg-white p-2" />
+                                            <button onClick={() => onChange({ logoPhoto: null })} className="absolute -top-1 -right-1 p-1 bg-error rounded-full text-white hover:bg-error/80"><X className="w-3 h-3" /></button>
+                                        </div>
+                                    ) : (
+                                        <label className="w-24 h-24 rounded-xl border-2 border-dashed border-secondary/50 flex items-center justify-center cursor-pointer hover:border-secondary hover:bg-secondary/10 transition-colors">
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelect(e, "logo")} disabled={uploading !== null} />
+                                            {uploading === "logo" ? <Loader2 className="w-8 h-8 text-secondary animate-spin" /> : <ImageIcon className="w-8 h-8 text-secondary" />}
+                                        </label>
+                                    )}
+                                    <p className="text-xs text-foreground-muted mt-2">Company Logo</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-foreground-muted text-center">Max 2MB • JPG, PNG, WebP</p>
+                        </div>
+                    </>
+                )}
+
+                {/* Baby Shower */}
+                {isBabyEvent && (
+                    <div>
+                        <label className="block text-sm font-medium text-foreground-muted mb-3">
+                            Baby Photo <span className="text-foreground-muted/60">(Optional)</span>
+                        </label>
+                        <div className="flex justify-center py-4">
+                            <div className="text-center">
+                                {data.babyPhoto ? (
+                                    <div className="relative inline-block">
+                                        <Image src={data.babyPhoto} alt="Baby" width={96} height={96} className="w-24 h-24 rounded-full object-cover border-2 border-pink-300" />
+                                        <button onClick={() => onChange({ babyPhoto: null })} className="absolute -top-1 -right-1 p-1 bg-error rounded-full text-white hover:bg-error/80"><X className="w-3 h-3" /></button>
+                                    </div>
+                                ) : (
+                                    <label className="w-24 h-24 rounded-full border-2 border-dashed border-pink-300/50 flex items-center justify-center cursor-pointer hover:border-pink-300 hover:bg-pink-300/10 transition-colors">
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelect(e, "baby")} disabled={uploading !== null} />
+                                        {uploading === "baby" ? <Loader2 className="w-8 h-8 text-pink-300 animate-spin" /> : <UserRound className="w-8 h-8 text-pink-300" />}
+                                    </label>
+                                )}
+                                <p className="text-xs text-foreground-muted mt-2">Baby Photo</p>
+                            </div>
+                        </div>
+                        <p className="text-xs text-foreground-muted text-center">Max 2MB • JPG, PNG, WebP</p>
+                    </div>
+                )}
+
+                {/* Graduation */}
+                {isGraduation && (
+                    <div>
+                        <label className="block text-sm font-medium text-foreground-muted mb-3">
+                            Graduate Photo <span className="text-foreground-muted/60">(Optional)</span>
+                        </label>
+                        <div className="flex justify-center py-4">
+                            <div className="text-center">
+                                {data.celebrantPhoto ? (
+                                    <div className="relative inline-block">
+                                        <Image src={data.celebrantPhoto} alt="Graduate" width={96} height={96} className="w-24 h-24 rounded-full object-cover border-2 border-yellow-500" />
+                                        <button onClick={() => onChange({ celebrantPhoto: null })} className="absolute -top-1 -right-1 p-1 bg-error rounded-full text-white hover:bg-error/80"><X className="w-3 h-3" /></button>
+                                    </div>
+                                ) : (
+                                    <label className="w-24 h-24 rounded-full border-2 border-dashed border-yellow-500/50 flex items-center justify-center cursor-pointer hover:border-yellow-500 hover:bg-yellow-500/10 transition-colors">
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelect(e, "celebrant")} disabled={uploading !== null} />
+                                        {uploading === "celebrant" ? <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" /> : <UserRound className="w-8 h-8 text-yellow-500" />}
+                                    </label>
+                                )}
+                                <p className="text-xs text-foreground-muted mt-2">Graduate</p>
+                            </div>
+                        </div>
+                        <p className="text-xs text-foreground-muted text-center">Max 2MB • JPG, PNG, WebP</p>
+                    </div>
+                )}
+
+                {/* Family Events */}
+                {isFamilyEvent && (
+                    <div>
+                        <label className="block text-sm font-medium text-foreground-muted mb-3">
+                            Host Photo <span className="text-foreground-muted/60">(Optional)</span>
+                        </label>
+                        <div className="flex justify-center py-4">
+                            <div className="text-center">
+                                {data.hostPhoto ? (
+                                    <div className="relative inline-block">
+                                        <Image src={data.hostPhoto} alt="Host" width={96} height={96} className="w-24 h-24 rounded-full object-cover border-2 border-green-400" />
+                                        <button onClick={() => onChange({ hostPhoto: null })} className="absolute -top-1 -right-1 p-1 bg-error rounded-full text-white hover:bg-error/80"><X className="w-3 h-3" /></button>
+                                    </div>
+                                ) : (
+                                    <label className="w-24 h-24 rounded-full border-2 border-dashed border-green-400/50 flex items-center justify-center cursor-pointer hover:border-green-400 hover:bg-green-400/10 transition-colors">
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelect(e, "host")} disabled={uploading !== null} />
+                                        {uploading === "host" ? <Loader2 className="w-8 h-8 text-green-400 animate-spin" /> : <UserRound className="w-8 h-8 text-green-400" />}
+                                    </label>
+                                )}
+                                <p className="text-xs text-foreground-muted mt-2">Host / Organizer</p>
+                            </div>
+                        </div>
+                        <p className="text-xs text-foreground-muted text-center">Max 2MB • JPG, PNG, WebP</p>
+                    </div>
+                )}
+
+                {/* Date & Time */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-foreground-muted mb-2">
+                            Date *
+                        </label>
+                        <DatePicker
+                            value={data.eventDate}
+                            onChange={(value: string) => onChange({ eventDate: value })}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-foreground-muted mb-2">
+                            Time *
+                        </label>
+                        <TimePicker
+                            value={data.eventTime}
+                            onChange={(value: string) => onChange({ eventTime: value })}
+                        />
+                    </div>
+                </div>
+
+                {/* Venue */}
+                <div>
+                    <label className="block text-sm font-medium text-foreground-muted mb-2">
+                        Venue Name *
+                    </label>
+                    <input
+                        type="text"
+                        name="venue"
+                        value={data.venue}
+                        onChange={handleChange}
+                        placeholder="e.g., Dewan Seri Endon, PWTC"
+                        className="input-field"
+                    />
+                </div>
+
+                {/* Address */}
+                <div>
+                    <label className="block text-sm font-medium text-foreground-muted mb-2">
+                        Full Address
+                    </label>
+                    <input
+                        type="text"
+                        name="address"
+                        value={data.address}
+                        onChange={handleChange}
+                        placeholder="Full address with postcode"
+                        className="input-field"
+                    />
+                </div>
+
+                {/* Host Name */}
+                <div>
+                    <label className="block text-sm font-medium text-foreground-muted mb-2">
+                        Host Name
+                    </label>
+                    <input
+                        type="text"
+                        name="hostName"
+                        value={data.hostName}
+                        onChange={handleChange}
+                        placeholder="e.g., Encik Ahmad & Puan Fatimah"
+                        className="input-field"
+                    />
+                </div>
+
+                {/* Description */}
+                <div>
+                    <label className="block text-sm font-medium text-foreground-muted mb-2">
+                        Event Description (Optional)
+                    </label>
+                    <textarea
+                        name="description"
+                        value={data.description}
+                        onChange={handleChange}
+                        placeholder="Brief description or special notes about your event"
+                        rows={3}
+                        className="input-field resize-none"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function TemplateSection({ data, onChange }: { data: EventData; onChange: (d: Partial<EventData>) => void }) {
     const filteredTemplates = data.templateCategory === "All"
         ? templates
@@ -548,7 +1053,7 @@ function ThemeSection({ data, onChange }: { data: EventData; onChange: (d: Parti
             </div>
             <div className="glass-card p-6">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Image className="w-5 h-5 text-primary" />
+                    <ImageIcon className="w-5 h-5 text-primary" />
                     Background Style
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -2037,6 +2542,13 @@ function EventBuilderContent() {
         eventType: eventTypeFromUrl,
     }));
 
+    // Re-sync event type if URL changes
+    useEffect(() => {
+        if (eventTypeFromUrl && eventTypeFromUrl !== eventData.eventType) {
+            setEventData(prev => ({ ...prev, eventType: eventTypeFromUrl }));
+        }
+    }, [eventTypeFromUrl]);
+
     // Load event details from localStorage (saved from /events/create/details)
     useEffect(() => {
         const savedDetails = localStorage.getItem('eventDetails');
@@ -2087,6 +2599,7 @@ function EventBuilderContent() {
 
     const renderSection = (stepKey: string) => {
         switch (stepKey) {
+            case "details": return <DetailsSection data={eventData} onChange={updateData} />;
             case "template": return <TemplateSection data={eventData} onChange={updateData} />;
             case "theme": return <ThemeSection data={eventData} onChange={updateData} />;
             case "music": return <MusicSection data={eventData} onChange={updateData} />;
