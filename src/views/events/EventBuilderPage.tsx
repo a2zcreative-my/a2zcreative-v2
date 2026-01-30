@@ -66,6 +66,7 @@ import {
     type LucideIcon,
     UserRound,
     Settings,
+    ExternalLink,
 } from "lucide-react";
 import TimePicker from "@/components/ui/TimePicker";
 import DatePicker from "@/components/ui/DatePicker";
@@ -139,17 +140,20 @@ interface BankDetails {
     bankName: string;
     accountNumber: string;
     accountHolder: string;
+    qrCodeImage: string;
 }
 
 interface EwalletDetails {
     provider: string;
     phoneNumber: string;
     accountName: string;
+    qrCodeImage: string;
 }
 
 interface PhysicalGift {
     address: string;
     notes: string;
+    registryLink: string;
 }
 
 // ============= CONSTANTS =============
@@ -371,6 +375,9 @@ const malaysianBanks = [
     { name: "Bank Rakyat", color: "#003D7C", textColor: "#ffffff" },
     { name: "BSN", color: "#0072BC", textColor: "#ffffff" },
     { name: "Affin Bank", color: "#004B93", textColor: "#ffffff" },
+    { name: "Standard Chartered", color: "#0072AA", textColor: "#ffffff" },
+    { name: "UOB", color: "#0038A8", textColor: "#ffffff" },
+    { name: "HSBC", color: "#DB0011", textColor: "#ffffff" },
 ];
 
 const doorAnimations = [
@@ -416,9 +423,9 @@ const initialEventData: EventData = {
     contacts: [{ id: "1", name: "", phone: "", countryCode: "+60", role: "", showWhatsApp: true }],
     itinerary: [{ id: "1", time: "12:00", activity: "", location: "" }],
     giftType: "bank",
-    bankDetails: { bankName: "", accountNumber: "", accountHolder: "" },
-    ewalletDetails: { provider: "", phoneNumber: "", accountName: "" },
-    physicalGift: { address: "", notes: "" },
+    bankDetails: { bankName: "", accountNumber: "", accountHolder: "", qrCodeImage: "" },
+    ewalletDetails: { provider: "", phoneNumber: "", accountName: "", qrCodeImage: "" },
+    physicalGift: { address: "", notes: "", registryLink: "" },
     // Event Details
     eventName: "",
     eventDate: "",
@@ -1370,11 +1377,31 @@ function ItinerarySection({ data, onChange }: { data: EventData; onChange: (d: P
 }
 
 function GiftSection({ data, onChange }: { data: EventData; onChange: (d: Partial<EventData>) => void }) {
+    const [bankDropdownOpen, setBankDropdownOpen] = useState(false);
+    const [ewalletDropdownOpen, setEwalletDropdownOpen] = useState(false);
+    const bankDropdownRef = useRef<HTMLDivElement>(null);
+    const ewalletDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (bankDropdownRef.current && !bankDropdownRef.current.contains(event.target as Node)) {
+                setBankDropdownOpen(false);
+            }
+            if (ewalletDropdownRef.current && !ewalletDropdownRef.current.contains(event.target as Node)) {
+                setEwalletDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     const giftTypes = [
         { id: "bank", name: "Bank Transfer", Icon: Landmark },
         { id: "ewallet", name: "E-Wallet", Icon: Smartphone },
         { id: "physical", name: "Physical Gift", Icon: Package },
     ];
+
 
     return (
         <div className="space-y-6">
@@ -1405,26 +1432,61 @@ function GiftSection({ data, onChange }: { data: EventData; onChange: (d: Partia
                     </h3>
                     <div>
                         <label className="text-sm text-foreground-muted block mb-2">Bank Name *</label>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {malaysianBanks.map(bank => (
-                                <button
-                                    key={bank.name}
-                                    type="button"
-                                    onClick={() => onChange({ bankDetails: { ...data.bankDetails, bankName: bank.name } })}
-                                    className={`p-3 rounded-xl flex items-center gap-3 transition-all ${data.bankDetails.bankName === bank.name
-                                        ? "ring-2 ring-primary bg-primary/10"
-                                        : "bg-background-tertiary hover:bg-[var(--glass-bg)]"
-                                        }`}
-                                >
-                                    <div
-                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                                        style={{ backgroundColor: bank.color, color: bank.textColor }}
-                                    >
-                                        {bank.name.charAt(0)}
-                                    </div>
-                                    <span className="text-white text-sm font-medium text-left">{bank.name}</span>
-                                </button>
-                            ))}
+                        <div className="relative" ref={bankDropdownRef}>
+                            <button
+                                type="button"
+                                onClick={() => setBankDropdownOpen(!bankDropdownOpen)}
+                                className="input-field h-14 text-base w-full text-left flex items-center gap-3 pr-10 cursor-pointer"
+                            >
+                                {data.bankDetails.bankName ? (
+                                    <>
+                                        <div
+                                            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                                            style={{
+                                                backgroundColor: malaysianBanks.find(b => b.name === data.bankDetails.bankName)?.color || '#6366f1',
+                                                color: malaysianBanks.find(b => b.name === data.bankDetails.bankName)?.textColor || '#fff'
+                                            }}
+                                        >
+                                            {data.bankDetails.bankName.charAt(0)}
+                                        </div>
+                                        <span className="text-white">{data.bankDetails.bankName}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="w-8 h-8 rounded-lg bg-background-tertiary flex items-center justify-center shrink-0">
+                                            <Landmark className="w-4 h-4 text-foreground-muted" />
+                                        </div>
+                                        <span className="text-foreground-muted">Select a bank</span>
+                                    </>
+                                )}
+                                <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted transition-transform ${bankDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {bankDropdownOpen && (
+                                <div className="absolute z-50 w-full mt-1 bg-background-secondary border border-white/10 rounded-xl shadow-xl max-h-64 overflow-y-auto">
+                                    {malaysianBanks.map(bank => (
+                                        <button
+                                            key={bank.name}
+                                            type="button"
+                                            onClick={() => {
+                                                onChange({ bankDetails: { ...data.bankDetails, bankName: bank.name } });
+                                                setBankDropdownOpen(false);
+                                            }}
+                                            className={`w-full p-3 flex items-center gap-3 hover:bg-white/5 transition-colors ${data.bankDetails.bankName === bank.name ? 'bg-primary/10' : ''}`}
+                                        >
+                                            <div
+                                                className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                                                style={{ backgroundColor: bank.color, color: bank.textColor }}
+                                            >
+                                                {bank.name.charAt(0)}
+                                            </div>
+                                            <span className="text-white text-sm">{bank.name}</span>
+                                            {data.bankDetails.bankName === bank.name && (
+                                                <Check className="w-4 h-4 text-primary ml-auto" />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div>
@@ -1447,6 +1509,51 @@ function GiftSection({ data, onChange }: { data: EventData; onChange: (d: Partia
                             className="input-field h-14 text-base"
                         />
                     </div>
+                    {/* QR Code Upload */}
+                    <div>
+                        <label className="text-sm text-foreground-muted block mb-2">Payment QR Code (Optional)</label>
+                        <p className="text-xs text-foreground-muted mb-3">Upload your DuitNow QR or bank QR code for easy payment</p>
+                        {data.bankDetails.qrCodeImage ? (
+                            <div className="relative group">
+                                <img
+                                    src={data.bankDetails.qrCodeImage}
+                                    alt="Payment QR Code"
+                                    className="w-48 h-48 object-contain rounded-xl border border-white/10 bg-white mx-auto"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => onChange({ bankDetails: { ...data.bankDetails, qrCodeImage: "" } })}
+                                    className="absolute top-2 right-2 p-2 rounded-full bg-error/80 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ) : (
+                            <label className="flex flex-col items-center justify-center w-48 h-48 mx-auto border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                <Upload className="w-8 h-8 text-foreground-muted mb-2" />
+                                <span className="text-sm text-foreground-muted">Upload QR Code</span>
+                                <span className="text-xs text-foreground-muted mt-1">PNG, JPG up to 2MB</span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        if (file.size > 2 * 1024 * 1024) {
+                                            alert("File size must be less than 2MB");
+                                            return;
+                                        }
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            onChange({ bankDetails: { ...data.bankDetails, qrCodeImage: reader.result as string } });
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }}
+                                />
+                            </label>
+                        )}
+                    </div>
                 </div>
             )}
             {data.giftType === "ewallet" && (
@@ -1456,26 +1563,61 @@ function GiftSection({ data, onChange }: { data: EventData; onChange: (d: Partia
                     </h3>
                     <div>
                         <label className="text-sm text-foreground-muted block mb-2">Provider *</label>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {eWallets.map(wallet => (
-                                <button
-                                    key={wallet.name}
-                                    type="button"
-                                    onClick={() => onChange({ ewalletDetails: { ...data.ewalletDetails, provider: wallet.name } })}
-                                    className={`p-3 rounded-xl flex items-center gap-3 transition-all ${data.ewalletDetails.provider === wallet.name
-                                        ? "ring-2 ring-primary bg-primary/10"
-                                        : "bg-background-tertiary hover:bg-[var(--glass-bg)]"
-                                        }`}
-                                >
-                                    <div
-                                        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                                        style={{ backgroundColor: wallet.color, color: wallet.textColor }}
-                                    >
-                                        {wallet.name.charAt(0)}
-                                    </div>
-                                    <span className="text-white text-sm font-medium text-left">{wallet.name}</span>
-                                </button>
-                            ))}
+                        <div className="relative" ref={ewalletDropdownRef}>
+                            <button
+                                type="button"
+                                onClick={() => setEwalletDropdownOpen(!ewalletDropdownOpen)}
+                                className="input-field h-14 text-base w-full text-left flex items-center gap-3 pr-10 cursor-pointer"
+                            >
+                                {data.ewalletDetails.provider ? (
+                                    <>
+                                        <div
+                                            className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                                            style={{
+                                                backgroundColor: eWallets.find(w => w.name === data.ewalletDetails.provider)?.color || '#6366f1',
+                                                color: eWallets.find(w => w.name === data.ewalletDetails.provider)?.textColor || '#fff'
+                                            }}
+                                        >
+                                            {data.ewalletDetails.provider.charAt(0)}
+                                        </div>
+                                        <span className="text-white">{data.ewalletDetails.provider}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="w-8 h-8 rounded-lg bg-background-tertiary flex items-center justify-center shrink-0">
+                                            <Smartphone className="w-4 h-4 text-foreground-muted" />
+                                        </div>
+                                        <span className="text-foreground-muted">Select a provider</span>
+                                    </>
+                                )}
+                                <ChevronDown className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted transition-transform ${ewalletDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {ewalletDropdownOpen && (
+                                <div className="absolute z-50 w-full mt-1 bg-background-secondary border border-white/10 rounded-xl shadow-xl max-h-64 overflow-y-auto">
+                                    {eWallets.map(wallet => (
+                                        <button
+                                            key={wallet.name}
+                                            type="button"
+                                            onClick={() => {
+                                                onChange({ ewalletDetails: { ...data.ewalletDetails, provider: wallet.name } });
+                                                setEwalletDropdownOpen(false);
+                                            }}
+                                            className={`w-full p-3 flex items-center gap-3 hover:bg-white/5 transition-colors ${data.ewalletDetails.provider === wallet.name ? 'bg-primary/10' : ''}`}
+                                        >
+                                            <div
+                                                className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
+                                                style={{ backgroundColor: wallet.color, color: wallet.textColor }}
+                                            >
+                                                {wallet.name.charAt(0)}
+                                            </div>
+                                            <span className="text-white text-sm">{wallet.name}</span>
+                                            {data.ewalletDetails.provider === wallet.name && (
+                                                <Check className="w-4 h-4 text-primary ml-auto" />
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div>
@@ -1498,6 +1640,52 @@ function GiftSection({ data, onChange }: { data: EventData; onChange: (d: Partia
                             className="input-field h-14 text-base"
                         />
                     </div>
+                    {/* QR Code Upload for E-Wallet */}
+                    <div>
+                        <label className="text-sm text-foreground-muted block mb-2">Payment QR Code (Optional)</label>
+                        <p className="text-xs text-foreground-muted mb-3">Upload your DuitNow QR or e-wallet QR code for easy payment</p>
+                        {data.ewalletDetails.qrCodeImage ? (
+                            <div className="relative group">
+                                <img
+                                    src={data.ewalletDetails.qrCodeImage}
+                                    alt="E-Wallet QR Code"
+                                    className="w-48 h-48 object-contain rounded-xl border border-white/10 bg-white mx-auto"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => onChange({ ewalletDetails: { ...data.ewalletDetails, qrCodeImage: "" } })}
+                                    className="absolute top-2 right-2 p-2 rounded-full bg-error/80 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ) : (
+                            <label className="flex flex-col items-center justify-center w-48 h-48 mx-auto border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+                                <Upload className="w-8 h-8 text-foreground-muted mb-2" />
+                                <span className="text-sm text-foreground-muted">Upload QR Code</span>
+                                <span className="text-xs text-foreground-muted mt-1">PNG, JPG up to 2MB</span>
+                                <input
+                                    type="file"
+                                    accept="image/png,image/jpeg"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            if (file.size > 2 * 1024 * 1024) {
+                                                alert("File size must be less than 2MB");
+                                                return;
+                                            }
+                                            const reader = new FileReader();
+                                            reader.onload = (event) => {
+                                                onChange({ ewalletDetails: { ...data.ewalletDetails, qrCodeImage: event.target?.result as string } });
+                                            };
+                                            reader.readAsDataURL(file);
+                                        }
+                                    }}
+                                />
+                            </label>
+                        )}
+                    </div>
                 </div>
             )}
             {data.giftType === "physical" && (
@@ -1505,24 +1693,38 @@ function GiftSection({ data, onChange }: { data: EventData; onChange: (d: Partia
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                         <Package className="w-5 h-5 text-primary" /> Physical Gift Details
                     </h3>
+                    {/* Gift Registry/Wishlist Link */}
                     <div>
-                        <label className="text-sm text-foreground-muted block mb-1">Delivery Address *</label>
-                        <textarea
-                            value={data.physicalGift.address}
-                            onChange={(e) => onChange({ physicalGift: { ...data.physicalGift, address: e.target.value } })}
-                            placeholder="Full address including postcode"
-                            rows={3}
-                            className="input-field resize-none"
-                        />
+                        <label className="text-sm text-foreground-muted block mb-1">Gift Registry / Wishlist Link</label>
+                        <p className="text-xs text-foreground-muted mb-3">Add a link to your wishlist from Shopee, Lazada, TikTok Shop, or any online store</p>
+                        <div className="relative">
+                            <input
+                                type="url"
+                                value={data.physicalGift.registryLink}
+                                onChange={(e) => onChange({ physicalGift: { ...data.physicalGift, registryLink: e.target.value } })}
+                                placeholder="https://shopee.com.my/your-wishlist"
+                                className="input-field h-14 text-base !pl-12"
+                            />
+                            <ExternalLink className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground-muted" />
+                        </div>
+                        <div className="flex items-center gap-2 mt-3 flex-wrap">
+                            <span className="text-xs text-foreground-muted">Supported platforms:</span>
+                            <div className="flex gap-2 flex-wrap">
+                                <span className="px-2 py-1 text-xs bg-[#EE4D2D]/20 text-[#EE4D2D] rounded-md">Shopee</span>
+                                <span className="px-2 py-1 text-xs bg-[#0F1689]/20 text-[#6A7AFF] rounded-md">Lazada</span>
+                                <span className="px-2 py-1 text-xs bg-white/10 text-white rounded-md">TikTok Shop</span>
+                                <span className="px-2 py-1 text-xs bg-white/5 text-foreground-muted rounded-md">Any URL</span>
+                            </div>
+                        </div>
                     </div>
                     <div>
-                        <label className="text-sm text-foreground-muted block mb-1">Notes</label>
+                        <label className="text-sm text-foreground-muted block mb-1">Notes (Optional)</label>
                         <input
                             type="text"
                             value={data.physicalGift.notes}
                             onChange={(e) => onChange({ physicalGift: { ...data.physicalGift, notes: e.target.value } })}
-                            placeholder="e.g., Cash only, No flowers"
-                            className="input-field"
+                            placeholder="e.g., Preferred colors, sizes, or any special instructions"
+                            className="input-field h-14 text-base"
                         />
                     </div>
                 </div>
